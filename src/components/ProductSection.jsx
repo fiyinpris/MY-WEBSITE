@@ -230,7 +230,7 @@ export const ProductSection = () => {
       </ul>
 
       {/* Product Grid - Fixed for small screens */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8 max-w-7xl lg:mx-10">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8 max-w-7xl lg:mx-10 mb-20 my-13">
         {filteredProducts.length > 0 ? (
           filteredProducts.map((product) => (
             <div
@@ -247,7 +247,7 @@ export const ProductSection = () => {
 
               {/* Discount */}
               {product.type === "sale" && product.discount && (
-                <span className="absolute bottom-24 left-0 bg-red-600 text-white text-xs font-semibold px-2 py-1 rounded-md z-10">
+                <span className="absolute lg:bottom-27 md:bottom-27 bottom-25 left-0  bg-red-600 text-white text-xs font-semibold px-2 py-1 rounded-md z-10">
                   {product.discount}
                 </span>
               )}

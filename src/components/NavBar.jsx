@@ -55,11 +55,19 @@ export const NavBar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Theme toggle
+  // Load theme from localStorage on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") || "light";
+    setTheme(savedTheme);
+    document.documentElement.classList.toggle("dark", savedTheme === "dark");
+  }, []);
+
+  // Theme toggle function
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
     document.documentElement.classList.toggle("dark", newTheme === "dark");
+    localStorage.setItem("theme", newTheme);
   };
 
   // ✅ Fetch user info from localStorage
@@ -386,7 +394,7 @@ export const NavBar = () => {
                 </span>
               </div>
 
-              {/* The Toggle Button */}
+              {/* Toggle Button */}
               <button
                 onClick={toggleTheme}
                 className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors duration-300 ${

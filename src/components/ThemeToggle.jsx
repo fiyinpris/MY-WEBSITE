@@ -3,42 +3,30 @@ import { useEffect, useState } from "react";
 import { cn } from "../lib/utils";
 
 export const ThemeToggle = () => {
+  // Load theme from localStorage on mount
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) {
-      return savedTheme === "dark";
-    }
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    return savedTheme === "dark"; // true if dark, false otherwise
   });
 
   const [isScrolled, setIsScrolled] = useState(false);
 
+  // Apply theme whenever state changes
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    document.documentElement.classList.toggle("dark", isDarkMode);
+    localStorage.setItem("theme", isDarkMode ? "dark" : "light"); // persist
   }, [isDarkMode]);
 
-  // Track scroll position
+  // Detect scroll for button positioning
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Toggle dark/light mode
   const toggleTheme = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-
-    localStorage.setItem("theme", newMode ? "dark" : "light");
-
-    if (newMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    setIsDarkMode(!isDarkMode);
   };
 
   return (
@@ -48,8 +36,9 @@ export const ThemeToggle = () => {
       className={cn(
         "fixed max-sm:hidden z-[60] p-2 rounded-full hover:bg-primary/10",
         "transition-all duration-300 hover:scale-110",
-        // Position it in the navbar area, adjusting with scroll
-        isScrolled ? "top-2 right-8 lg:right-8 md:right-0" : "top-2.5 lg:right-8 right-8 md:right-0"
+        isScrolled
+          ? "top-2 right-8 lg:right-8 md:right-0"
+          : "top-2.5 lg:right-8 right-8 md:right-0"
       )}
     >
       {isDarkMode ? (

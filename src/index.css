@@ -8,7 +8,7 @@
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-card: hsl(var(--card));
 
-  /* Animation styles*/
+  /* Animation styles */
   --animate-float: float 6s ease-in-out infinite;
   --animate-pulse-subtle: pulse-subtle 4s ease-in-out infinite;
   --animate-fade-in: fade-in 0.7s ease-out forwards;
@@ -16,6 +16,7 @@
   --animate-fade-in-delay-2: fade-in 0.7s ease-out 0.6s forwards;
   --animate-fade-in-delay-3: fade-in 0.7s ease-out 0.8s forwards;
   --animate-fade-in-delay-4: fade-in 0.7s ease-out 1s forwards;
+
   @keyframes float {
     0%,
     100% {
@@ -25,6 +26,7 @@
       transform: translateY(-15px);
     }
   }
+
   @keyframes pulse-subtle {
     0%,
     100% {
@@ -34,6 +36,7 @@
       opacity: 0.85;
     }
   }
+
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -45,40 +48,24 @@
     }
   }
 }
-@keyframes scroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
-.animate-scroll {
-  animation: scroll 45s linear infinite;
-}
-
-.animate-scroll:hover {
-  animation-play-state: paused;
-}
 
 @layer base {
   :root {
-    --background: 210 40% 98%; /* light background */
-    --foreground: 222 47% 11%; /* dark text */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --primary: 140 50% 40%; /* soft green */
+    --primary: 140 50% 40%;
     --primary-foreground: 210 40% 98%;
     --border: 214 32% 91%;
   }
 
   :root.dark {
-    --background: 220 26% 14%; /* softer dark background */
-    --foreground: 210 20% 98%; /* cleaner white text */
-    --card: 220 24% 18%; /* elevated card background */
-    --primary: 142 76% 45%; /* vibrant emerald green */
+    --background: 220 26% 14%;
+    --foreground: 210 20% 98%;
+    --card: 220 24% 18%;
+    --primary: 142 76% 45%;
     --primary-foreground: 0 0% 100%;
-    --border: 217 19% 27%; /* subtle visible border */
+    --border: 217 19% 27%;
   }
 
   * {
@@ -102,7 +89,6 @@
     min-height: 100vh;
   }
 
-  /* ✅ Remove default margins from root */
   #root {
     margin: 0;
     padding: 0;
@@ -114,43 +100,42 @@
   padding-inline: 2rem;
 }
 
-@media (width >= 640px) {
+@media (min-width: 640px) {
   .container {
     max-width: 640px;
   }
 }
-@media (width >= 768px) {
+@media (min-width: 768px) {
   .container {
     max-width: 768px;
   }
 }
-@media (width >= 1024px) {
+@media (min-width: 1024px) {
   .container {
     max-width: 1024px;
   }
 }
-@media (width >= 1280px) {
+@media (min-width: 1280px) {
   .container {
     max-width: 1280px;
   }
 }
-@media (width >= 1400px) {
+@media (min-width: 1400px) {
   .container {
     max-width: 1400px;
   }
 }
 
-/* TEXT EFFECTS*/
+/* TEXT EFFECTS */
 .text-glow {
   position: relative;
   text-shadow: 0 0 10px rgba(92, 203, 153, 0.5);
 }
-
 :root.dark .text-glow {
   text-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
 }
 
-/* CARD HOVER EFFECT*/
+/* CARD HOVER EFFECT */
 .card-hover {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -158,17 +143,11 @@
   transform: scale(1.03);
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.15);
 }
-
 :root.dark .card-hover:hover {
   box-shadow: 0 10px 30px -3px rgb(16 185 129 / 0.2);
 }
 
-.gradient-border {
-  border-radius: 1rem;
-  background: linear-gradient(to right, hsl(var(--card)), hsl(var(--card)));
-  background-clip: padding-box;
-}
-
+/* BUTTONS */
 .normal-button {
   padding: 0.5rem 1.5rem;
   border-radius: 9999px;
@@ -182,15 +161,14 @@
   box-shadow: 0 0 12px rgba(0, 90, 50, 0.5);
   transform: scale(1.05);
 }
-
 :root.dark .normal-button:hover {
   box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
 }
-
 .normal-button:active {
   transform: scale(0.95);
 }
 
+/* BACKGROUND GRADIENT ANIMATION */
 body::before {
   content: "";
   position: fixed;
@@ -199,43 +177,80 @@ body::before {
   width: 100%;
   height: 100%;
   z-index: -2;
-  background: linear-gradient(
-    315deg,
-    rgba(0, 100, 0, 1) 3%,
-    rgba(34, 139, 34, 1) 38%,
-    rgba(60, 179, 113, 1) 68%,
-    rgba(144, 238, 144, 1) 98%
-  );
-  animation: gradient 15s ease infinite;
+  background: linear-gradient(315deg, #006400, #228b22, #3cb371, #90ee90);
   background-size: 400% 400%;
-  background-attachment: fixed;
-  opacity: 0.3;
+  animation: morphGradient 20s ease infinite;
+  opacity: 0.25;
   transition: opacity 0.3s ease;
 }
-
 :root.dark body::before {
-  background: linear-gradient(
-    315deg,
-    rgba(6, 78, 59, 1) 3%,
-    rgba(16, 185, 129, 1) 38%,
-    rgba(5, 150, 105, 1) 68%,
-    rgba(52, 211, 153, 1) 98%
-  );
+  background: linear-gradient(315deg, #064e3b, #10b981, #059669, #34d399);
   opacity: 0.15;
 }
-
-@keyframes gradient {
+@keyframes morphGradient {
   0% {
-    background-position: 0% 0%;
+    background-position: 0% 50%;
   }
   50% {
-    background-position: 100% 100%;
+    background-position: 100% 50%;
   }
   100% {
-    background-position: 0% 0%;
+    background-position: 0% 50%;
   }
 }
 
+/* FLOATING BUBBLES */
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  animation: floatBubble linear infinite;
+  pointer-events: none;
+}
+.bubble:nth-child(1) {
+  width: 80px;
+  height: 80px;
+  top: 10%;
+  left: 5%;
+  animation-duration: 25s;
+}
+.bubble:nth-child(2) {
+  width: 120px;
+  height: 120px;
+  top: 30%;
+  left: 70%;
+  animation-duration: 30s;
+}
+.bubble:nth-child(3) {
+  width: 60px;
+  height: 60px;
+  top: 60%;
+  left: 40%;
+  animation-duration: 20s;
+}
+.bubble:nth-child(4) {
+  width: 100px;
+  height: 100px;
+  top: 80%;
+  left: 20%;
+  animation-duration: 35s;
+}
+@keyframes floatBubble {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-50px) translateX(30px) scale(1.1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0.3;
+  }
+}
+
+/* WAVES */
 .wave {
   background: rgb(255 255 255 / 25%);
   border-radius: 1000% 1000% 0 0;
@@ -249,27 +264,22 @@ body::before {
   left: 0;
   z-index: -1;
 }
-
 :root.dark .wave {
   background: rgb(16 185 129 / 10%);
 }
-
 .wave:nth-of-type(2) {
   bottom: -1.25em;
   animation: wave 18s linear reverse infinite;
   opacity: 0.8;
 }
-
 :root.dark .wave:nth-of-type(2) {
   background: rgb(5 150 105 / 12%);
 }
-
 .wave:nth-of-type(3) {
   bottom: -2.5em;
   animation: wave 20s -1s reverse infinite;
   opacity: 0.9;
 }
-
 :root.dark .wave:nth-of-type(3) {
   background: rgb(52 211 153 / 8%);
 }
@@ -291,12 +301,37 @@ body::before {
     transform: translateX(1);
   }
 }
+
+/* SCROLLING CAROUSEL */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+.animate-scroll {
+  animation: scroll 20s linear infinite;
+}
+.animate-scroll:hover,
+.pause-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* DIVIDER */
 #divider {
   user-select: none;
   background-color: hsl(var(--border));
   transition: background 0.2s;
 }
-
 #divider:hover {
   background-color: hsl(var(--primary));
 }

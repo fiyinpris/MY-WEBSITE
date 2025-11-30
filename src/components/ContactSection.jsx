@@ -161,7 +161,6 @@ export const ContactSection = () => {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Full Name */}
                 <div>
                   <label className="block text-sm font-medium text-foreground/70 mb-2">
                     Full Name
@@ -205,7 +204,7 @@ export const ContactSection = () => {
                     placeholder="Leave us a message here..."
                     required
                     rows={5}
-                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all resize-none"
+                    className="w-full px-5 py-3 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60 bg-background resize-none"
                   ></textarea>
                 </div>
 

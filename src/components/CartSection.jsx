@@ -105,33 +105,39 @@ export const CartPage = () => {
 
   return (
     <div className="min-h-screen bg-background pt-20 pb-16 px-4">
-      <div className="container max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* ✅ Cart Notification - Reduced top margin */}
-        <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-lg flex items-center gap-3 mt-2">
-          <ShoppingCart className="w-6 h-6" />
-          <p className="font-semibold">
+        <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-3 sm:p-4 mb-6 rounded-lg flex items-center gap-2 sm:gap-3 mt-2">
+          <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+          <p className="font-semibold text-sm sm:text-base">
             You have {totalItems} {totalItems === 1 ? "item" : "items"} in your
             cart
           </p>
         </div>
 
         {/* Header */}
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-8">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-6 sm:mb-8">
           Cart
         </h1>
 
         {/* Progress Steps */}
-        <div className="flex items-center gap-4 mb-12">
-          <div className="flex items-center gap-2">
-            <span className="text-foreground font-semibold">1. Cart</span>
+        <div className="flex items-center gap-2 sm:gap-4 mb-8 sm:mb-12">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <span className="text-foreground font-semibold text-xs sm:text-base">
+              1. Cart
+            </span>
           </div>
           <div className="h-px flex-1 bg-border"></div>
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">2. Checkout</span>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <span className="text-muted-foreground text-xs sm:text-base">
+              2. Checkout
+            </span>
           </div>
           <div className="h-px flex-1 bg-border"></div>
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">3. Payment</span>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <span className="text-muted-foreground text-xs sm:text-base">
+              3. Payment
+            </span>
           </div>
         </div>
 
@@ -141,28 +147,28 @@ export const CartPage = () => {
             {cartItems.map((item) => (
               <div
                 key={item.id}
-                className="bg-card rounded-xl p-6 shadow-sm border border-border"
+                className="bg-card rounded-xl p-4 sm:p-6 shadow-sm border border-border"
               >
-                <div className="flex gap-6">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                   {/* Product Image */}
-                  <div className="flex-shrink-0">
+                  <div className="flex-shrink-0 w-full sm:w-auto mx-auto sm:mx-0">
                     <img
                       src={item.image || item.img}
                       alt={item.name}
-                      className="w-32 h-32 object-cover rounded-lg"
+                      className="w-full h-48 sm:w-32 sm:h-32 object-cover rounded-lg"
                     />
                   </div>
 
                   {/* Product Details */}
                   <div className="flex-1">
-                    <h3 className="text-lg font-bold text-foreground mb-1">
+                    <h3 className="text-base sm:text-lg font-bold text-foreground mb-1">
                       {item.name}
                     </h3>
-                    <p className="text-sm text-muted-foreground mb-3">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 line-clamp-2">
                       {item.description || item.desc || "Product description"}
                     </p>
 
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                    <div className="flex items-center gap-4 text-xs sm:text-sm text-muted-foreground mb-4">
                       <span>
                         Color:{" "}
                         <span className="font-medium text-foreground">
@@ -172,12 +178,12 @@ export const CartPage = () => {
                     </div>
 
                     {/* Price */}
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl font-bold text-foreground">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <span className="text-xl sm:text-2xl font-bold text-foreground">
                         ₦{item.price.toLocaleString()}
                       </span>
                       {item.oldPrice && (
-                        <span className="text-lg text-muted-foreground line-through">
+                        <span className="text-base sm:text-lg text-muted-foreground line-through">
                           ₦{item.oldPrice.toLocaleString()}
                         </span>
                       )}
@@ -186,7 +192,7 @@ export const CartPage = () => {
                 </div>
 
                 {/* Quantity and Actions */}
-                <div className="flex items-center justify-between mt-6 pt-6 border-t border-border">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-border">
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
@@ -230,45 +236,45 @@ export const CartPage = () => {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-card rounded-xl p-6 shadow-sm border border-border sticky top-24">
-              <h2 className="text-xl font-bold text-foreground mb-6">
+            <div className="bg-card rounded-xl p-4 sm:p-6 shadow-sm border border-border lg:sticky lg:top-24">
+              <h2 className="text-lg sm:text-xl font-bold text-foreground mb-4 sm:mb-6">
                 Order Summary
               </h2>
 
-              <div className="space-y-4 mb-6">
-                <div className="flex justify-between text-foreground">
+              <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+                <div className="flex justify-between text-sm sm:text-base text-foreground">
                   <span>Sub Total</span>
                   <span className="font-semibold">
                     ₦{subtotal.toLocaleString()}
                   </span>
                 </div>
-                <div className="flex justify-between text-foreground">
+                <div className="flex justify-between text-sm sm:text-base text-foreground">
                   <span>Discount</span>
                   <span className="font-semibold text-red-500">
                     -₦{discount.toFixed(2)}
                   </span>
                 </div>
-                <div className="flex justify-between text-foreground">
+                <div className="flex justify-between text-sm sm:text-base text-foreground">
                   <span>Tax</span>
                   <span className="font-semibold">₦{tax.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-foreground">
+                <div className="flex justify-between text-sm sm:text-base text-foreground">
                   <span>Shipping</span>
                   <span className="font-semibold text-primary">Free</span>
                 </div>
-                <div className="border-t border-border pt-4">
-                  <div className="flex justify-between text-lg font-bold text-foreground">
+                <div className="border-t border-border pt-3 sm:pt-4">
+                  <div className="flex justify-between text-base sm:text-lg font-bold text-foreground">
                     <span>Total</span>
                     <span>₦{total.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
 
-              <button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 rounded-lg transition-colors mb-6">
+              <button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 rounded-lg transition-colors mb-4 sm:mb-6 text-sm sm:text-base">
                 Proceed to Checkout
               </button>
 
-              <p className="text-sm text-center text-muted-foreground mb-6">
+              <p className="text-xs sm:text-sm text-center text-muted-foreground mb-4 sm:mb-6">
                 Estimated Delivery by{" "}
                 <span className="font-semibold text-foreground">
                   25 December, 2025
@@ -276,19 +282,19 @@ export const CartPage = () => {
               </p>
 
               {/* Coupon Code */}
-              <div className="border-t border-border pt-6">
-                <h3 className="font-semibold text-foreground mb-3">
+              <div className="border-t border-border pt-4 sm:pt-6">
+                <h3 className="font-semibold text-sm sm:text-base text-foreground mb-3">
                   Have a Referral code?
                 </h3>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
                     placeholder="Referral Code"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
-                    className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="flex-1 px-3 sm:px-4 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
-                  <button className="px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg transition-colors">
+                  <button className="px-4 sm:px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg transition-colors text-sm">
                     Apply
                   </button>
                 </div>
@@ -300,3 +306,58 @@ export const CartPage = () => {
     </div>
   );
 };
+
+// Demo wrapper with sample data
+export default function App() {
+  const sampleProducts = [
+    {
+      id: 1,
+      name: "Premium Wireless Headphones",
+      description: "High-quality sound with noise cancellation",
+      price: 45000,
+      oldPrice: 60000,
+      image:
+        "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop",
+    },
+    {
+      id: 2,
+      name: "Smart Watch Series 5",
+      description: "Track your fitness and stay connected",
+      price: 120000,
+      image:
+        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop",
+    },
+  ];
+
+  return (
+    <CartSection>
+      <CartDemo products={sampleProducts} />
+    </CartSection>
+  );
+}
+
+function CartDemo({ products }) {
+  const { addToCart, cartItems } = useCart();
+
+  return (
+    <div>
+      {cartItems.length === 0 && (
+        <div className="fixed top-4 right-4 bg-white p-4 rounded-lg shadow-lg border border-gray-200 z-50">
+          <p className="text-sm text-gray-600 mb-3">Add sample items:</p>
+          <div className="flex gap-2">
+            {products.map((product) => (
+              <button
+                key={product.id}
+                onClick={() => addToCart(product)}
+                className="px-3 py-2 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+              >
+                Add Item {product.id}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <CartPage />
+    </div>
+  );
+}

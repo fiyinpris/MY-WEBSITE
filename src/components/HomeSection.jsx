@@ -1,4 +1,4 @@
-import { useState } from "react"; // Replace "Phone" with your WhatsApp icon if different
+import { useState, useEffect } from "react";
 import { FaWhatsapp } from "react-icons/fa";
 
 import myImage from "../Images/image 7.jpg";
@@ -44,7 +44,6 @@ const products = [
       "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&q=80",
     badge: "Bestseller",
   },
-  // Duplicate products to make the scroll seamless
   {
     id: 4,
     name: "LED 600",
@@ -66,13 +65,33 @@ const products = [
     badge: "Bestseller",
   },
   {
-    id: 6,
+    id: 3,
     name: "K29 Tripod",
     price: "#30,000.00 NGN",
     rating: 4.7,
     reviews: 89,
     image:
       "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&q=80",
+    badge: "Bestseller",
+  },
+  {
+    id: 4,
+    name: "LED 600",
+    price: "#43,000.00 NGN",
+    rating: 4.8,
+    reviews: 156,
+    image:
+      "https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?w=500&q=80",
+    badge: "Bestseller",
+  },
+  {
+    id: 5,
+    name: "LED 800",
+    price: "#57,000.00 NGN",
+    rating: 4.9,
+    reviews: 203,
+    image:
+      "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&q=80",
     badge: "Bestseller",
   },
 ];
@@ -83,21 +102,22 @@ const reviews = [
     id: 1,
     name: "Olawale A.",
     image: "https://randomuser.me/api/portraits/men/32.jpg",
-    text: "These content tools have completely transformed how I manage and organize my work. They’re easy to use, save me so much time, and keep everything neat and accessible. Highly recommended!",
+    text: "These content tools have completely transformed how I manage and organize my work. They're easy to use, save me so much time, and keep everything neat and accessible. Highly recommended!",
   },
   {
     id: 2,
     name: "Fiyinfoluwa P.",
     image: "https://randomuser.me/api/portraits/women/45.jpg",
-    text: "Honestly, I didn’t expect it to be this good! The tools are smooth, fast, and super helpful for keeping my content workflow organized. I love the user-friendly interface.",
+    text: "Honestly, I didn't expect it to be this good! The tools are smooth, fast, and super helpful for keeping my content workflow organized. I love the user-friendly interface.",
   },
   {
     id: 3,
     name: "Michael O.",
     image: "https://randomuser.me/api/portraits/men/55.jpg",
-    text: "The best experience I’ve had with a content tool so far. I can easily manage multiple files and projects without stress. Great work from the developers!",
+    text: "The best experience I've had with a content tool so far. I can easily manage multiple files and projects without stress. Great work from the developers!",
   },
 ];
+
 export const HomeSection = () => {
   const [currentReview, setCurrentReview] = useState(0);
   const [formData, setFormData] = useState({
@@ -113,8 +133,6 @@ export const HomeSection = () => {
     e.preventDefault();
     setIsSending(true);
 
-    // Add your email sending logic here (EmailJS)
-    // For now, just simulating:
     setTimeout(() => {
       alert("Message sent!");
       setFormData({ name: "", email: "", contactnumber: "", message: "" });
@@ -122,19 +140,18 @@ export const HomeSection = () => {
     }, 2000);
   };
 
-  const handleNext = () => {
+  const handleNextReview = () => {
     setCurrentReview((prev) => (prev + 1) % reviews.length);
   };
 
-  const handlePrev = () => {
+  const handlePrevReview = () => {
     setCurrentReview((prev) => (prev - 1 + reviews.length) % reviews.length);
   };
-  
 
   return (
     <section
       id="Home"
-      className="relative min-h-screen items-center justify-center pt-24 "
+      className="relative min-h-screen items-center justify-center pt-24"
     >
       {/* Hero Section */}
       <div className="flex items-center justify-center px-4">
@@ -169,13 +186,14 @@ export const HomeSection = () => {
               <img
                 src={myImage}
                 alt=""
-                className="w-98 h-82 sm:w-100 sm:h-82 md:w-[30rem] md:h-[20rem] lg:w-[27rem] lg:h-[27rem] object-cover animate-fade-in-delay-1 hover:scale-105 transition-transform duration-500 drop-shadow-2xl rounded-3xl max-w-full"
+                className="w-100 h-82 sm:w-100 sm:h-82 md:w-[30rem] md:h-[20rem] lg:w-[27rem] lg:h-[27rem] object-cover animate-fade-in-delay-1 hover:scale-105 transition-transform duration-500 drop-shadow-2xl rounded-3xl max-w-full"
               />
             </div>
           </div>
         </div>
       </div>
 
+      {/* Best Selling Carousel */}
       <div className="mt-20 p-4 overflow-hidden">
         <div className="max-w-6xl mx-auto text-center">
           <h4 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">
@@ -192,7 +210,7 @@ export const HomeSection = () => {
               {products.map((product, index) => (
                 <div
                   key={`${product.id}-${index}`}
-                  className="flex-shrink-0 w-[280px] bg-card rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group"
+                  className="flex-shrink-0  w-[200px] bg-card rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group"
                 >
                   {/* Image Container */}
                   <div className="relative overflow-hidden h-48 bg-muted">
@@ -262,9 +280,8 @@ export const HomeSection = () => {
         </p>
 
         <div className="relative border bg-white p-6 sm:p-8 shadow-md w-full sm:w-4/5 md:w-[600px] mt-10 border-transparent flex flex-col items-center rounded-xl">
-          {/* Left Arrow (desktop) */}
           <button
-            onClick={handlePrev}
+            onClick={handlePrevReview}
             className="hidden sm:flex absolute left-[-4rem] top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full p-2 sm:p-3 hover:bg-primary/90 transition"
           >
             <ArrowBigLeft size={20} />
@@ -285,24 +302,22 @@ export const HomeSection = () => {
             - {reviews[currentReview].name}
           </p>
 
-          {/* Right Arrow (desktop) */}
           <button
-            onClick={handleNext}
+            onClick={handleNextReview}
             className="hidden sm:flex absolute right-[-4rem] top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full p-2 sm:p-3 hover:bg-primary/90 transition"
           >
             <ArrowBigRight size={20} />
           </button>
 
-          {/* Mobile Arrows (collapse to bottom) */}
           <div className="flex sm:hidden justify-center gap-6 mt-6">
             <button
-              onClick={handlePrev}
+              onClick={handlePrevReview}
               className="bg-primary text-white rounded-full p-3 hover:bg-primary/90 transition"
             >
               <ArrowBigLeft size={20} />
             </button>
             <button
-              onClick={handleNext}
+              onClick={handleNextReview}
               className="bg-primary text-white rounded-full p-3 hover:bg-primary/90 transition"
             >
               <ArrowBigRight size={20} />
@@ -313,24 +328,21 @@ export const HomeSection = () => {
 
       {/* Contact Form Section */}
       <div className="flex flex-col md:flex-row justify-center items-center gap-8 bg-white py-16 px-6 sm:px-12 dark:bg-background">
-        {/* Left Text Section */}
         <div className="text-center md:text-left max-w-md">
           <h4 className="text-3xl sm:text-4xl font-bold text-primary mb-8">
             Contact Us
           </h4>
           <p className="text-muted-foreground text-base leading-relaxed">
-            Have a question, idea, or feedback about our lighting products? We’d
+            Have a question, idea, or feedback about our lighting products? We'd
             love to hear from you!
           </p>
         </div>
 
-        {/* Contact Form */}
         <div
           className="w-full max-w-lg bg-white dark:bg-background sm:shadow-lg sm:border sm:rounded-2xl p-6 sm:p-8"
           style={{ opacity: 1, transition: "opacity 0.1s ease-in" }}
         >
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Hidden fields for EmailJS */}
             <input type="hidden" name="to_name" value="Fiyinfoluwa" />
             <input
               type="hidden"
@@ -338,7 +350,6 @@ export const HomeSection = () => {
               value={new Date().toLocaleString()}
             />
 
-            {/* Input fields */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <input
                 type="text"
@@ -350,7 +361,7 @@ export const HomeSection = () => {
                 }
                 placeholder="Your Name"
                 required
-                className="w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/60"
+                className="w-full px-5 py-3 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60"
               />
               <input
                 type="email"
@@ -362,7 +373,7 @@ export const HomeSection = () => {
                 }
                 placeholder="Your Email"
                 required
-                className="w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/60"
+                className="w-full px-5 py-3 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60"
               />
             </div>
 
@@ -376,7 +387,7 @@ export const HomeSection = () => {
               }
               placeholder="Phone Number"
               required
-              className="w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/60"
+              className="w-full px-5 py-3 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60"
             />
 
             <textarea
@@ -388,7 +399,7 @@ export const HomeSection = () => {
               }
               placeholder="Your Message"
               required
-              className="w-full resize-none px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/60 min-h-[120px]"
+              className="w-full border-border resize-none px-5 py-3 border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60 min-h-[120px]"
             />
 
             <button
