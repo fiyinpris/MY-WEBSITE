@@ -40,13 +40,13 @@ export const ContactSection = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 py-20 px-4">
-      <div className="container max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 py-20 lg:px-4">
+      <div className="w-full max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
           {/* Left Side - Contact Info */}
-          <div className="text-foreground space-y-8 lg:pt-12">
+          <div className="text-foreground space-y-8 px-7 lg:px-3 lg:pt-12">
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              <h1 className="text-4xl md:text-5xl lg:text-left text-center font-bold mb-4">
                 Contact Us
               </h1>
               <p className="text-lg text-foreground/80 leading-relaxed">
@@ -80,7 +80,7 @@ export const ContactSection = () => {
                 <div>
                   <h3 className="font-semibold mb-1">Phone</h3>
                   <a
-                    href="tel:+234-XXX-XXX-XXXX"
+                    href="tel:+234-813-542-4926"
                     className="text-foreground/70 hover:text-primary transition-colors"
                   >
                     Support: +234-813-542-4926
@@ -95,7 +95,7 @@ export const ContactSection = () => {
                 <div>
                   <h3 className="font-semibold mb-1">Location</h3>
                   <p className="text-foreground/70">
-                    Ibadan, Oyo State,
+                    Osogbo, Osun State,
                     <br />
                     Nigeria
                   </p>
@@ -135,8 +135,10 @@ export const ContactSection = () => {
             </div>
           </div>
 
+
+
           {/* Right Side - Contact Form */}
-          <div className="w-full lg:max-w-md bg-card rounded-2xl shadow-2xl p-6 sm:p-8 lg:p-10 border border-border relative overflow-hidden mx-auto">
+          <div className="w-full max-w-3xl bg-card rounded-2xl shadow-2xl p-6 sm:p-8 lg:p-10 border border-border relative overflow-hidden mx-auto">
             {/* Decorative circles */}
             <div className="absolute top-0 right-0 w-32 h-32 opacity-7 pointer-events-none">
               <svg
@@ -156,7 +158,7 @@ export const ContactSection = () => {
 
               {success && (
                 <div className="mb-6 bg-green-100 border border-green-500 text-green-700 px-4 py-3 rounded-lg">
-                  ✓ Message sent successfully! We'll get back to you soon.
+                  Message sent successfully! We'll get back to you soon.
                 </div>
               )}
 

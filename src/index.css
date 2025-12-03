@@ -335,3 +335,175 @@ body::before {
 #divider:hover {
   background-color: hsl(var(--primary));
 }
+/* 3D SOCIAL MEDIA BUTTONS */
+.social-3d-button {
+  position: relative;
+  width: 45px;
+  height: 45px;
+  transform: rotate(-30deg) skew(25deg);
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.social-3d-button span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: hsl(var(--primary));
+  transition: 0.5s;
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  color: hsl(var(--primary-foreground));
+}
+
+.social-3d-button .social-icon {
+  font-size: 18px !important;
+}
+
+.social-3d-button:hover span:nth-child(5) {
+  transform: translate(30px, -30px);
+  opacity: 1;
+}
+
+.social-3d-button:hover span:nth-child(4) {
+  transform: translate(22px, -22px);
+  opacity: 0.8;
+}
+
+.social-3d-button:hover span:nth-child(3) {
+  transform: translate(15px, -15px);
+  opacity: 0.6;
+}
+
+.social-3d-button:hover span:nth-child(2) {
+  transform: translate(8px, -8px);
+  opacity: 0.4;
+}
+
+.social-3d-button:hover span:nth-child(1) {
+  transform: translate(0, 0);
+  opacity: 0.2;
+}
+
+/* Different colors for each social media */
+.instagram-btn span {
+  background: linear-gradient(
+    45deg,
+    #f09433 0%,
+    #e6683c 25%,
+    #dc2743 50%,
+    #cc2366 75%,
+    #bc1888 100%
+  );
+}
+
+.whatsapp-btn span {
+  background: #25d366;
+}
+
+/* Dark mode adjustments */
+:root.dark .social-3d-button span {
+  background: hsl(var(--primary));
+}
+
+:root.dark .instagram-btn span {
+  background: linear-gradient(
+    45deg,
+    #f09433 0%,
+    #e6683c 25%,
+    #dc2743 50%,
+    #cc2366 75%,
+    #bc1888 100%
+  );
+}
+
+:root.dark .whatsapp-btn span {
+  background: #25d366;
+}
+/* SPLIT TEXT ANIMATION */
+.split-text-container {
+  display: flex;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .split-text-container {
+    font-size: 3rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .split-text-container {
+    font-size: 4rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .split-text-container {
+    font-size: 5rem;
+  }
+}
+
+.text-part {
+  display: inline-block;
+  position: relative;
+  animation-duration: 2s;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
+.text-part.left {
+  transform: translateX(-200%);
+  animation-name: slide-in-left;
+}
+
+.text-part.right {
+  transform: translateX(200%);
+  animation-name: slide-in-right;
+}
+
+@keyframes slide-in-left {
+  0% {
+    transform: translateX(-200%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  0% {
+    transform: translateX(200%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+@keyframes scroll-mobile {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-164px * 8)); /* 160px card + 16px gap (4 * 4px) */
+  }
+}
+
+.animate-scroll-mobile {
+  animation: scroll-mobile 25s linear infinite;
+}
+
+.hover\:pause-scroll:hover {
+  animation-play-state: paused;
+}
+.mobile-menu a,
+.mobile-menu Link {
+  text-decoration: none !important;
+  border-bottom: none !important;
+}

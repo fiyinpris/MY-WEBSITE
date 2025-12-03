@@ -105,7 +105,12 @@ export const NavBar = () => {
             <Link
               key={item.name}
               to={item.href}
-              className="text-foreground/80 hover:text-primary transition-colors duration-300 font-medium text-sm md:text-base lg:text-lg"
+              onClick={handleNavClick}
+              className={cn(
+                "inline-block text-foreground hover:text-primary transition-colors duration-300 text-lg pt-0 pb-2",
+                location.pathname === item.href &&
+                  "relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:bg-green-500 after:rounded-full text-primary"
+              )}
             >
               {item.name}
             </Link>
@@ -318,7 +323,7 @@ export const NavBar = () => {
                 key={item.name}
                 to={item.href}
                 onClick={handleNavClick}
-                className="text-foreground hover:text-primary transition-colors duration-300 text-lg text-foreground/80 py-2 border-b border-border/50"
+                className="text-foreground hover:text-primary transition-colors duration-300 text-lg text-foreground/80 py-2 border-border/50"
               >
                 {item.name}
               </Link>

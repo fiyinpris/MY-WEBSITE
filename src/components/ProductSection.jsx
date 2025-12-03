@@ -174,7 +174,7 @@ export const ProductSection = () => {
   };
 
   return (
-    <section className="my-6 px-4 mt-25">
+    <section className="my-6 px-4 mt-20">
       {/* Tabs */}
       <ul className="flex justify-center flex-wrap gap-10 mb-6">
         {tabs.map((tab) => (

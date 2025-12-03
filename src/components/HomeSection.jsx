@@ -157,13 +157,11 @@ export const HomeSection = () => {
       <div className="flex items-center justify-center px-4">
         <div className="container max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div className="space-y-6 text-center md:text-left order-2 md:order-1 px-2 sm:px-4">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight">
-                <span className="animate-fade-in-delay-1">Manage, </span>
-                <span className="animate-fade-in-delay-2">Organize </span>
-                <span className="animate-fade-in-delay-3">
-                  and Enhance Your Digital Content!
-                </span>
+            <div className="ursor-typewriter space-y-6 text-center md:text-left order-2 md:order-1 px-2 sm:px-4">
+              <h1 className="ctext-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight">
+                <span>Manage, </span>
+                <span>Organize </span>
+                <span>and Enhance Your Digital Content!</span>
               </h1>
 
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed animate-fade-in-delay-4">
@@ -206,14 +204,14 @@ export const HomeSection = () => {
 
           {/* Scrolling Container */}
           <div className="relative">
-            <div className="flex gap-6 animate-scroll hover:pause-scroll">
-              {products.map((product, index) => (
+            <div className="flex gap-4 md:gap-6 animate-scroll-mobile md:animate-scroll hover:pause-scroll">
+              {products.concat(products).map((product, index) => (
                 <div
                   key={`${product.id}-${index}`}
-                  className="flex-shrink-0  w-[200px] bg-card rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group"
+                  className="flex-shrink-0 w-[150px] lg:w-[200px] md:w-[200px] bg-card rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group"
                 >
                   {/* Image Container */}
-                  <div className="relative overflow-hidden h-48 bg-muted">
+                  <div className="relative overflow-hidden h-35 sm:h-44 md:h-48 bg-muted">
                     <img
                       src={product.image}
                       alt={product.name}
@@ -230,14 +228,14 @@ export const HomeSection = () => {
                   </div>
 
                   {/* Card Content */}
-                  <div className="p-4 text-left">
+                  <div className="p-3 md:p-4 text-left">
                     {/* Rating */}
                     <div className="flex items-center gap-2 mb-2">
                       <div className="flex items-center gap-0.5">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            size={14}
+                            size={12}
                             className={
                               i < Math.floor(product.rating)
                                 ? "fill-yellow-400 text-yellow-400"
@@ -247,22 +245,22 @@ export const HomeSection = () => {
                         ))}
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        {product.rating} ({product.reviews})
+                        {product.rating}
                       </span>
                     </div>
 
-                    <h3 className="text-base md:text-lg font-bold text-foreground mb-2">
+                    <h3 className="text-sm md:text-base font-bold text-foreground mb-2">
                       {product.name}
                     </h3>
 
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-lg font-bold text-primary">
+                      <span className="text-base md:text-lg font-bold text-primary">
                         {product.price}
                       </span>
                     </div>
 
-                    <button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2 text-sm rounded-lg transition-colors duration-300 flex items-center justify-center gap-2">
-                      <ShoppingCart size={16} />
+                    <button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2 text-xs md:text-sm rounded-lg transition-colors duration-300 flex items-center justify-center gap-2">
+                      <ShoppingCart size={14} />
                       Add to Cart
                     </button>
                   </div>
@@ -270,9 +268,9 @@ export const HomeSection = () => {
               ))}
             </div>
           </div>
+          
         </div>
       </div>
-
       {/* Customer Review Section */}
       <div className="flex flex-col justify-center items-center bg-green-200 mt-20 w-full min-h-[400px] sm:min-h-[450px] px-4 py-10 dark:text-black relative">
         <p className="font-bold text-2xl sm:text-3xl text-center">
@@ -339,7 +337,7 @@ export const HomeSection = () => {
         </div>
 
         <div
-          className="w-full max-w-lg bg-white dark:bg-background sm:shadow-lg sm:border sm:rounded-2xl p-6 sm:p-8"
+          className="w-full max-w-lg bg-white dark:bg-background sm:shadow-lg sm:border sm:rounded-2xl p- sm:p-8"
           style={{ opacity: 1, transition: "opacity 0.1s ease-in" }}
         >
           <form className="space-y-6" onSubmit={handleSubmit}>

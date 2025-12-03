@@ -173,7 +173,7 @@ export const ShopSection = () => {
   }, []);
 
   return (
-    <div className="mt-12 md:mt-20">
+    <div className="mt-12">
       {/* Success Notification */}
       {showNotification && (
         <div className="fixed top-20 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-bounce">
@@ -187,14 +187,15 @@ export const ShopSection = () => {
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${headerBg})` }}
         ></div>
-        <div className="absolute inset-0 bg-white/40"></div>
+        {/* Dark overlay for better text visibility */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70"></div>
         <div className="relative h-full flex items-center justify-center px-4">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-black text-center">
-            WELCOME TO my.LIGHTSTORE
-          </h1>
+          <div className="split-text-container text-white drop-shadow-2xl">
+            <span className="text-part left">WELCOME TO&nbsp;</span>
+            <span className="text-part right">my.LIGHTSTORE</span>
+          </div>
         </div>
       </div>
-
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Mobile Filter Button - Shows selected category */}
