@@ -174,11 +174,11 @@ export const ProductSection = () => {
   };
 
   return (
-    <section className="my-6 px-4 mt-20">
+    <section className="my-6 mt-13 lg:mt-13">
       {/* Tabs */}
-      <ul className="flex justify-center flex-wrap gap-10 mb-6">
+      <ul className="flex justify-center flex-wrap p-7 gap-10 bg-black/20 backdrop-blur-md">
         {tabs.map((tab) => (
-          <li key={tab.name}>
+          <li key={tab.name} className="relative">
             <button
               onClick={() => {
                 setActiveTab(tab.name);
@@ -190,47 +190,44 @@ export const ProductSection = () => {
               className={`font-semibold text-foreground text-sm transition-all duration-200 ${
                 activeTab === tab.name
                   ? "text-green-600 underline underline-offset-4"
-                  : " hover:text-green-600"
+                  : "hover:text-green-600"
               }`}
             >
               {tab.label}
             </button>
           </li>
         ))}
-
-        {/* Dropdown beside ALL */}
-        {activeTab === "all" && (
-          <div className="relative inline-block">
-            <button
-              onClick={() => setShowDropdown(!showDropdown)}
-              className="flex items-center gap-1 font-semibold text-sm border px-3 py-1 rounded-md"
-            >
-              {selectedCategory}
-              <ChevronDown size={14} />
-            </button>
-
-            {showDropdown && (
-              <ul className="gradient-border absolute mt-2 left-0 w-40 rounded-md shadow-lg overflow-hidden z-50">
-                {categories.map((cat) => (
-                  <li
-                    key={cat}
-                    onClick={() => {
-                      setSelectedCategory(cat);
-                      setShowDropdown(false);
-                    }}
-                    className="px-4 py-2 text-sm cursor-pointer hover:bg-gray-100 hover:bg-green-300"
-                  >
-                    {cat}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
       </ul>
 
+      {/* Dropdown placed OUTSIDE of backdrop-blur parent */}
+      {activeTab === "all" && showDropdown && (
+        <div
+          className="absolute z-50 mt-1"
+          style={{
+            top: "calc(7rem + 1px)",
+            left: "50%",
+            transform: "translateX(-50%)",
+          }}
+        >
+          <ul className="w-40 bg-card rounded-md shadow-lg overflow-hidden border border-border transition-colors duration-300">
+            {categories.map((cat) => (
+              <li
+                key={cat}
+                onClick={() => {
+                  setSelectedCategory(cat);
+                  setShowDropdown(false);
+                }}
+                className="px-4 py-2 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-green-600"
+              >
+                {cat}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Product Grid - Fixed for small screens */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8 max-w-7xl lg:mx-10 mb-20 my-13">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8 max-w-7xl mx-3 lg:mx-10 mb-20 my-7">
         {filteredProducts.length > 0 ? (
           filteredProducts.map((product) => (
             <div

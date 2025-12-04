@@ -14,76 +14,76 @@ export const ShopSection = () => {
   const [notificationText, setNotificationText] = useState("");
 
   const products = [
-    { id: 1, name: "RINGLIGHT", price: 35, image: miniRinglight },
-    { id: 2, name: "TRIPOD STAND", price: 120, image: tripodStand },
-    { id: 3, name: "LEDLIGHT", price: 35, image: ledLight },
-    { id: 4, name: "SOFTBOX", price: 100, image: softbox },
-    { id: 5, name: "PODCAST MICROPHONE", price: 30, image: podcastMic },
-    { id: 6, name: "RINGLIGHT", price: 35, image: ringlight },
-    { id: 7, name: "SOFTBOX", price: 100, image: softbox },
-    { id: 8, name: "PODCAST MICROPHONE", price: 30, image: podcastMic },
-    { id: 9, name: "RINGLIGHT", price: 35, image: ringlight },
-    { id: 10, name: "TRIPOD STAND", price: 120, image: tripodStand },
-    { id: 11, name: "LEDLIGHT", price: 35, image: ledLight },
-    { id: 12, name: "SOFTBOX", price: 100, image: softbox },
-    { id: 13, name: "PODCAST MICROPHONE", price: 30, image: podcastMic },
-    { id: 14, name: "RINGLIGHT", price: 35, image: ringlight },
-    { id: 15, name: "SOFTBOX", price: 100, image: softbox },
-    { id: 16, name: "PODCAST MICROPHONE", price: 30, image: podcastMic },
-    { id: 17, name: "RINGLIGHT", price: 35, image: ringlight },
-    { id: 18, name: "TRIPOD STAND", price: 120, image: tripodStand },
-    { id: 19, name: "LEDLIGHT", price: 35, image: ledLight },
-    { id: 20, name: "SOFTBOX", price: 100, image: softbox },
-    { id: 21, name: "PODCAST MICROPHONE", price: 30, image: podcastMic },
-    { id: 22, name: "RINGLIGHT", price: 35, image: miniRinglight },
-    { id: 23, name: "TRIPOD STAND", price: 120, image: tripodStand },
-    { id: 24, name: "LEDLIGHT", price: 35, image: ledLight },
-    { id: 25, name: "SOFTBOX", price: 100, image: softbox },
-    { id: 26, name: "PODCAST MICROPHONE", price: 30, image: podcastMic },
-    { id: 27, name: "RINGLIGHT", price: 35, image: ringlight },
-    { id: 28, name: "TRIPOD STAND", price: 120, image: tripodStand },
-    { id: 29, name: "LEDLIGHT", price: 35, image: ledLight },
-    { id: 30, name: "SOFTBOX", price: 100, image: softbox },
-    { id: 31, name: "PODCAST MICROPHONE", price: 30, image: podcastMic },
-    { id: 32, name: "RINGLIGHT", price: 35, image: ringlight },
-    { id: 33, name: "SOFTBOX", price: 100, image: softbox },
-    { id: 34, name: "PODCAST MICROPHONE", price: 30, image: podcastMic },
-    { id: 35, name: "RINGLIGHT", price: 35, image: ringlight },
-    { id: 36, name: "TRIPOD STAND", price: 120, image: tripodStand },
-    { id: 37, name: "LEDLIGHT", price: 35, image: ledLight },
-    { id: 38, name: "SOFTBOX", price: 100, image: softbox },
-    { id: 39, name: "PODCAST MICROPHONE", price: 30, image: podcastMic },
-    { id: 40, name: "RINGLIGHT", price: 35, image: ringlight },
-    { id: 41, name: "SOFTBOX", price: 100, image: softbox },
-    { id: 42, name: "PODCAST MICROPHONE", price: 30, image: podcastMic },
-    { id: 43, name: "RINGLIGHT", price: 35, image: ringlight },
-    { id: 44, name: "TRIPOD STAND", price: 120, image: tripodStand },
-    { id: 45, name: "LEDLIGHT", price: 35, image: ledLight },
-    { id: 46, name: "SOFTBOX", price: 100, image: softbox },
-    { id: 47, name: "PODCAST MICROPHONE", price: 30, image: podcastMic },
-    { id: 48, name: "RINGLIGHT", price: 35, image: ringlight },
-    { id: 49, name: "TRIPOD STAND", price: 120, image: tripodStand },
-    { id: 50, name: "LEDLIGHT", price: 35, image: ledLight },
-    { id: 51, name: "SOFTBOX", price: 100, image: softbox },
-    { id: 52, name: "PODCAST MICROPHONE", price: 30, image: podcastMic },
-    { id: 53, name: "RINGLIGHT", price: 35, image: ringlight },
-    { id: 54, name: "SOFTBOX", price: 100, image: softbox },
-    { id: 55, name: "PODCAST MICROPHONE", price: 30, image: podcastMic },
-    { id: 56, name: "RINGLIGHT", price: 35, image: ringlight },
-    { id: 57, name: "TRIPOD STAND", price: 120, image: tripodStand },
-    { id: 58, name: "LEDLIGHT", price: 35, image: ledLight },
-    { id: 59, name: "SOFTBOX", price: 100, image: softbox },
-    { id: 60, name: "PODCAST MICROPHONE", price: 30, image: podcastMic },
-    { id: 61, name: "RINGLIGHT", price: 35, image: ringlight },
-    { id: 62, name: "TRIPOD STAND", price: 120, image: tripodStand },
-    { id: 63, name: "LEDLIGHT", price: 35, image: ledLight },
+    { id: 1, name: "RINGLIGHT", price: 35000, image: miniRinglight },
+    { id: 2, name: "TRIPOD STAND", price: 12000, image: tripodStand },
+    { id: 3, name: "LEDLIGHT", price: 35000, image: ledLight },
+    { id: 4, name: "SOFTBOX", price: 10000, image: softbox },
+    { id: 5, name: "PODCAST MICROPHONE", price: 30000, image: podcastMic },
+    { id: 6, name: "RINGLIGHT", price: 35000, image: ringlight },
+    { id: 7, name: "SOFTBOX", price: 100000, image: softbox },
+    { id: 8, name: "PODCAST MICROPHONE", price: 30000, image: podcastMic },
+    { id: 9, name: "RINGLIGHT", price: 35000, image: ringlight },
+    { id: 10, name: "TRIPOD STAND", price: 12000, image: tripodStand },
+    { id: 11, name: "LEDLIGHT", price: 35000, image: ledLight },
+    { id: 12, name: "SOFTBOX", price: 10000, image: softbox },
+    { id: 13, name: "PODCAST MICROPHONE", price: 30000, image: podcastMic },
+    { id: 14, name: "RINGLIGHT", price: 35000, image: ringlight },
+    { id: 15, name: "SOFTBOX", price: 10000, image: softbox },
+    { id: 16, name: "PODCAST MICROPHONE", price: 30000, image: podcastMic },
+    { id: 17, name: "RINGLIGHT", price: 35000, image: ringlight },
+    { id: 18, name: "TRIPOD STAND", price: 12000, image: tripodStand },
+    { id: 19, name: "LEDLIGHT", price: 35000, image: ledLight },
+    { id: 20, name: "SOFTBOX", price: 10000, image: softbox },
+    { id: 21, name: "PODCAST MICROPHONE", price: 30000, image: podcastMic },
+    { id: 22, name: "RINGLIGHT", price: 35000, image: miniRinglight },
+    { id: 23, name: "TRIPOD STAND", price: 12000, image: tripodStand },
+    { id: 24, name: "LEDLIGHT", price: 35000, image: ledLight },
+    { id: 25, name: "SOFTBOX", price: 10000, image: softbox },
+    { id: 26, name: "PODCAST MICROPHONE", price: 30000, image: podcastMic },
+    { id: 27, name: "RINGLIGHT", price: 35000, image: ringlight },
+    { id: 28, name: "TRIPOD STAND", price: 12000, image: tripodStand },
+    { id: 29, name: "LEDLIGHT", price: 35000, image: ledLight },
+    { id: 30, name: "SOFTBOX", price: 10000, image: softbox },
+    { id: 31, name: "PODCAST MICROPHONE", price: 30000, image: podcastMic },
+    { id: 32, name: "RINGLIGHT", price: 35000, image: ringlight },
+    { id: 33, name: "SOFTBOX", price: 10000, image: softbox },
+    { id: 34, name: "PODCAST MICROPHONE", price: 30000, image: podcastMic },
+    { id: 35, name: "RINGLIGHT", price: 35000, image: ringlight },
+    { id: 36, name: "TRIPOD STAND", price: 12000, image: tripodStand },
+    { id: 37, name: "LEDLIGHT", price: 35000, image: ledLight },
+    { id: 38, name: "SOFTBOX", price: 10000, image: softbox },
+    { id: 39, name: "PODCAST MICROPHONE", price: 30000, image: podcastMic },
+    { id: 40, name: "RINGLIGHT", price: 35000, image: ringlight },
+    { id: 41, name: "SOFTBOX", price: 10000, image: softbox },
+    { id: 42, name: "PODCAST MICROPHONE", price: 30000, image: podcastMic },
+    { id: 43, name: "RINGLIGHT", price: 35000, image: ringlight },
+    { id: 44, name: "TRIPOD STAND", price: 12000, image: tripodStand },
+    { id: 45, name: "LEDLIGHT", price: 35000, image: ledLight },
+    { id: 46, name: "SOFTBOX", price: 10000, image: softbox },
+    { id: 47, name: "PODCAST MICROPHONE", price: 30000, image: podcastMic },
+    { id: 48, name: "RINGLIGHT", price: 35000, image: ringlight },
+    { id: 49, name: "TRIPOD STAND", price: 12000, image: tripodStand },
+    { id: 50, name: "LEDLIGHT", price: 35000, image: ledLight },
+    { id: 51, name: "SOFTBOX", price: 10000, image: softbox },
+    { id: 52, name: "PODCAST MICROPHONE", price: 30000, image: podcastMic },
+    { id: 53, name: "RINGLIGHT", price: 35000, image: ringlight },
+    { id: 54, name: "SOFTBOX", price: 10000, image: softbox },
+    { id: 55, name: "PODCAST MICROPHONE", price: 30000, image: podcastMic },
+    { id: 56, name: "RINGLIGHT", price: 35000, image: ringlight },
+    { id: 57, name: "TRIPOD STAND", price: 12000, image: tripodStand },
+    { id: 58, name: "LEDLIGHT", price: 35000, image: ledLight },
+    { id: 59, name: "SOFTBOX", price: 10000, image: softbox },
+    { id: 60, name: "PODCAST MICROPHONE", price: 30000, image: podcastMic },
+    { id: 61, name: "RINGLIGHT", price: 35000, image: ringlight },
+    { id: 62, name: "TRIPOD STAND", price: 12000, image: tripodStand },
+    { id: 63, name: "LEDLIGHT", price: 35000, image: ledLight },
   ];
 
   const PRODUCTS_PER_PAGE = 9;
 
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("ALL");
-  const [priceRange, setPriceRange] = useState(1000);
+  const [priceRange, setPriceRange] = useState(200000);
   const [showFilters, setShowFilters] = useState(false);
 
   // Filter products by category and price
@@ -134,7 +134,9 @@ export const ShopSection = () => {
   // Handle Add to Cart with notification
   const handleAddToCart = (product) => {
     addToCart(product);
-    setNotificationText(`${product.name} added to cart!`);
+    setNotificationText(
+      `${product.name} (₦${product.price.toLocaleString()}) added to cart!`
+    );
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 3000);
   };
@@ -304,8 +306,9 @@ export const ShopSection = () => {
                       <span className="text-sm">₦10K</span>
                       <input
                         type="range"
-                        min="10"
-                        max="200"
+                        min="10000" // ₦10,000
+                        max="200000" // ₦200,000
+                        step="1000"
                         value={priceRange}
                         onChange={(e) => {
                           setPriceRange(Number(e.target.value));
@@ -313,11 +316,13 @@ export const ShopSection = () => {
                         }}
                         className="w-full"
                       />
+
                       <span className="text-sm">₦200K</span>
                     </div>
                     <div className="text-sm text-gray-400 mb-2">
-                      Max: ₦{priceRange.toLocaleString()},000.00
+                      Max: ₦{priceRange.toLocaleString()}
                     </div>
+
                     <button
                       className="px-3 py-1 border rounded text-sm hover:bg-gray-400"
                       onClick={() => {
@@ -371,7 +376,7 @@ export const ShopSection = () => {
                       {product.name}
                     </h6>
                     <p className="font-bold text-base md:text-lg">
-                      ₦{product.price.toLocaleString()},000.00
+                      ₦{product.price.toLocaleString()}
                     </p>
                     <button
                       className="normal-button w-full py-2 text-sm md:text-base"

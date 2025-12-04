@@ -151,14 +151,14 @@ export const HomeSection = () => {
   return (
     <section
       id="Home"
-      className="relative min-h-screen items-center justify-center pt-24"
+      className="relative min-h-screen items-center justify-center lg:pt-24 pt-14"
     >
       {/* Hero Section */}
-      <div className="flex items-center justify-center px-4">
-        <div className="container max-w-6xl mx-auto">
+      <div className="flex items-center justify-center px-0 md:px-4">
+        <div className="w-full  mx-auto lg:px-2 px-0 md:px-4">
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div className="ursor-typewriter space-y-6 text-center md:text-left order-2 md:order-1 px-2 sm:px-4">
-              <h1 className="ctext-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight">
+            <div className="cursor-typewriter space-y-6 text-center md:text-left order-2 md:order-1 px-2 sm:px-4">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight">
                 <span>Manage, </span>
                 <span>Organize </span>
                 <span>and Enhance Your Digital Content!</span>
@@ -171,7 +171,7 @@ export const HomeSection = () => {
 
               <div className="pt-4 animate-fade-in-delay-3">
                 <a
-                  href="#contact"
+                  href="contact"
                   className="normal-button inline-block text-sm sm:text-base"
                 >
                   Connect with me
@@ -184,7 +184,7 @@ export const HomeSection = () => {
               <img
                 src={myImage}
                 alt=""
-                className="w-100 h-82 sm:w-100 sm:h-82 md:w-[30rem] md:h-[20rem] lg:w-[27rem] lg:h-[27rem] object-cover animate-fade-in-delay-1 hover:scale-105 transition-transform duration-500 drop-shadow-2xl rounded-3xl max-w-full"
+                className="w-full h-100 md:w-[30rem] md:h-[20rem] lg:w-[27rem] lg:h-[27rem] object-cover lg:hover:scale-105 transition-transform duration-500 drop-shadow-2xl lg:rounded-3xl "
               />
             </div>
           </div>
@@ -268,7 +268,6 @@ export const HomeSection = () => {
               ))}
             </div>
           </div>
-          
         </div>
       </div>
       {/* Customer Review Section */}

@@ -1,9 +1,10 @@
 import { cn } from "../lib/utils";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useContext } from "react";
 import { ShoppingCart, User, Search, Menu, X, Heart } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { useCart } from "./CartSection"; // ✅ Import useCart
-import { useWishlist } from "./WishlistSection"; // ✅ Import useWishlist
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useCart } from "./CartSection";
+import { useWishlist } from "./WishlistSection";
+import { SearchContext } from "./SearchContext"; // ✅ Correct (same folder)
 
 const navItems = [
   { name: "Home", href: "/" },
@@ -13,19 +14,23 @@ const navItems = [
 ];
 
 export const NavBar = () => {
-  const { totalItems } = useCart(); // ✅ Get total items from cart
-  const { totalWishlistItems } = useWishlist(); // ✅ Get total wishlist items
+  const { totalItems } = useCart();
+  const { totalWishlistItems } = useWishlist();
+
+  // ✅ Connect to SearchContext
+  const { searchQuery, setSearchQuery } = useContext(SearchContext);
+
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [theme, setTheme] = useState("light");
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const searchRef = useRef(null);
   const navigate = useNavigate();
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
+  const location = useLocation();
 
   // Scroll behavior
   useEffect(() => {
@@ -70,15 +75,24 @@ export const NavBar = () => {
     localStorage.setItem("theme", newTheme);
   };
 
-  // ✅ Fetch user info from localStorage
+  // Fetch user info from localStorage
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user")) || {};
     if (storedUser.name) setUserName(storedUser.name);
     if (storedUser.email) setUserEmail(storedUser.email);
   }, []);
 
-  // ✅ Check if user is logged in
+  // Check if user is logged in
   const isLoggedIn = userName && userEmail;
+
+  // ✅ Handle search submission - navigate to search page
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate("/search");
+      setIsSearchOpen(false);
+    }
+  };
 
   return (
     <nav
@@ -126,7 +140,7 @@ export const NavBar = () => {
               <Search size={22} />
             </button>
 
-            {/* ✅ WISHLIST WITH BADGE */}
+            {/* WISHLIST WITH BADGE */}
             <button
               onClick={() => navigate("/wishlist")}
               aria-label="Wishlist"
@@ -140,7 +154,7 @@ export const NavBar = () => {
               )}
             </button>
 
-            {/* ✅ SHOPPING CART WITH BADGE */}
+            {/* SHOPPING CART WITH BADGE */}
             <button
               onClick={() => navigate("/cart")}
               aria-label="Shopping Cart"
@@ -165,7 +179,6 @@ export const NavBar = () => {
             {/* ACCOUNT DROPDOWN */}
             {isAccountOpen && (
               <div className="fixed right-4 top-20 w-72 bg-card border border-border rounded-xl shadow-lg p-4 z-50 hidden md:block">
-                {/* Close Button */}
                 <button
                   onClick={() => setIsAccountOpen(false)}
                   className="absolute top-4 right-3 text-muted-foreground hover:text-foreground transition-colors p-2 cursor-pointer"
@@ -225,9 +238,8 @@ export const NavBar = () => {
           </div>
         </div>
 
-        {/* ✅ MOBILE ICONS - Search, Cart, and Hamburger */}
+        {/* MOBILE ICONS */}
         <div className="flex md:hidden items-center">
-          {/* Mobile Search Icon */}
           <button
             onClick={() => setIsSearchOpen(!isSearchOpen)}
             aria-label="Search"
@@ -236,7 +248,6 @@ export const NavBar = () => {
             <Search size={20} />
           </button>
 
-          {/* Mobile Cart Icon with Badge */}
           <button
             onClick={() => navigate("/cart")}
             aria-label="Shopping Cart"
@@ -250,7 +261,6 @@ export const NavBar = () => {
             )}
           </button>
 
-          {/* Mobile Hamburger Menu */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="text-foreground p-2 hover:bg-primary/10 rounded-lg transition-colors"
@@ -262,7 +272,7 @@ export const NavBar = () => {
         </div>
       </div>
 
-      {/* SEARCH DROPDOWN */}
+      {/* ✅ SEARCH DROPDOWN - NOW CONNECTED TO CONTEXT & NAVIGATES TO SEARCH PAGE */}
       {isSearchOpen && (
         <div
           ref={searchRef}
@@ -277,16 +287,30 @@ export const NavBar = () => {
             </button>
             <input
               type="text"
-              placeholder="Search content tools..."
+              placeholder="Search anything..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-3 pr-12 rounded-lg border border-border bg-background text-foreground focus:outline-none"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSearchSubmit();
+                }
+              }}
+              className="w-full px-4 py-3 pr-12 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              autoFocus
             />
             {searchQuery && (
-              <p className="text-sm text-muted-foreground mt-2">
-                Searching for:{" "}
-                <span className="font-medium">{searchQuery}</span>
-              </p>
+              <div className="mt-2 flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Press Enter or{" "}
+                  <button
+                    onClick={handleSearchSubmit}
+                    className="text-primary hover:underline font-medium"
+                  >
+                    click here
+                  </button>{" "}
+                  to search
+                </p>
+              </div>
             )}
           </div>
         </div>
@@ -323,7 +347,12 @@ export const NavBar = () => {
                 key={item.name}
                 to={item.href}
                 onClick={handleNavClick}
-                className="text-foreground hover:text-primary transition-colors duration-300 text-lg text-foreground/80 py-2 border-border/50"
+                className={cn(
+                  "text-lg py-2 transition-colors duration-300",
+                  location.pathname === item.href
+                    ? "text-primary font-semibold"
+                    : "text-foreground/80 hover:text-primary"
+                )}
               >
                 {item.name}
               </Link>
@@ -399,7 +428,6 @@ export const NavBar = () => {
                 </span>
               </div>
 
-              {/* Toggle Button */}
               <button
                 onClick={toggleTheme}
                 className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors duration-300 ${
@@ -417,7 +445,7 @@ export const NavBar = () => {
         </div>
       </div>
 
-      {/* ✅ ACCOUNT POPUP — CENTERED ON SMALL SCREEN */}
+      {/* ACCOUNT POPUP — CENTERED ON SMALL SCREEN */}
       {isAccountOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-[999] bg-black/50 backdrop-blur-sm md:hidden">
           <div className="relative w-[90%] max-w-sm bg-card border border-border rounded-2xl shadow-lg p-6">
