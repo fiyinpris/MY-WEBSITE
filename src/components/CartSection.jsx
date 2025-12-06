@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { Trash2, Edit, Plus, Minus, ShoppingCart } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const CartContext = createContext();
 
@@ -270,9 +271,11 @@ export const CartPage = () => {
                 </div>
               </div>
 
-              <button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 rounded-lg transition-colors mb-4 sm:mb-6 text-sm sm:text-base">
-                Proceed to Checkout
-              </button>
+              <Link to="">
+                <button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 rounded-lg transition-colors mb-4 sm:mb-6 text-sm sm:text-base">
+                  Proceed to Checkout
+                </button>
+              </Link>
 
               <p className="text-xs sm:text-sm text-center text-muted-foreground mb-4 sm:mb-6">
                 Estimated Delivery by{" "}

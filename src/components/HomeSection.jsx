@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { FaWhatsapp } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 import myImage from "../Images/image 7.jpg";
 import {
@@ -170,12 +171,12 @@ export const HomeSection = () => {
               </p>
 
               <div className="pt-4 animate-fade-in-delay-3">
-                <a
-                  href="contact"
+                <Link
+                  to="/contact"
                   className="normal-button inline-block text-sm sm:text-base"
                 >
                   Connect with me
-                </a>
+                </Link>
               </div>
             </div>
 

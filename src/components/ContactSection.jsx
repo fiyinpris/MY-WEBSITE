@@ -188,7 +188,7 @@ export const ContactSection = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="you@example.com"
+                    placeholder="Email"
                     required
                     className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
                   />

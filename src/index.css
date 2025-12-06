@@ -177,11 +177,18 @@ body::before {
   width: 100%;
   height: 100%;
   z-index: -2;
-  background: linear-gradient(315deg, #006400, #228b22, #3cb371, #90ee90);
+  background: linear-gradient(
+    315deg,
+    #006400 0%,
+    #0d7928 25%,
+    #228b22 50%,
+    #52a578 75%,
+    #90ee90 100%
+  );
   background-size: 400% 400%;
   animation: morphGradient 20s ease infinite;
-  opacity: 0.25;
-  transition: opacity 0.3s ease;
+  opacity: 0.3;
+  transition: opacity 0.1s ease;
 }
 :root.dark body::before {
   background: linear-gradient(315deg, #064e3b, #10b981, #059669, #34d399);
@@ -253,11 +260,11 @@ body::before {
 /* WAVES */
 .wave {
   background: rgb(255 255 255 / 25%);
-  border-radius: 1000% 1000% 0 0;
+  border-radius: 200% 200% 0 0;
   position: fixed;
   width: 200%;
-  height: 12em;
-  animation: wave 10s -3s linear infinite;
+  height: 15em;
+  animation: wave 10s -5s linear infinite;
   transform: translate3d(0, 0, 0);
   opacity: 0.8;
   bottom: 0;
@@ -427,7 +434,7 @@ body::before {
 .split-text-container {
   display: flex;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: bold;
   text-transform: uppercase;
   overflow: hidden;
@@ -491,7 +498,9 @@ body::before {
     transform: translateX(0);
   }
   100% {
-    transform: translateX(calc(-164px * 8)); /* 160px card + 16px gap (4 * 4px) */
+    transform: translateX(
+      calc(-164px * 8)
+    ); /* 160px card + 16px gap (4 * 4px) */
   }
 }
 

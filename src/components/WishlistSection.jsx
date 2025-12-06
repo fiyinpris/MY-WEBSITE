@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { Trash2, ShoppingCart, Heart } from "lucide-react";
 import { useCart } from "./CartSection";
+import { Link } from "react-router-dom";
 
 const WishlistContext = createContext();
 
@@ -87,9 +88,9 @@ export const WishlistPage = () => {
           <p className="text-muted-foreground mb-6">
             Add products you love to see them here.
           </p>
-          <a href="/products" className="normal-button">
+          <Link to="/shop" className="normal-button">
             Continue Shopping
-          </a>
+          </Link>
         </div>
       </div>
     );
