@@ -384,7 +384,7 @@ export const HomeSection = () => {
         </div>
 
         <div
-          className="w-full max-w-lg bg-white dark:bg-background sm:shadow-lg sm:border sm:rounded-2xl p-6 sm:p-8"
+          className="w-full max-w-lg bg-white dark:bg-background sm:shadow-lg sm:border sm:rounded-2xl sm:p-8"
           style={{ opacity: 1, transition: "opacity 0.1s ease-in" }}
         >
           <form onSubmit={handleSubmit} className="space-y-6">
