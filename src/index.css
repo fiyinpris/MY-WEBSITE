@@ -516,3 +516,37 @@ body::before {
   text-decoration: none !important;
   border-bottom: none !important;
 }
+/* Fade In Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Custom Scrollbar Styles */
+div::-webkit-scrollbar {
+  height: 6px;
+}
+
+@media (min-width: 640px) {
+  div::-webkit-scrollbar {
+    height: 8px;
+  }
+}
+
+div::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+div::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+div::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

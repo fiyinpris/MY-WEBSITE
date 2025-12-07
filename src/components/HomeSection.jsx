@@ -1,18 +1,24 @@
-import { useState, useEffect } from "react";
-import { FaWhatsapp } from "react-icons/fa";
-import { Link } from "react-router-dom";
-
-import myImage from "../Images/image 7.jpg";
+// src/components/HomeSection.jsx
+import React, { useState, useEffect } from "react";
 import {
-  ArrowBigLeft,
-  ArrowBigRight,
+  Send,
   ShoppingCart,
   Star,
-  Send,
-  Facebook,
-  Instagram,
+  ArrowBigLeft,
+  ArrowBigRight,
 } from "lucide-react";
-import { cn } from "../lib/utils";
+
+// keep your original filenames (spaces allowed) — ensure the files exist at these paths
+import myImage1 from "../Images/image 7.jpg";
+import myImage2 from "../Images/image 6.webp";
+import myImage3 from "../Images/image 4.jpg";
+
+// small classnames helper (you used `cn` elsewhere)
+function cn(...inputs) {
+  return inputs.filter(Boolean).join(" ");
+}
+
+const carouselImages = [myImage1, myImage2, myImage3];
 
 const products = [
   {
@@ -20,7 +26,6 @@ const products = [
     name: "LED 600",
     price: "#43,000.00 NGN",
     rating: 4.8,
-    reviews: 156,
     image:
       "https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?w=500&q=80",
     badge: "Bestseller",
@@ -30,7 +35,6 @@ const products = [
     name: "LED 800",
     price: "#57,000.00 NGN",
     rating: 4.9,
-    reviews: 203,
     image:
       "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&q=80",
     badge: "Bestseller",
@@ -40,49 +44,17 @@ const products = [
     name: "K29 Tripod",
     price: "#30,000.00 NGN",
     rating: 4.7,
-    reviews: 89,
     image:
       "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&q=80",
     badge: "Bestseller",
   },
   {
     id: 4,
-    name: "LED 600",
-    price: "#43,000.00 NGN",
-    rating: 4.8,
-    reviews: 156,
-    image:
-      "https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?w=500&q=80",
-    badge: "Bestseller",
-  },
-  {
-    id: 5,
-    name: "LED 800",
-    price: "#57,000.00 NGN",
-    rating: 4.9,
-    reviews: 203,
-    image:
-      "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&q=80",
-    badge: "Bestseller",
-  },
-  {
-    id: 3,
     name: "K29 Tripod",
     price: "#30,000.00 NGN",
     rating: 4.7,
-    reviews: 89,
     image:
       "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&q=80",
-    badge: "Bestseller",
-  },
-  {
-    id: 4,
-    name: "LED 600",
-    price: "#43,000.00 NGN",
-    rating: 4.8,
-    reviews: 156,
-    image:
-      "https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?w=500&q=80",
     badge: "Bestseller",
   },
   {
@@ -90,14 +62,21 @@ const products = [
     name: "LED 800",
     price: "#57,000.00 NGN",
     rating: 4.9,
-    reviews: 203,
     image:
       "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&q=80",
+    badge: "Bestseller",
+  },
+  {
+    id: 6,
+    name: "K29 Tripod",
+    price: "#30,000.00 NGN",
+    rating: 4.7,
+    image:
+      "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&q=80",
     badge: "Bestseller",
   },
 ];
 
-// Customer reviews
 const reviews = [
   {
     id: 1,
@@ -120,6 +99,7 @@ const reviews = [
 ];
 
 export const HomeSection = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
   const [currentReview, setCurrentReview] = useState(0);
   const [formData, setFormData] = useState({
     name: "",
@@ -127,13 +107,20 @@ export const HomeSection = () => {
     contactnumber: "",
     message: "",
   });
-
   const [isSending, setIsSending] = useState(false);
+
+  // Auto-scroll carousel every 4s
+  useEffect(() => {
+    if (!carouselImages || carouselImages.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSending(true);
-
     setTimeout(() => {
       alert("Message sent!");
       setFormData({ name: "", email: "", contactnumber: "", message: "" });
@@ -150,48 +137,105 @@ export const HomeSection = () => {
   };
 
   return (
-    <section
-      id="Home"
-      className="relative min-h-screen items-center justify-center lg:pt-24 pt-14"
-    >
-      {/* Hero Section */}
-      <div className="flex items-center justify-center px-0 md:px-4">
-        <div className="w-full  mx-auto lg:px-2 px-0 md:px-4">
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div className="cursor-typewriter space-y-6 text-center md:text-left order-2 md:order-1 px-2 sm:px-4">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight">
-                <span>Manage, </span>
-                <span>Organize </span>
-                <span>and Enhance Your Digital Content!</span>
-              </h1>
+    <section className="relative w-full">
+      {/* Full Width Auto-Scrolling Carousel */}
+      <div className="relative w-full h-[60vh] sm:h-[65vh] md:h-[75vh] lg:h-[90vh] overflow-hidden mb-6 md:mb-8">
+        {/* Background Image - centered properly */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000 ease-in-out"
+          style={{
+            backgroundImage: `url(${carouselImages[currentSlide]})`,
+            backgroundPosition: "center center",
+          }}
+        />
 
-              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed animate-fade-in-delay-4">
-                Built to save time, boost accuracy, and make working with
-                content smoother than ever.
-              </p>
+        {/* Dark Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70" />
 
-              <div className="pt-4 animate-fade-in-delay-3">
-                <Link
-                  to="/contact"
-                  className="normal-button inline-block text-sm sm:text-base"
-                >
-                  Connect with me
-                </Link>
-              </div>
-            </div>
+        {/* Content Container - Text Overlay on Image */}
+        <div className="relative h-full flex items-center justify-center px-4 sm:px-6 md:px-8">
+          <div className="text-center text-white drop-shadow-2xl max-w-5xl w-full">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-4 md:mb-6">
+              Manage, Organize and Enhance Your Digital Content!
+            </h1>
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 leading-relaxed mb-6 md:mb-8 px-2">
+              Built to save time, boost accuracy, and make working with content
+              smoother than ever.
+            </p>
+            <button className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 sm:px-5 sm:py-2 md:px-4 md:py-3 text-sm sm:text-base md:text-lg rounded-lg font-semibold transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105">
+              Connect with me
+            </button>
+          </div>
+        </div>
 
-            {/* Image */}
-            <div className="flex justify-center order-1 md:order-2 w-full">
-              <img
-                src={myImage}
-                alt=""
-                className="w-full h-100 md:w-[30rem] md:h-[20rem] lg:w-[27rem] lg:h-[27rem] object-cover lg:hover:scale-105 transition-transform duration-500 drop-shadow-2xl lg:rounded-3xl "
+        {/* Slide Indicators with Arrows at Each End (arrows far left/right on large screens) */}
+        <div className="absolute bottom-4 sm:bottom-6 w-full px-6 flex items-center justify-center sm:justify-between z-10">
+          {/* Left Arrow (visible on sm and up) */}
+          <div className="hidden sm:block">
+            <button
+              onClick={() =>
+                setCurrentSlide(
+                  (currentSlide - 1 + (carouselImages?.length || 1)) %
+                    (carouselImages?.length || 1)
+                )
+              }
+              className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 transition-all duration-300"
+              aria-label="Previous slide"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Dot Indicators (centered) */}
+          <div className="flex gap-2 sm:absolute sm:left-1/2 sm:-translate-x-1/2">
+            {carouselImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`${
+                  currentSlide === index
+                    ? "bg-white w-6 sm:w-8 h-1.5 sm:h-2 rounded-full transition-all duration-300"
+                    : "bg-white/50 w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full transition-all duration-300 hover:bg-white/75"
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
               />
-            </div>
+            ))}
+          </div>
+
+          {/* Right Arrow (visible on sm and up) */}
+          <div className="hidden sm:block">
+            <button
+              onClick={() =>
+                setCurrentSlide(
+                  (currentSlide + 1) % (carouselImages?.length || 1)
+                )
+              }
+              className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 transition-all duration-300"
+              aria-label="Next slide"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
-
       {/* Best Selling Carousel */}
       <div className="mt-20 p-4 overflow-hidden">
         <div className="max-w-6xl mx-auto text-center">
@@ -270,7 +314,7 @@ export const HomeSection = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div>{" "}
       {/* Customer Review Section */}
       <div className="flex flex-col justify-center items-center bg-green-200 mt-20 w-full min-h-[400px] sm:min-h-[450px] px-4 py-10 dark:text-black relative">
         <p className="font-bold text-2xl sm:text-3xl text-center">
@@ -281,15 +325,16 @@ export const HomeSection = () => {
           <button
             onClick={handlePrevReview}
             className="hidden sm:flex absolute left-[-4rem] top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full p-2 sm:p-3 hover:bg-primary/90 transition"
+            aria-label="Previous review"
           >
             <ArrowBigLeft size={20} />
           </button>
 
           <div className="flex justify-center -mt-16">
             <img
-              src={reviews[currentReview].image || "myImage2"}
+              src={reviews[currentReview].image}
               alt={reviews[currentReview].name}
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border border-white dark:border-gray-800 shadow-md object-cover mb-8"
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full  border-white dark:border-gray-800 shadow-md object-cover mb-8"
             />
           </div>
 
@@ -303,6 +348,7 @@ export const HomeSection = () => {
           <button
             onClick={handleNextReview}
             className="hidden sm:flex absolute right-[-4rem] top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full p-2 sm:p-3 hover:bg-primary/90 transition"
+            aria-label="Next review"
           >
             <ArrowBigRight size={20} />
           </button>
@@ -311,19 +357,20 @@ export const HomeSection = () => {
             <button
               onClick={handlePrevReview}
               className="bg-primary text-white rounded-full p-3 hover:bg-primary/90 transition"
+              aria-label="Previous review mobile"
             >
               <ArrowBigLeft size={20} />
             </button>
             <button
               onClick={handleNextReview}
               className="bg-primary text-white rounded-full p-3 hover:bg-primary/90 transition"
+              aria-label="Next review mobile"
             >
               <ArrowBigRight size={20} />
             </button>
           </div>
         </div>
       </div>
-
       {/* Contact Form Section */}
       <div className="flex flex-col md:flex-row justify-center items-center gap-8 bg-white py-16 px-6 sm:px-12 dark:bg-background">
         <div className="text-center md:text-left max-w-md">
@@ -337,10 +384,10 @@ export const HomeSection = () => {
         </div>
 
         <div
-          className="w-full max-w-lg bg-white dark:bg-background sm:shadow-lg sm:border sm:rounded-2xl p- sm:p-8"
+          className="w-full max-w-lg bg-white dark:bg-background sm:shadow-lg sm:border sm:rounded-2xl p-6 sm:p-8"
           style={{ opacity: 1, transition: "opacity 0.1s ease-in" }}
         >
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="space-y-6">
             <input type="hidden" name="to_name" value="Fiyinfoluwa" />
             <input
               type="hidden"
@@ -416,3 +463,5 @@ export const HomeSection = () => {
     </section>
   );
 };
+
+export default HomeSection;
