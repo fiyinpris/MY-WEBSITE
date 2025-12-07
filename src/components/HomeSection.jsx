@@ -139,7 +139,7 @@ export const HomeSection = () => {
   return (
     <section className="relative w-full">
       {/* Full Width Auto-Scrolling Carousel */}
-      <div className="relative w-full h-[60vh] sm:h-[65vh] md:h-[75vh] lg:h-[90vh] overflow-hidden mb-6 md:mb-8">
+      <div className="relative w-full h-[80vh] sm:h-[75vh] md:h-[75vh] lg:h-[90vh] overflow-hidden md:mb-8">
         {/* Background Image - centered properly */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000 ease-in-out"
@@ -237,7 +237,7 @@ export const HomeSection = () => {
         </div>
       </div>
       {/* Best Selling Carousel */}
-      <div className="mt-20 p-4 overflow-hidden">
+      <div className="mt-12 p-4 overflow-hidden">
         <div className="max-w-6xl mx-auto text-center">
           <h4 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">
             Best <span className="text-primary">Selling</span>
