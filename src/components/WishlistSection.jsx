@@ -107,7 +107,7 @@ export const WishlistPage = () => {
 
       <div className="w-full px-4 max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+        <div className="flex flex-row sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">
             My Wishlist
           </h1>
