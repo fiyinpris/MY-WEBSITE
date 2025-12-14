@@ -62,7 +62,7 @@ export const SearchSection = () => {
 
   return (
     <section className="pt-24 pb-10 min-h-screen bg-background">
-      <div className="container mx-auto max-w-6xl">
+      <div className="container mx-auto max-w-6xl px-4">
         {/* Back Navigation */}
         <div className="flex items-center gap-4 mb-6">
           <button
@@ -88,29 +88,29 @@ export const SearchSection = () => {
           Find your perfect lighting equipment and accessories
         </p>
 
-        {/* Search Bar */}
+        {/* Search Bar - FIXED SPACING */}
         <div className="relative mb-12 max-w-2xl mx-auto">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search for ringlights, tripods, LED lights, microphones..."
-            className="w-full pl-12 pr-12 py-4 rounded-full border-2 border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all text-lg"
+            className="w-full pl-14 pr-20 py-4 rounded-full border-2 border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all text-lg"
             autoFocus
           />
 
           <Search
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+            className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground"
             size={24}
           />
 
           {searchQuery && (
             <button
               onClick={handleClear}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-2"
+              className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-2 rounded-full hover:bg-muted"
               aria-label="Clear search"
             >
-              <X size={20} />
+              <X size={22} />
             </button>
           )}
         </div>
@@ -226,7 +226,7 @@ export const SearchSection = () => {
 
         {/* Empty State - When no search query */}
         {!searchQuery && (
-          <div className="text-center">
+          <div className="text-center py-10">
             <div className="mb-6">
               <Search
                 size={64}

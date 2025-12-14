@@ -10,8 +10,8 @@ import {
 
 // keep your original filenames (spaces allowed) — ensure the files exist at these paths
 import myImage1 from "../Images/image 7.jpg";
-import myImage2 from "../Images/image 6.webp";
-import myImage3 from "../Images/image 4.jpg";
+import myImage2 from "../Images/image 16.jpg";
+import myImage3 from "../Images/image 15.jpg";
 
 // small classnames helper (you used `cn` elsewhere)
 function cn(...inputs) {
@@ -168,74 +168,66 @@ export const HomeSection = () => {
           </div>
         </div>
 
-        {/* Slide Indicators with Arrows at Each End (arrows far left/right on large screens) */}
-        <div className="absolute bottom-4 sm:bottom-6 w-full px-6 flex items-center justify-center sm:justify-between z-10">
-          {/* Left Arrow (visible on sm and up) */}
-          <div className="hidden sm:block">
-            <button
-              onClick={() =>
-                setCurrentSlide(
-                  (currentSlide - 1 + (carouselImages?.length || 1)) %
-                    (carouselImages?.length || 1)
-                )
-              }
-              className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 transition-all duration-300"
-              aria-label="Previous slide"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </button>
-          </div>
+        {/* Navigation Arrows - Center Left and Right (All Screens) */}
+        <button
+          onClick={() =>
+            setCurrentSlide(
+              (currentSlide - 1 + carouselImages.length) % carouselImages.length
+            )
+          }
+          className="absolute lg-left-2 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-1 lg-p-2 sm:p-3 transition-all duration-300 z-10"
+          aria-label="Previous slide"
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="sm:w-6 sm:h-6"
+          >
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
 
-          {/* Dot Indicators (centered) */}
-          <div className="flex gap-2 sm:absolute sm:left-1/2 sm:-translate-x-1/2">
-            {carouselImages.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`${
-                  currentSlide === index
-                    ? "bg-white w-6 sm:w-8 h-1.5 sm:h-2 rounded-full transition-all duration-300"
-                    : "bg-white/50 w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full transition-all duration-300 hover:bg-white/75"
-                }`}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
-          </div>
+        <button
+          onClick={() =>
+            setCurrentSlide((currentSlide + 1) % carouselImages.length)
+          }
+          className="absolute lg-right-2 right-0 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full lg-p-2 p-1 sm:p-3 transition-all duration-300 z-10"
+          aria-label="Next slide"
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="sm:w-6 sm:h-6"
+          >
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </button>
 
-          {/* Right Arrow (visible on sm and up) */}
-          <div className="hidden sm:block">
+        {/* Dot Indicators - Bottom Center */}
+        <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          {carouselImages.map((_, index) => (
             <button
-              onClick={() =>
-                setCurrentSlide(
-                  (currentSlide + 1) % (carouselImages?.length || 1)
-                )
-              }
-              className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 transition-all duration-300"
-              aria-label="Next slide"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </button>
-          </div>
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`${
+                currentSlide === index
+                  ? "bg-white w-6 sm:w-8 h-1.5 sm:h-2 rounded-full transition-all duration-300"
+                  : "bg-white/50 w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full transition-all duration-300 hover:bg-white/75"
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
         </div>
       </div>
+
       {/* Best Selling Carousel */}
       <div className="mt-12 p-4 overflow-hidden">
         <div className="max-w-6xl mx-auto text-center">
@@ -314,7 +306,8 @@ export const HomeSection = () => {
             </div>
           </div>
         </div>
-      </div>{" "}
+      </div>
+
       {/* Customer Review Section */}
       <div className="flex flex-col justify-center items-center bg-green-200 mt-20 w-full min-h-[400px] sm:min-h-[450px] px-4 py-10 dark:text-black relative">
         <p className="font-bold text-2xl sm:text-3xl text-center">
@@ -334,7 +327,7 @@ export const HomeSection = () => {
             <img
               src={reviews[currentReview].image}
               alt={reviews[currentReview].name}
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full  border-white dark:border-gray-800 shadow-md object-cover mb-8"
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border border-white dark:border-gray-800 shadow-md object-cover mb-8"
             />
           </div>
 
@@ -371,6 +364,7 @@ export const HomeSection = () => {
           </div>
         </div>
       </div>
+
       {/* Contact Form Section */}
       <div className="flex flex-col md:flex-row justify-center items-center gap-8 bg-white py-16 px-6 sm:px-12 dark:bg-background">
         <div className="text-center md:text-left max-w-md">

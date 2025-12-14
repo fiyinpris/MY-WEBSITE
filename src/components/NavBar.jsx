@@ -114,67 +114,129 @@ export const NavBar = () => {
         </Link>
 
         {/* Desktop view */}
-        <div className="hidden md:flex items-center space-x-6 lg:space-x-8 lg:mr-10 relative">
-          {navItems.map((item) => (
-            <Link
-              key={item.name}
-              to={item.href}
-              onClick={handleNavClick}
-              className={cn(
-                "inline-block text-foreground hover:text-primary transition-colors duration-300 text-lg pt-0 pb-2",
-                location.pathname === item.href &&
-                  "relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:bg-green-500 after:rounded-full text-primary"
+        <div className="hidden md:flex items-center space-x-3 lg:space-x-6 xl:space-x-8 lg:mr-6 xl:mr-10 relative">
+          {/* Show Navigation Items OR Search Bar */}
+          {!isSearchOpen ? (
+            <>
+              {navItems.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  onClick={handleNavClick}
+                  className={cn(
+                    "inline-block text-foreground hover:text-primary transition-colors duration-300 text-base lg:text-lg pt-0 pb-2",
+                    location.pathname === item.href &&
+                      "relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:bg-green-500 after:rounded-full text-primary"
+                  )}
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </>
+          ) : (
+            /* Search Bar in Place of Navigation */
+            <div className="flex items-center gap-2 animate-fadeIn">
+              <input
+                type="text"
+                placeholder="Search anything..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearchSubmit();
+                  }
+                }}
+                className="w-[400px] lg:w-[500px] pl-4 pr-10 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                autoFocus
+              />
+              <button
+                onClick={() => setIsSearchOpen(false)}
+                className="text-muted-foreground hover:text-foreground p-2 rounded-full hover:bg-muted transition-colors"
+              >
+                <X size={20} />
+              </button>
+              {searchQuery && (
+                <button
+                  onClick={handleSearchSubmit}
+                  className="text-primary hover:underline font-medium text-sm whitespace-nowrap"
+                >
+                  Search
+                </button>
               )}
-            >
-              {item.name}
-            </Link>
-          ))}
+            </div>
+          )}
 
-          {/* Desktop Icons */}
-          <div className="flex items-center space-x-4 ml-4 relative">
-            <button
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              aria-label="Search"
-              className="text-foreground/80 hover:text-primary transition-colors duration-300 hover:scale-110 transition-transform"
-            >
-              <Search size={22} />
-            </button>
+          {/* Desktop Icons with Tooltips */}
+          <div className="flex items-center space-x-2 lg:space-x-4 ml-2 lg:ml-4 relative">
+            {/* Search Icon with Tooltip */}
+            <div className="relative group">
+              <button
+                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                aria-label="Search"
+                className="text-foreground/80 hover:text-primary transition-colors duration-300 hover:scale-110 transition-transform cursor-pointer"
+              >
+                <Search size={22} />
+              </button>
+              {/* Tooltip - Only on md and lg screens */}
+              <span className="hidden md:block absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-50">
+                Search
+              </span>
+            </div>
 
-            {/* WISHLIST WITH BADGE */}
-            <button
-              onClick={() => navigate("/wishlist")}
-              aria-label="Wishlist"
-              className="text-foreground/80 cursor-pointer hover:text-primary transition-colors duration-300 hover:scale-110 transition-transform relative"
-            >
-              <Heart size={22} />
-              {totalWishlistItems > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {totalWishlistItems}
-                </span>
-              )}
-            </button>
+            {/* WISHLIST WITH BADGE and Tooltip */}
+            <div className="relative group">
+              <button
+                onClick={() => navigate("/wishlist")}
+                aria-label="Wishlist"
+                className="text-foreground/80 hover:text-primary transition-colors duration-300 hover:scale-110 transition-transform relative cursor-pointer"
+              >
+                <Heart size={22} />
+                {totalWishlistItems > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {totalWishlistItems}
+                  </span>
+                )}
+              </button>
+              {/* Tooltip - Only on md and lg screens */}
+              <span className="hidden md:block absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-50">
+                Wishlist
+              </span>
+            </div>
 
-            {/* SHOPPING CART WITH BADGE */}
-            <button
-              onClick={() => navigate("/cart")}
-              aria-label="Shopping Cart"
-              className="text-foreground/80 cursor-pointer hover:text-primary transition-colors duration-300 hover:scale-110 transition-transform relative"
-            >
-              <ShoppingCart size={22} />
-              {totalItems > 0 && (
-                <span className="absolute -top-2 -right-2 bg-green-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
-                  {totalItems}
-                </span>
-              )}
-            </button>
+            {/* SHOPPING CART WITH BADGE and Tooltip */}
+            <div className="relative group">
+              <button
+                onClick={() => navigate("/cart")}
+                aria-label="Shopping Cart"
+                className="text-foreground/80 hover:text-primary transition-colors duration-300 hover:scale-110 transition-transform relative cursor-pointer"
+              >
+                <ShoppingCart size={22} />
+                {totalItems > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-green-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                    {totalItems}
+                  </span>
+                )}
+              </button>
+              {/* Tooltip - Only on md and lg screens */}
+              <span className="hidden md:block absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-50">
+                Cart
+              </span>
+            </div>
 
-            <button
-              onClick={() => setIsAccountOpen(!isAccountOpen)}
-              aria-label="User Account"
-              className="text-foreground/80 hover:text-primary transition-colors duration-300 hover:scale-110 transition-transform"
-            >
-              <User size={22} />
-            </button>
+            {/* Account Icon with Tooltip */}
+            <div className="relative group">
+              <button
+                onClick={() => setIsAccountOpen(!isAccountOpen)}
+                aria-label="User Account"
+                className="text-foreground/80 hover:text-primary transition-colors duration-300 hover:scale-110 transition-transform cursor-pointer"
+              >
+                <User size={22} />
+              </button>
+              {/* Tooltip - Only on md and lg screens */}
+              <span className="hidden md:block absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-50">
+                Account
+              </span>
+            </div>
 
             {/* ACCOUNT DROPDOWN */}
             {isAccountOpen && (
@@ -281,7 +343,7 @@ export const NavBar = () => {
           <div className="container mx-auto max-w-2xl px-4 py-4 relative">
             <button
               onClick={() => setIsSearchOpen(false)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-2"
+              className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-2 rounded-full hover:bg-muted transition-colors"
             >
               <X size={20} />
             </button>
@@ -295,7 +357,7 @@ export const NavBar = () => {
                   handleSearchSubmit();
                 }
               }}
-              className="w-full px-4 py-3 pr-12 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full pl-4 pr-14 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               autoFocus
             />
             {searchQuery && (
