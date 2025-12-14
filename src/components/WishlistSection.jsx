@@ -131,7 +131,7 @@ export const WishlistPage = () => {
                 <img
                   src={item.image || item.img}
                   alt={item.name}
-                  className="w-full h-32 sm:h-36 lg:h-40 object-cover rounded-lg"
+                  className="w-full h-50 sm:h-36 lg:h-40 object-cover rounded-lg"
                 />
               </div>
 
