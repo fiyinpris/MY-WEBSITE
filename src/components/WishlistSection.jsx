@@ -97,17 +97,17 @@ export const WishlistPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-16 px-4">
+    <div className="min-h-screen bg-background pt-20 pb-16">
       {/* Success Notification */}
       {showNotification && (
-        <div className="fixed top-20 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-bounce">
+        <div className="fixed top-20 right-2 bg-green-600 px-2 py-2 rounded-lg shadow-lg z-50 animate-bounce">
           ✓ {notificationText}
         </div>
       )}
 
-      <div className="container max-w-6xl mx-auto">
+      <div className="w-full px-4 max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+        <div className="flex flex-row sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">
             My Wishlist
           </h1>
@@ -118,54 +118,58 @@ export const WishlistPage = () => {
             </p>
           </div>
         </div>
-
-        {/* Wishlist Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+        {/* Wishlist List (Compact Cart Style) */}
+        <div className="w-full space-y-4">
           {wishlistItems.map((item) => (
             <div
               key={item.id}
-              className="bg-card rounded-xl p-4 shadow-sm border border-border hover:shadow-lg transition-shadow"
+              className="flex flex-col bg-card rounded-xl p-4 shadow-sm border border-border hover:shadow-lg transition-shadow w-full gap-4"
             >
-              {/* Product Image */}
-              <div className="relative mb-4">
-                <img
-                  src={item.image || item.img}
-                  alt={item.name}
-                  className="w-full h-40 sm:h-48 object-cover rounded-lg"
-                />
-                <button
-                  onClick={() => removeFromWishlist(item.id)}
-                  className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-md hover:bg-red-50 transition-colors"
-                  aria-label="Remove from wishlist"
-                >
-                  <Trash2 size={16} className="text-red-500" />
-                </button>
-              </div>
+              {/* Product Info */}
+              <div className="flex items-start gap-4">
+                {/* Product Image */}
+                <div className="flex-shrink-0 w-32 sm:w-40">
+                  <img
+                    src={item.image || item.img}
+                    alt={item.name}
+                    className="w-full h-32 sm:h-40 object-cover rounded-lg"
+                  />
+                </div>
 
-              {/* Product Details */}
-              <div className="space-y-2">
-                <h3 className="text-sm sm:text-base font-bold text-foreground line-clamp-1">
-                  {item.name}
-                </h3>
-                <p className="text-lg sm:text-xl font-semibold text-primary">
-                  ₦{(item.price || 0).toLocaleString()}
-                </p>
-                {item.desc && (
+                {/* Product Details */}
+                <div className="flex-1 flex flex-col justify-between space-y-1">
+                  <h3 className="text-sm sm:text-base font-semibold text-foreground line-clamp-1">
+                    {item.name}
+                  </h3>
                   <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                     {item.desc}
                   </p>
-                )}
-
-                {/* Action Buttons */}
-                <div className="pt-2">
-                  <button
-                    onClick={() => handleAddToCart(item)}
-                    className="w-full bg-primary hover:bg-primary/90 text-white px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
-                  >
-                    <ShoppingCart size={16} />
-                    <span>Add to Cart</span>
-                  </button>
+                  <p className="text-sm sm:text-base font-bold text-primary">
+                    ₦{(item.price || 0).toLocaleString()}
+                  </p>
                 </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-border mt-3"></div>
+
+              {/* Action Buttons */}
+              <div className="flex w-100 items-center gap-10 mt-3">
+                <button
+                  onClick={() => handleAddToCart(item)}
+                  className="bg-primary hover:bg-primary/90 text-white px-3 py-1 rounded-lg text-sm flex-1 flex items-center justify-center gap-1"
+                >
+                  <ShoppingCart size={14} />
+                  Add to Cart
+                </button>
+
+                <button
+                  onClick={() => removeFromWishlist(item.id)}
+                  className="bg-red-50 hover:bg-red-100 text-red-500 px-3 py-1 rounded-lg text-sm flex-1 flex items-center justify-center gap-1"
+                >
+                  <Trash2 size={14} />
+                  Remove
+                </button>
               </div>
             </div>
           ))}

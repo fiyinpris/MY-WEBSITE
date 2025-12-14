@@ -266,7 +266,6 @@ export const ShopSection = () => {
                 <h5 className="font-semibold mb-2 hidden lg:block">Filters</h5>
                 <div className="space-y-4">
                   <div>
-                    <h6 className="font-medium mb-2">Category</h6>
                     <ul className="space-y-2">
                       {[
                         "ALL",

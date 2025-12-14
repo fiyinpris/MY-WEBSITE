@@ -103,7 +103,7 @@ export const NavBar = () => {
           : "py-4 bg-background"
       )}
     >
-      <div className="container flex items-center justify-between px-4 md:px-8 lg:px-12">
+      <div className="w-full flex items-center justify-between px-4 sm:px-4 md:px-8 lg:px-12 max-w-7xl mx-auto">
         <Link
           to="/"
           className="text-2xl font-bold text-primary flex items-center"
