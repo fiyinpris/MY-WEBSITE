@@ -100,74 +100,72 @@ export const WishlistPage = () => {
     <div className="min-h-screen bg-background pt-20 pb-16">
       {/* Success Notification */}
       {showNotification && (
-        <div className="fixed top-20 right-2 bg-green-600 px-2 py-2 rounded-lg shadow-lg z-50 animate-bounce">
+        <div className="fixed top-20 right-2 sm:right-4 bg-green-600 px-3 py-2 rounded-lg shadow-lg z-50 animate-bounce text-white text-sm sm:text-base">
           ✓ {notificationText}
         </div>
       )}
 
       <div className="w-full px-4 max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex flex-row sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">
             My Wishlist
           </h1>
           <div className="bg-red-100 border border-red-500 text-red-700 px-4 py-2 rounded-lg">
-            <p className="font-semibold">
+            <p className="font-semibold text-sm sm:text-base">
               {wishlistItems.length}{" "}
               {wishlistItems.length === 1 ? "item" : "items"}
             </p>
           </div>
         </div>
-        {/* Wishlist List (Compact Cart Style) */}
+
+        {/* Wishlist List */}
         <div className="w-full space-y-4">
           {wishlistItems.map((item) => (
             <div
               key={item.id}
-              className="flex flex-col bg-card rounded-xl p-4 shadow-sm border border-border hover:shadow-lg transition-shadow w-full gap-4"
+              className="flex flex-col sm:flex-row lg:flex-row bg-card rounded-xl p-4 shadow-sm border border-border hover:shadow-lg transition-shadow gap-4"
             >
-              {/* Product Info */}
-              <div className="flex items-start gap-4">
-                {/* Product Image */}
-                <div className="flex-shrink-0 w-32 sm:w-40">
-                  <img
-                    src={item.image || item.img}
-                    alt={item.name}
-                    className="w-full h-32 sm:h-40 object-cover rounded-lg"
-                  />
-                </div>
-
-                {/* Product Details */}
-                <div className="flex-1 flex flex-col justify-between space-y-1">
-                  <h3 className="text-sm sm:text-base font-semibold text-foreground line-clamp-1">
-                    {item.name}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
-                    {item.desc}
-                  </p>
-                  <p className="text-sm sm:text-base font-bold text-primary">
-                    ₦{(item.price || 0).toLocaleString()}
-                  </p>
-                </div>
+              {/* Product Image */}
+              <div className="flex-shrink-0 w-full sm:w-32 lg:w-40">
+                <img
+                  src={item.image || item.img}
+                  alt={item.name}
+                  className="w-full h-32 sm:h-36 lg:h-40 object-cover rounded-lg"
+                />
               </div>
 
-              {/* Divider */}
-              <div className="border-t border-border mt-3"></div>
+              {/* Product Details */}
+              <div className="flex-1 flex flex-col justify-between space-y-2">
+                <h3 className="text-sm sm:text-base font-semibold text-foreground line-clamp-1">
+                  {item.name}
+                </h3>
+                <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
+                  {item.desc}
+                </p>
+                <p className="text-sm sm:text-base font-bold text-primary">
+                  ₦{(item.price || 0).toLocaleString()}
+                </p>
+              </div>
+
+              {/* Divider (vertical on lg, horizontal on sm) */}
+              <div className="border-t sm:border-t lg:border-t-0 lg:border-l border-border my-2 lg:my-0"></div>
 
               {/* Action Buttons */}
-              <div className="flex w-100 items-center gap-10 mt-3">
+              <div className="flex flex-row md:flex-row sm:flex-row lg:flex-row items-center gap-4 mt-2 sm:mt-0 lg:mt-0">
                 <button
                   onClick={() => handleAddToCart(item)}
-                  className="bg-primary hover:bg-primary/90 text-white px-3 py-1 rounded-lg text-sm flex-1 flex items-center justify-center gap-1"
+                  className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm flex items-center justify-center gap-2 w-full sm:w-auto lg:w-32"
                 >
-                  <ShoppingCart size={14} />
-                  Add to Cart
+                  <ShoppingCart size={16} />
+                  Add
                 </button>
 
                 <button
                   onClick={() => removeFromWishlist(item.id)}
-                  className="bg-red-50 hover:bg-red-100 text-red-500 px-3 py-1 rounded-lg text-sm flex-1 flex items-center justify-center gap-1"
+                  className="bg-red-50 hover:bg-red-100 text-red-500 px-4 py-2 rounded-lg text-sm flex items-center justify-center gap-2 w-full sm:w-auto lg:w-32"
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={16} />
                   Remove
                 </button>
               </div>
