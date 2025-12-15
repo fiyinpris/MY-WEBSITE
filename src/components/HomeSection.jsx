@@ -175,7 +175,7 @@ export const HomeSection = () => {
               (currentSlide - 1 + carouselImages.length) % carouselImages.length
             )
           }
-          className="absolute lg-left-2 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-1 lg-p-2 sm:p-3 transition-all duration-300 z-10"
+          className="absolute lg-left-2 sm:left-4 md:left-1 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-1 lg-p-2 sm:p-3 transition-all duration-300 z-10"
           aria-label="Previous slide"
         >
           <svg
@@ -195,7 +195,7 @@ export const HomeSection = () => {
           onClick={() =>
             setCurrentSlide((currentSlide + 1) % carouselImages.length)
           }
-          className="absolute lg-right-2 right-0 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full lg-p-2 p-1 sm:p-3 transition-all duration-300 z-10"
+          className="absolute lg-right-2 right-0 sm:right-4 md:right-1 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full lg-p-2 p-1 sm:p-3 transition-all duration-300 z-10"
           aria-label="Next slide"
         >
           <svg
@@ -366,8 +366,9 @@ export const HomeSection = () => {
       </div>
 
       {/* Contact Form Section */}
-      <div className="flex flex-col md:flex-row justify-center items-center gap-8 bg-white py-16 px-6 sm:px-12 dark:bg-background">
-        <div className="text-center md:text-left max-w-md">
+      <div className="flex flex-col lg:flex-row justify-center items-center gap-8 bg-white py-16 px-4 md:px-0 lg:px-12 dark:bg-background">
+        {/* Text Section */}
+        <div className="text-center lg:text-left max-w-md px-4 md:px-8 lg:px-0">
           <h4 className="text-3xl sm:text-4xl font-bold text-primary mb-8">
             Contact Us
           </h4>
@@ -377,8 +378,9 @@ export const HomeSection = () => {
           </p>
         </div>
 
+        {/* Form Card */}
         <div
-          className="w-full max-w-lg bg-white dark:bg-background sm:shadow-lg sm:border sm:rounded-2xl sm:p-8"
+          className="w-full md:w-full lg:max-w-lg bg-white dark:bg-background sm:shadow-lg sm:border sm:rounded-2xl sm:p-8"
           style={{ opacity: 1, transition: "opacity 0.1s ease-in" }}
         >
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -438,7 +440,7 @@ export const HomeSection = () => {
               }
               placeholder="Your Message"
               required
-              className="w-full border-border resize-none px-5 py-3 border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60 min-h-[120px]"
+              className="w-full border-border resize-none px-5 py-3 border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60 min-h-[150px]"
             />
 
             <button

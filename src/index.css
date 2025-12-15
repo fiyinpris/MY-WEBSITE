@@ -448,7 +448,7 @@ body::before {
 
 @media (min-width: 768px) {
   .split-text-container {
-    font-size: 4rem;
+    font-size: 3rem;
   }
 }
 
