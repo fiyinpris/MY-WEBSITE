@@ -12,16 +12,15 @@ import { useWishlist } from "./WishlistSection";
 export const ProductSection = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [hoveredProduct, setHoveredProduct] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [hoveredProduct, setHoveredProduct] = useState(null);
 
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
 
   const tabs = [
-    { name: "sale", label: "🔥SALE"},
+    { name: "sale", label: "🔥SALE" },
     { name: "hot", label: "⚡HOT" },
     { name: "newarrivals", label: "✨NEW ARRIVALS" },
     { name: "all", label: "📦ALL" },
@@ -183,9 +182,7 @@ export const ProductSection = () => {
     return matchType && matchCategory;
   });
 
-  const openModal = (product) => {
-    setSelectedProduct(product);
-  };
+  const openModal = (product) => setSelectedProduct(product);
 
   const handleAddToCart = (product) => {
     addToCart(product);
@@ -203,14 +200,12 @@ export const ProductSection = () => {
     setTimeout(() => setShowConfirmModal(false), 2000);
   };
 
-  // Helper function to render stars with half-star support
   const renderStars = (rating, size = 14) => {
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
-
     for (let i = 0; i < 5; i++) {
-      if (i < fullStars) {
+      if (i < fullStars)
         stars.push(
           <Star
             key={i}
@@ -218,10 +213,10 @@ export const ProductSection = () => {
             className="text-yellow-400 fill-yellow-400"
           />
         );
-      } else if (i === fullStars && hasHalfStar) {
+      else if (i === fullStars && hasHalfStar)
         stars.push(
           <div key={i} className="relative inline-block">
-            <Star size={size} className="text-gray-300 dark:text-gray-600" />
+            <Star size={size} className="text-gray-300" />
             <div
               className="absolute top-0 left-0 overflow-hidden"
               style={{ width: "50%" }}
@@ -230,15 +225,7 @@ export const ProductSection = () => {
             </div>
           </div>
         );
-      } else {
-        stars.push(
-          <Star
-            key={i}
-            size={size}
-            className="text-gray-300 dark:text-gray-600"
-          />
-        );
-      }
+      else stars.push(<Star key={i} size={size} className="text-gray-300" />);
     }
     return stars;
   };
@@ -260,7 +247,6 @@ export const ProductSection = () => {
                   : "hover:text-green-600"
               }`}
             >
-              <span className="mr-1">{tab.icon}</span>
               {tab.label}
             </button>
           </li>
@@ -273,55 +259,48 @@ export const ProductSection = () => {
           filteredProducts.map((product) => (
             <div
               key={product.id}
-              className="group relative bg-card rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border max-w-xs mx-auto w-full"
+              className="p-3 md:p-4 flex flex-col items-stretch space-y-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border"
               onMouseEnter={() => setHoveredProduct(product.id)}
               onMouseLeave={() => setHoveredProduct(null)}
             >
-              {/* Product Image Container */}
-              <div className="relative overflow-hidden bg-gray-100 dark:bg-gray-700">
-                {/* Badges */}
-                <div className="absolute top-2 left-2 z-20">
-                  {product.discount && (
-                    <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md shadow-lg">
-                      {product.discount}
-                    </span>
-                  )}
-                </div>
-
-                {/* Action Buttons */}
+              {/* Product Image */}
+              <div className="relative overflow-hidden">
+                {product.discount && (
+                  <span className="absolute top-2 left-2 z-20 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md shadow-lg">
+                    {product.discount}
+                  </span>
+                )}
                 <div className="absolute top-2 right-2 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       addToWishlist(product);
                     }}
-                    className="bg-white  p-1.5 rounded-full shadow-lg hover:scale-110 transition-transform duration-200"
+                    className="bg-card p-1.5 rounded-full shadow-lg hover:scale-110 transition-transform duration-200"
                   >
                     <Heart
                       size={16}
                       className={`${
                         isInWishlist(product.id)
                           ? "text-red-500 fill-red-500"
-                          : "text-gray-600 dark:text-gray-400"
+                          : "text-gray-600"
                       }`}
                     />
                   </button>
                   <button
                     onClick={() => openModal(product)}
-                    className="bg-white p-1.5 rounded-full shadow-lg hover:scale-110 transition-transform duration-200"
+                    className="bg-card p-1.5 rounded-full shadow-lg hover:scale-110 transition-transform duration-200"
                   >
-                    <Eye size={16} className="" />
+                    <Eye size={16} />
                   </button>
                 </div>
-
-                {/* Product Image */}
                 <img
                   src={product.img}
                   alt={product.name}
-                  className="w-full h-48 sm:h-56 object-cover group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-46 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
 
-                {/* Quick Add to Cart - Appears on Hover */}
+                {/* Quick Add */}
                 <div
                   className={`absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent transition-all duration-300 ${
                     hoveredProduct === product.id
@@ -333,46 +312,35 @@ export const ProductSection = () => {
                     onClick={(e) => handleQuickAddToCart(e, product)}
                     className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 text-xs sm:text-sm rounded-md transition-colors duration-200 flex items-center justify-center gap-2"
                   >
-                    <ShoppingCart size={14} />
-                    Quick Add
+                    <ShoppingCart size={14} /> Quick Add
                   </button>
                 </div>
               </div>
 
               {/* Product Details */}
               <div className="p-3 sm:p-4">
-                {/* Rating */}
                 <div className="flex items-center gap-1 mb-2">
                   {renderStars(product.rating)}
                   <span className="text-xs text-gray-500 ml-1">
                     ({product.reviews})
                   </span>
                 </div>
-
-                {/* Product Name */}
-                <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white mb-1 line-clamp-1">
+                <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-1 line-clamp-1">
                   {product.name}
                 </h3>
-
-                {/* Description */}
                 <p className="text-xs text-gray-600 mb-2 line-clamp-2 hidden sm:block">
                   {product.desc}
                 </p>
-
-                {/* Price Section */}
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-base sm:text-lg font-bold text-green-600">
                     ₦{product.price.toLocaleString()}
                   </span>
                 </div>
-
-                {/* Add to Cart Button */}
                 <button
                   onClick={() => openModal(product)}
                   className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 text-xs sm:text-sm rounded-md transition-all duration-300 flex items-center justify-center gap-2"
                 >
-                  <ShoppingCart size={14} />
-                  Add to Cart
+                  <ShoppingCart size={14} /> Add to Cart
                 </button>
               </div>
             </div>
@@ -380,7 +348,7 @@ export const ProductSection = () => {
         ) : (
           <div className="col-span-full text-center py-20">
             <div className="text-4xl sm:text-6xl mb-4">🔍</div>
-            <p className="text-lg sm:text-xl text-gray-500 dark:text-gray-400">
+            <p className="text-lg sm:text-xl text-gray-500">
               No products found
             </p>
           </div>
@@ -439,7 +407,9 @@ export const ProductSection = () => {
                   </p>
 
                   {/* Price */}
-                  <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-2.5 sm:p-3">
+                  <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-2.5 sm:p-3 w-32">
+                    {" "}
+                    {/* Adjust w-32 as needed */}
                     <div className="flex items-center gap-2">
                       <span className="text-xl sm:text-2xl font-semibold text-green-600">
                         ₦{selectedProduct.price.toLocaleString()}
@@ -449,7 +419,7 @@ export const ProductSection = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex flex-row gap-2 sm:gap-3">
+                <div className="flex flex-row gap-2 sm:gap-3 mb-5">
                   {/* Add to Cart */}
                   <button
                     onClick={() => handleAddToCart(selectedProduct)}
@@ -490,8 +460,6 @@ export const ProductSection = () => {
           </div>
         </div>
       )}
-
-
 
       <style jsx>{`
         @keyframes fadeIn {
