@@ -10,8 +10,6 @@ import headerBg from "../Images/image 9.jpg";
 
 export const ShopSection = () => {
   const { addToCart } = useCart(); // Get addToCart function from context
-  const [showNotification, setShowNotification] = useState(false);
-  const [notificationText, setNotificationText] = useState("");
 
   const products = [
     { id: 1, name: "RINGLIGHT", price: 35000, image: miniRinglight },
@@ -131,14 +129,9 @@ export const ShopSection = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Handle Add to Cart with notification
+  // Handle Add to Cart - CartSection already shows toast notification
   const handleAddToCart = (product) => {
-    addToCart(product);
-    setNotificationText(
-      `${product.name} (₦${product.price.toLocaleString()}) added to cart!`
-    );
-    setShowNotification(true);
-    setTimeout(() => setShowNotification(false), 3000);
+    addToCart(product); // This triggers the toast notification in CartSection
   };
 
   useEffect(() => {
@@ -176,13 +169,6 @@ export const ShopSection = () => {
 
   return (
     <div className="mt-12">
-      {/* Success Notification */}
-      {showNotification && (
-        <div className="fixed top-20 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-bounce">
-          ✓ {notificationText}
-        </div>
-      )}
-
       {/* Hero Banner */}
       <div className="relative w-full h-100 md:h-90 lg:h-90 mb-6 md:mb-8 overflow-hidden">
         <div
@@ -305,8 +291,8 @@ export const ShopSection = () => {
                       <span className="text-sm">₦10K</span>
                       <input
                         type="range"
-                        min="10000" // ₦10,000
-                        max="200000" // ₦200,000
+                        min="10000"
+                        max="200000"
                         step="1000"
                         value={priceRange}
                         onChange={(e) => {

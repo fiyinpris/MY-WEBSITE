@@ -21,10 +21,10 @@ export const ProductSection = () => {
   const { addToWishlist, isInWishlist } = useWishlist();
 
   const tabs = [
-    { name: "sale", label: "SALE", icon: "🔥" },
-    { name: "hot", label: "HOT", icon: "⚡" },
-    { name: "newarrivals", label: "NEW ARRIVALS", icon: "✨" },
-    { name: "all", label: "ALL", icon: "📦" },
+    { name: "sale", label: "🔥SALE"},
+    { name: "hot", label: "⚡HOT" },
+    { name: "newarrivals", label: "✨NEW ARRIVALS" },
+    { name: "all", label: "📦ALL" },
   ];
 
   const categories = [
@@ -491,22 +491,7 @@ export const ProductSection = () => {
         </div>
       )}
 
-      {/* Confirmation Toast */}
-      {showConfirmModal && selectedProduct && (
-        <div className="fixed bottom-4 sm:bottom-8 right-4 sm:right-8 z-[9999] animate-slideInRight">
-          <div className="bg-green-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl flex items-center gap-3 max-w-xs sm:max-w-sm">
-            <div className="bg-white rounded-full p-2">
-              <ShoppingCart size={18} className="text-green-600" />
-            </div>
-            <div>
-              <p className="font-bold text-sm sm:text-base">Added to cart!</p>
-              <p className="text-xs sm:text-sm opacity-90 line-clamp-1">
-                {selectedProduct.name}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       <style jsx>{`
         @keyframes fadeIn {

@@ -11,6 +11,45 @@ import {
 } from "lucide-react";
 
 const CartContext = createContext();
+const STATES = [
+  "Abia",
+  "Adamawa",
+  "Akwa Ibom",
+  "Anambra",
+  "Bauchi",
+  "Bayelsa",
+  "Benue",
+  "Borno",
+  "Cross River",
+  "Delta",
+  "Ebonyi",
+  "Edo",
+  "Ekiti",
+  "Enugu",
+  "Gombe",
+  "Imo",
+  "Jigawa",
+  "Kaduna",
+  "Kano",
+  "Katsina",
+  "Kebbi",
+  "Kogi",
+  "Kwara",
+  "Lagos",
+  "Nasarawa",
+  "Niger",
+  "Ogun",
+  "Ondo",
+  "Osun",
+  "Oyo",
+  "Plateau",
+  "Rivers",
+  "Sokoto",
+  "Taraba",
+  "Yobe",
+  "Zamfara",
+  "FCT – Abuja",
+];
 
 // Toast Notification Component
 const Toast = ({ message, type, onClose }) => {
@@ -28,7 +67,7 @@ const Toast = ({ message, type, onClose }) => {
 
   return (
     <div
-      className={`fixed top-4 right-4 ${bgColor} border rounded-lg p-4 shadow-lg z-50 max-w-md`}
+      className={`fixed top-20 right-4 ${bgColor} border rounded-lg p-4 shadow-lg z-[9999] max-w-md`}
     >
       <div className="flex items-start gap-3">
         <Icon className={`w-5 h-5 ${textColor} flex-shrink-0 mt-0.5`} />
@@ -120,7 +159,7 @@ export const CartSection = ({ children }) => {
             showToast("Maximum quantity (10) reached for this item", "error");
             return prev;
           }
-          showToast(`Updated quantity for ${product.name}`, "success");
+          showToast(` ${product.name} added to cart`, "success");
           return prev.map((item) =>
             item.id === product.id
               ? { ...item, quantity: item.quantity + 1 }
@@ -227,8 +266,8 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
     email: "",
     phone: "",
     address: "",
-    city: "",
     state: "",
+    city: "",
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -249,8 +288,8 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
     }
     if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
     if (!formData.address.trim()) newErrors.address = "Address is required";
-    if (!formData.city.trim()) newErrors.city = "City is required";
     if (!formData.state.trim()) newErrors.state = "State is required";
+    if (!formData.city.trim()) newErrors.city = "City is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -403,6 +442,31 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-foreground mb-2">
+                      State
+                    </label>
+                    <select
+                      name="state"
+                      value={formData.state}
+                      onChange={handleChange}
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-background text-foreground text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="">Select State</option>
+
+                      {STATES.map((state) => (
+                        <option key={state} value={state}>
+                          {state}
+                        </option>
+                      ))}
+                    </select>
+
+                    {errors.state && (
+                      <p className="text-red-500 text-xs sm:text-sm mt-1">
+                        {errors.state}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-foreground mb-2">
                       City
                     </label>
                     <input
@@ -415,24 +479,6 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                     {errors.city && (
                       <p className="text-red-500 text-xs sm:text-sm mt-1">
                         {errors.city}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-foreground mb-2">
-                      State
-                    </label>
-                    <input
-                      type="text"
-                      name="state"
-                      value={formData.state}
-                      onChange={handleChange}
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-background text-foreground text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    {errors.state && (
-                      <p className="text-red-500 text-xs sm:text-sm mt-1">
-                        {errors.state}
                       </p>
                     )}
                   </div>
