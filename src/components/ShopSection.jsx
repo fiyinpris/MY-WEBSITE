@@ -7,6 +7,8 @@ import softbox from "../Images/image 6.webp";
 import podcastMic from "../Images/image 5.jpg";
 import miniRinglight from "../Images/image 1.jpg";
 import headerBg from "../Images/image 9.jpg";
+import { useWishlist } from "./WishlistSection";
+import { Heart } from "lucide-react";
 
 export const ShopSection = () => {
   const { addToCart } = useCart(); // Get addToCart function from context
@@ -78,12 +80,21 @@ export const ShopSection = () => {
   ];
 
   const PRODUCTS_PER_PAGE = 9;
+  const { wishlistItems, addToWishlist, isInWishlist } = useWishlist();
 
+  const [wishlist, setWishlist] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [priceRange, setPriceRange] = useState(200000);
   const [showFilters, setShowFilters] = useState(false);
 
+  const handleAddToWishlist = (product) => {
+    if (wishlist.find((item) => item.id === product.id)) {
+      setWishlist(wishlist.filter((item) => item.id !== product.id));
+    } else {
+      setWishlist([...wishlist, product]);
+    }
+  };
   // Filter products by category and price
   const filteredProducts = products.filter((product) => {
     const categoryMatch =
@@ -349,13 +360,30 @@ export const ShopSection = () => {
                   key={product.id}
                   className="border p-3 md:p-4 flex flex-col items-stretch space-y-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
                 >
-                  <div className="w-full h-40 sm:h-48 flex items-center justify-center overflow-hidden rounded-md bg-white">
+                  {/* Image container */}
+                  <div className="w-full h-40 sm:h-48 flex items-center justify-center overflow-hidden rounded-md bg-white relative">
                     <img
                       src={product.image}
                       alt={product.name}
                       className="w-full h-full object-cover"
                     />
+
+                    {/* Wishlist button */}
+                    <button
+                      className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white shadow hover:bg-gray-100"
+                      onClick={() => addToWishlist(product)}
+                    >
+                      <Heart
+                        className={`w-5 h-5 ${
+                          isInWishlist(product.id)
+                            ? "text-red-500"
+                            : "text-gray-400"
+                        }`}
+                      />
+                    </button>
                   </div>
+
+                  {/* Product details */}
                   <div className="flex flex-col space-y-2">
                     <h6 className="font-semibold text-sm md:text-base">
                       {product.name}

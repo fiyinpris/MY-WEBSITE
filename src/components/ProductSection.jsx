@@ -233,7 +233,7 @@ export const ProductSection = () => {
   return (
     <section className="my-6 mt-13 lg:mt-13">
       {/* Tabs */}
-      <ul className="flex justify-center flex-wrap p-7 gap-4 md:gap-10 bg-black/20 backdrop-blur-md">
+      <ul className="flex justify-center flex-wrap p-7 gap-7 md:gap-10 bg-black/20 backdrop-blur-md">
         {tabs.map((tab) => (
           <li key={tab.name} className="relative">
             <button
@@ -259,7 +259,7 @@ export const ProductSection = () => {
           filteredProducts.map((product) => (
             <div
               key={product.id}
-              className="p-3 md:p-4 flex flex-col items-stretch space-y-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border"
+              className="p-3 md:p-4 flex flex-col items-stretch space-y-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border group"
               onMouseEnter={() => setHoveredProduct(product.id)}
               onMouseLeave={() => setHoveredProduct(null)}
             >
@@ -270,13 +270,15 @@ export const ProductSection = () => {
                     {product.discount}
                   </span>
                 )}
+
+                {/* Heart & Eye buttons on hover */}
                 <div className="absolute top-2 right-2 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       addToWishlist(product);
                     }}
-                    className="bg-card p-1.5 rounded-full shadow-lg hover:scale-110 transition-transform duration-200"
+                    className="bg-white p-1.5 rounded-full shadow-lg hover:scale-110 transition-transform duration-200"
                   >
                     <Heart
                       size={16}
@@ -287,13 +289,15 @@ export const ProductSection = () => {
                       }`}
                     />
                   </button>
+
                   <button
                     onClick={() => openModal(product)}
-                    className="bg-card p-1.5 rounded-full shadow-lg hover:scale-110 transition-transform duration-200"
+                    className="bg-white p-1.5 rounded-full shadow-lg hover:scale-110 transition-transform duration-200"
                   >
                     <Eye size={16} />
                   </button>
                 </div>
+
                 <img
                   src={product.img}
                   alt={product.name}
@@ -318,7 +322,7 @@ export const ProductSection = () => {
               </div>
 
               {/* Product Details */}
-              <div className="p-3 sm:p-4">
+              <div className="">
                 <div className="flex items-center gap-1 mb-2">
                   {renderStars(product.rating)}
                   <span className="text-xs text-gray-500 ml-1">
