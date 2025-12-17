@@ -34,11 +34,9 @@ export const ThemeToggle = () => {
       onClick={toggleTheme}
       aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
       className={cn(
-        "fixed max-sm:hidden z-[60] p-2 rounded-full hover:bg-primary/10",
+        "fixed max-sm:hidden lg:block md:hidden z-[60] p-2 rounded-full hover:bg-primary/10",
         "transition-all duration-300 hover:scale-110",
-        isScrolled
-          ? "top-2 right-8 lg:right-8 md:right-0"
-          : "top-2.5 lg:right-8 right-8 md:right-0"
+        isScrolled ? "top-2 right-8 lg:right-8" : "top-2.5 lg:right-8 right-8"
       )}
     >
       {isDarkMode ? (

@@ -168,19 +168,19 @@ export const HomeSection = () => {
           </div>
         </div>
 
-        {/* Navigation Arrows - Center Left and Right (All Screens) */}
+        {/* Navigation Arrows - Center Left and Right (Medium and Large Screens Only) */}
         <button
           onClick={() =>
             setCurrentSlide(
               (currentSlide - 1 + carouselImages.length) % carouselImages.length
             )
           }
-          className="absolute lg-left-2 sm:left-4 md:left-1 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-1 lg-p-2 sm:p-3 transition-all duration-300 z-10"
+          className="hidden sm:block absolute left-2 sm:left-4 md:left-1 lg:left-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 transition-all duration-300 z-10"
           aria-label="Previous slide"
         >
           <svg
-            width="15"
-            height="15"
+            width="20"
+            height="20"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -195,12 +195,12 @@ export const HomeSection = () => {
           onClick={() =>
             setCurrentSlide((currentSlide + 1) % carouselImages.length)
           }
-          className="absolute lg-right-2 right-0 sm:right-4 md:right-1 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full lg-p-2 p-1 sm:p-3 transition-all duration-300 z-10"
+          className="hidden sm:block absolute right-2 sm:right-4 md:right-1 lg:right-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 transition-all duration-300 z-10"
           aria-label="Next slide"
         >
           <svg
-            width="15"
-            height="15"
+            width="20"
+            height="20"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -210,6 +210,50 @@ export const HomeSection = () => {
             <path d="M9 18l6-6-6-6" />
           </svg>
         </button>
+
+        {/* Arrow Buttons for Small Screens - Bottom Center */}
+        <div className="sm:hidden absolute bottom-16 left-1/2 -translate-x-1/2 flex gap-20 z-10">
+          <button
+            onClick={() =>
+              setCurrentSlide(
+                (currentSlide - 1 + carouselImages.length) %
+                  carouselImages.length
+              )
+            }
+            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 transition-all duration-300"
+            aria-label="Previous slide mobile"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+
+          <button
+            onClick={() =>
+              setCurrentSlide((currentSlide + 1) % carouselImages.length)
+            }
+            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 transition-all duration-300"
+            aria-label="Next slide mobile"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+        </div>
 
         {/* Dot Indicators - Bottom Center */}
         <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
