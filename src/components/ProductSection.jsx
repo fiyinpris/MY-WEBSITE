@@ -233,7 +233,7 @@ export const ProductSection = () => {
   return (
     <section className="my-6 mt-13 lg:mt-13">
       {/* Tabs */}
-      <ul className="flex justify-center flex-wrap p-7 gap-7 md:gap-10 bg-black/20 backdrop-blur-md">
+      <ul className="flex justify-center flex-wrap p-7 gap-6 md:gap-10 bg-black/20 backdrop-blur-md">
         {tabs.map((tab) => (
           <li key={tab.name} className="relative">
             <button

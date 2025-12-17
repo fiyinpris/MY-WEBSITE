@@ -1,10 +1,10 @@
 import { cn } from "../lib/utils";
-import { useEffect, useRef, useState, useContext } from "react";
+import { useEffect, useState, useContext } from "react";
 import { ShoppingCart, User, Search, Menu, X, Heart } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "./CartSection";
 import { useWishlist } from "./WishlistSection";
-import { SearchContext } from "./SearchContext"; // ✅ Correct (same folder)
+import { SearchContext } from "./SearchContext";
 
 const navItems = [
   { name: "Home", href: "/" },
@@ -16,8 +16,6 @@ const navItems = [
 export const NavBar = () => {
   const { totalItems } = useCart();
   const { totalWishlistItems } = useWishlist();
-
-  // ✅ Connect to SearchContext
   const { searchQuery, setSearchQuery } = useContext(SearchContext);
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -27,47 +25,30 @@ export const NavBar = () => {
   const [theme, setTheme] = useState("light");
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
-  const searchRef = useRef(null);
   const navigate = useNavigate();
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
   const location = useLocation();
 
-  // Scroll behavior
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Disable background scroll when mobile menu is open
   useEffect(() => {
     if (isMobileMenuOpen) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "unset";
     return () => (document.body.style.overflow = "unset");
   }, [isMobileMenuOpen]);
 
-  // Close menu when clicking nav link
   const handleNavClick = () => setIsMobileMenuOpen(false);
 
-  // Click outside to close search
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setIsSearchOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Load theme from localStorage on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") || "light";
     setTheme(savedTheme);
     document.documentElement.classList.toggle("dark", savedTheme === "dark");
   }, []);
 
-  // Theme toggle function
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
@@ -75,17 +56,14 @@ export const NavBar = () => {
     localStorage.setItem("theme", newTheme);
   };
 
-  // Fetch user info from localStorage
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user")) || {};
     if (storedUser.name) setUserName(storedUser.name);
     if (storedUser.email) setUserEmail(storedUser.email);
   }, []);
 
-  // Check if user is logged in
   const isLoggedIn = userName && userEmail;
 
-  // ✅ Handle search submission - navigate to search page
   const handleSearchSubmit = (e) => {
     if (e) e.preventDefault();
     if (searchQuery.trim()) {
@@ -104,6 +82,7 @@ export const NavBar = () => {
       )}
     >
       <div className="w-full flex items-center justify-between px-4 sm:px-4 md:px-8 lg:px-12 max-w-7xl mx-auto">
+        {/* Logo - Always visible */}
         <Link
           to="/"
           className="text-2xl font-bold text-primary flex items-center"
@@ -177,7 +156,6 @@ export const NavBar = () => {
               >
                 <Search size={22} />
               </button>
-              {/* Tooltip - Only on md and lg screens */}
               <span className="hidden md:block absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-50">
                 Search
               </span>
@@ -197,7 +175,6 @@ export const NavBar = () => {
                   </span>
                 )}
               </button>
-              {/* Tooltip - Only on md and lg screens */}
               <span className="hidden md:block absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-50">
                 Wishlist
               </span>
@@ -217,7 +194,6 @@ export const NavBar = () => {
                   </span>
                 )}
               </button>
-              {/* Tooltip - Only on md and lg screens */}
               <span className="hidden md:block absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-50">
                 Cart
               </span>
@@ -232,7 +208,6 @@ export const NavBar = () => {
               >
                 <User size={22} />
               </button>
-              {/* Tooltip - Only on md and lg screens */}
               <span className="hidden md:block absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-50">
                 Account
               </span>
@@ -301,9 +276,12 @@ export const NavBar = () => {
         </div>
 
         {/* MOBILE ICONS */}
-        <div className="flex md:hidden items-center">
+        <div className="flex md:hidden items-center space-x-2">
           <button
-            onClick={() => setIsSearchOpen(!isSearchOpen)}
+            onClick={() => {
+              setIsSearchOpen(!isSearchOpen);
+              navigate("/search");
+            }}
             aria-label="Search"
             className="text-foreground p-2 hover:bg-primary/10 rounded-lg transition-colors"
           >
@@ -333,50 +311,6 @@ export const NavBar = () => {
           </button>
         </div>
       </div>
-
-      {/* ✅ SEARCH DROPDOWN - NOW CONNECTED TO CONTEXT & NAVIGATES TO SEARCH PAGE */}
-      {isSearchOpen && (
-        <div
-          ref={searchRef}
-          className="absolute left-0 top-full w-full bg-card border-t border-border shadow-md z-50 animate-slideDown"
-        >
-          <div className="container mx-auto max-w-2xl px-4 py-4 relative">
-            <button
-              onClick={() => setIsSearchOpen(false)}
-              className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-2 rounded-full hover:bg-muted transition-colors"
-            >
-              <X size={20} />
-            </button>
-            <input
-              type="text"
-              placeholder="Search anything..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleSearchSubmit();
-                }
-              }}
-              className="w-full pl-4 pr-14 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              autoFocus
-            />
-            {searchQuery && (
-              <div className="mt-2 flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  Press Enter or{" "}
-                  <button
-                    onClick={handleSearchSubmit}
-                    className="text-primary hover:underline font-medium"
-                  >
-                    click here
-                  </button>{" "}
-                  to search
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* MOBILE OVERLAY */}
       {isMobileMenuOpen && (
