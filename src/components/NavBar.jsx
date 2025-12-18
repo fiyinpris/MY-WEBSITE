@@ -1,10 +1,33 @@
 import { cn } from "../lib/utils";
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useRef } from "react";
 import { ShoppingCart, User, Search, Menu, X, Heart } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "./CartSection";
 import { useWishlist } from "./WishlistSection";
 import { SearchContext } from "./SearchContext";
+
+// Import your actual images
+import ringlight from "../Images/image 6.webp";
+import tripodStand from "../Images/image 8.jpg";
+import ledLight from "../Images/image 10.jpg";
+import softbox from "../Images/image 6.webp";
+import podcastMic from "../Images/image 5.jpg";
+import miniRinglight from "../Images/image 1.jpg";
+
+// ✅ YOUR ACTUAL PRODUCTS
+const products = [
+  { id: 1, name: "RINGLIGHT", price: 35000, image: miniRinglight },
+  { id: 2, name: "TRIPOD STAND", price: 120000, image: tripodStand },
+  { id: 3, name: "LEDLIGHT", price: 35000, image: ledLight },
+  { id: 4, name: "SOFTBOX", price: 100000, image: softbox },
+  { id: 5, name: "PODCAST MICROPHONE", price: 30000, image: podcastMic },
+  { id: 6, name: "RINGLIGHT", price: 35000, image: ringlight },
+  { id: 101, name: "Ringlight", price: 25000, image: miniRinglight },
+  { id: 102, name: "Tripod Stand", price: 20000, image: tripodStand },
+  { id: 103, name: "Podcast Mic", price: 18000, image: podcastMic },
+  { id: 104, name: "LED Light", price: 30000, image: ledLight },
+  { id: 105, name: "Softbox", price: 40000, image: softbox },
+];
 
 const navItems = [
   { name: "Home", href: "/" },
@@ -28,6 +51,12 @@ export const NavBar = () => {
   const navigate = useNavigate();
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
   const location = useLocation();
+
+  // ✅ NEW: Autocomplete states
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const searchRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -64,11 +93,65 @@ export const NavBar = () => {
 
   const isLoggedIn = userName && userEmail;
 
+  // ✅ NEW: Update suggestions as user types
+  useEffect(() => {
+    if (searchQuery.trim().length > 0) {
+      const query = searchQuery.toLowerCase();
+      const filtered = products
+        .filter((product) => product.name.toLowerCase().includes(query))
+        .slice(0, 5); // Show max 5 suggestions
+      
+      setSuggestions(filtered);
+      setShowSuggestions(true);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [searchQuery]);
+
+  // ✅ NEW: Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // ✅ NEW: Handle keyboard navigation
+  const handleKeyDown = (e) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((prev) =>
+        prev < suggestions.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+    }
+  };
+
+  // ✅ NEW: Handle suggestion selection
+  const handleSelectSuggestion = (product) => {
+    setSearchQuery(product.name);
+    setShowSuggestions(false);
+    navigate("/search");
+    setIsSearchOpen(false);
+  };
+
   const handleSearchSubmit = (e) => {
     if (e) e.preventDefault();
     if (searchQuery.trim()) {
       navigate("/search");
       setIsSearchOpen(false);
+      setShowSuggestions(false);
     }
   };
 
@@ -115,7 +198,7 @@ export const NavBar = () => {
             </>
           ) : (
             /* Search Bar in Place of Navigation */
-            <div className="flex items-center gap-2 animate-fadeIn">
+            <div className="flex items-center gap-2 animate-fadeIn relative" ref={searchRef}>
               <div className="relative">
                 <input
                   type="text"
@@ -123,10 +206,12 @@ export const NavBar = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => {
+                    handleKeyDown(e);
                     if (e.key === "Enter") {
                       handleSearchSubmit();
                     }
                   }}
+                  onFocus={() => searchQuery && setShowSuggestions(true)}
                   className="w-[500px] pl-10 pr-4 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   autoFocus
                 />
@@ -134,6 +219,42 @@ export const NavBar = () => {
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
                   size={18}
                 />
+
+                {/* ✅ AUTOCOMPLETE DROPDOWN - DESKTOP */}
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className="absolute z-[60] w-full mt-2 bg-card border border-border rounded-lg shadow-xl overflow-hidden">
+                    <div className="py-1">
+                      {suggestions.map((product, index) => (
+                        <button
+                          key={product.id}
+                          onClick={() => handleSelectSuggestion(product)}
+                          onMouseEnter={() => setHighlightedIndex(index)}
+                          className={cn(
+                            "w-full flex items-center gap-3 px-3 py-2 transition-colors text-left",
+                            index === highlightedIndex
+                              ? "bg-primary/10"
+                              : "hover:bg-muted"
+                          )}
+                        >
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            className="w-10 h-10 object-cover rounded"
+                          />
+                          <div className="flex-1">
+                            <div className="text-sm font-medium text-foreground">
+                              {product.name}
+                            </div>
+                            <div className="text-xs text-primary font-semibold">
+                              ₦{product.price.toLocaleString()}
+                            </div>
+                          </div>
+                          <Search size={14} className="text-muted-foreground" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               {searchQuery && (
                 <button
@@ -356,7 +477,7 @@ export const NavBar = () => {
 
         {/* MOBILE SEARCH BAR - Replaces logo on small screen */}
         {isSearchOpen && (
-          <div className="flex items-center gap-2 flex-1">
+          <div className="flex items-center gap-2 flex-1 mr-2 relative" ref={searchRef}>
             <div className="relative flex-1">
               <input
                 type="text"
@@ -364,10 +485,12 @@ export const NavBar = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
+                  handleKeyDown(e);
                   if (e.key === "Enter") {
                     handleSearchSubmit();
                   }
                 }}
+                onFocus={() => searchQuery && setShowSuggestions(true)}
                 className="w-full pl-10 pr-4 py-2 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 autoFocus
               />
@@ -375,70 +498,104 @@ export const NavBar = () => {
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
                 size={18}
               />
+
+              {/* ✅ AUTOCOMPLETE DROPDOWN - MOBILE */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute z-[60] w-full mt-2 bg-card border border-border rounded-lg shadow-xl overflow-hidden">
+                  <div className="py-1">
+                    {suggestions.map((product, index) => (
+                      <button
+                        key={product.id}
+                        onClick={() => handleSelectSuggestion(product)}
+                        className={cn(
+                          "w-full flex items-center gap-2 px-3 py-2 transition-colors text-left",
+                          index === highlightedIndex
+                            ? "bg-primary/10"
+                            : "hover:bg-muted"
+                        )}
+                      >
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-8 h-8 object-cover rounded"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-medium text-foreground truncate">
+                            {product.name}
+                          </div>
+                          <div className="text-xs text-primary font-semibold">
+                            ₦{product.price.toLocaleString()}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        )}
-
-        {/* MOBILE ICONS - Always visible on mobile */}
-        <div className="flex items-center space-x-2">
-          {!isSearchOpen && (
-            <>
-              <button
-                onClick={() => setIsSearchOpen(true)}
-                aria-label="Search"
-                className="text-foreground p-2 hover:bg-primary/10 rounded-lg transition-colors"
-              >
-                <Search size={20} />
-              </button>
-
-              <button
-                onClick={() => navigate("/cart")}
-                aria-label="Shopping Cart"
-                className="text-foreground p-2 hover:bg-primary/10 rounded-lg transition-colors relative"
-              >
-                <ShoppingCart size={20} />
-                {totalItems > 0 && (
-                  <span className="absolute top-0 right-0 bg-green-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                    {totalItems}
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="text-foreground p-2 hover:bg-primary/10 rounded-lg transition-colors"
-                aria-label="Toggle menu"
-                aria-expanded={isMobileMenuOpen}
-              >
-                <Menu size={24} />
-              </button>
-            </>
-          )}
-
-          {isSearchOpen && (
             <button
               onClick={() => {
                 setIsSearchOpen(false);
                 setSearchQuery("");
+                setShowSuggestions(false);
               }}
-              className="text-foreground p-2 hover:bg-primary/10 rounded-lg transition-colors"
+              className="text-foreground p-2 hover:bg-primary/10 rounded-lg transition-colors flex-shrink-0"
               aria-label="Close search"
             >
               <X size={24} />
             </button>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* MOBILE ICONS - Only visible when search is closed */}
+        {!isSearchOpen && (
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              aria-label="Search"
+              className="text-foreground p-2 hover:bg-primary/10 rounded-lg transition-colors"
+            >
+              <Search size={20} />
+            </button>
+
+            <button
+              onClick={() => navigate("/cart")}
+              aria-label="Shopping Cart"
+              className="text-foreground p-2 hover:bg-primary/10 rounded-lg transition-colors relative"
+            >
+              <ShoppingCart size={20} />
+              {totalItems > 0 && (
+                <span className="absolute top-0 right-0 bg-green-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {totalItems}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="text-foreground p-2 hover:bg-primary/10 rounded-lg transition-colors"
+              aria-label="Toggle menu"
+              aria-expanded={isMobileMenuOpen}
+            >
+              <Menu size={24} />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* SEARCH MODAL FOR MEDIUM SCREENS */}
       {isSearchOpen && (
         <div
           className="hidden md:block lg:hidden fixed inset-0 bg-black/50 z-40"
-          onClick={() => setIsSearchOpen(false)}
+          onClick={() => {
+            setIsSearchOpen(false);
+            setShowSuggestions(false);
+          }}
         >
           <div
             className="bg-background p-4 max-w-2xl mx-auto mt-20"
             onClick={(e) => e.stopPropagation()}
+            ref={searchRef}
           >
             <div className="relative">
               <input
@@ -447,10 +604,12 @@ export const NavBar = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
+                  handleKeyDown(e);
                   if (e.key === "Enter") {
                     handleSearchSubmit();
                   }
                 }}
+                onFocus={() => searchQuery && setShowSuggestions(true)}
                 className="w-full pl-10 pr-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 autoFocus
               />
@@ -465,6 +624,41 @@ export const NavBar = () => {
                 >
                   Search
                 </button>
+              )}
+
+              {/* ✅ AUTOCOMPLETE DROPDOWN - MEDIUM SCREENS */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute z-[60] w-full mt-2 bg-card border border-border rounded-lg shadow-xl overflow-hidden">
+                  <div className="py-1">
+                    {suggestions.map((product, index) => (
+                      <button
+                        key={product.id}
+                        onClick={() => handleSelectSuggestion(product)}
+                        onMouseEnter={() => setHighlightedIndex(index)}
+                        className={cn(
+                          "w-full flex items-center gap-3 px-3 py-2 transition-colors text-left",
+                          index === highlightedIndex
+                            ? "bg-primary/10"
+                            : "hover:bg-muted"
+                        )}
+                      >
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-10 h-10 object-cover rounded"
+                        />
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-foreground">
+                            {product.name}
+                          </div>
+                          <div className="text-xs text-primary font-semibold">
+                            ₦{product.price.toLocaleString()}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           </div>

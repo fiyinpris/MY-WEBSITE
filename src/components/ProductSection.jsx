@@ -259,7 +259,13 @@ export const ProductSection = () => {
           filteredProducts.map((product) => (
             <div
               key={product.id}
-              className="p-3 md:p-4 flex flex-col items-stretch space-y-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border group"
+              tabIndex={0}
+              className="
+    p-3 md:p-4 flex flex-col items-stretch space-y-3
+    rounded-lg shadow-md hover:shadow-lg
+    transition-shadow duration-300
+    border group focus:outline-none
+  "
               onMouseEnter={() => setHoveredProduct(product.id)}
               onMouseLeave={() => setHoveredProduct(null)}
             >
@@ -272,29 +278,45 @@ export const ProductSection = () => {
                 )}
 
                 {/* Heart & Eye buttons on hover */}
-                <div className="absolute top-2 right-2 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div
+                  className="
+    absolute top-2 right-2 z-20 flex flex-col gap-2
+    opacity-0
+
+    /* Small + Medium: tap/focus */
+    group-focus-within:opacity-100
+
+    /* Medium + Large: hover */
+    md:group-hover:opacity-100
+
+    transition-opacity duration-300
+  "
+                >
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       addToWishlist(product);
                     }}
-                    className="bg-white p-1.5 rounded-full shadow-lg hover:scale-110 transition-transform duration-200"
+                    className="bg-white p-1 sm:p-1.5 md:p-2 rounded-full shadow-lg"
                   >
                     <Heart
-                      size={16}
-                      className={`${
+                      size={14}
+                      className={
                         isInWishlist(product.id)
                           ? "text-red-500 fill-red-500"
                           : "text-gray-600"
-                      }`}
+                      }
                     />
                   </button>
 
                   <button
-                    onClick={() => openModal(product)}
-                    className="bg-white p-1.5 rounded-full shadow-lg hover:scale-110 transition-transform duration-200"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openModal(product);
+                    }}
+                    className="bg-white p-1 sm:p-1.5 md:p-2 rounded-full shadow-lg"
                   >
-                    <Eye size={16} />
+                    <Eye size={14} />
                   </button>
                 </div>
 

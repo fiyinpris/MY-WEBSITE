@@ -483,6 +483,22 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                     )}
                   </div>
                 </div>
+                <div className="mt-4">
+                  <label className="flex items-center gap-2 text-sm sm:text-base cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.saveInfo || false}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          saveInfo: e.target.checked,
+                        }))
+                      }
+                      className="w-4 h-4"
+                    />
+                    Save this information for next time
+                  </label>
+                </div>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6">
