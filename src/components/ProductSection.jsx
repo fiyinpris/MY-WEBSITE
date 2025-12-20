@@ -241,7 +241,7 @@ export const ProductSection = () => {
                 setActiveTab(tab.name);
                 setSelectedCategory("All");
               }}
-              className={`font-semibold text-foreground text-xs md:text-sm transition-all duration-200 ${
+              className={`font-semibold text-foreground text-xs md:text-sm transition-all duration-200 cursor-pointer ${
                 activeTab === tab.name
                   ? "text-green-600 underline underline-offset-4"
                   : "hover:text-green-600"
@@ -264,10 +264,11 @@ export const ProductSection = () => {
     p-3 md:p-4 flex flex-col items-stretch space-y-3
     rounded-lg shadow-md hover:shadow-lg
     transition-shadow duration-300
-    border group focus:outline-none
+    border group focus:outline-none cursor-pointer
   "
               onMouseEnter={() => setHoveredProduct(product.id)}
               onMouseLeave={() => setHoveredProduct(null)}
+              onClick={() => openModal(product)}
             >
               {/* Product Image */}
               <div className="relative overflow-hidden">
@@ -297,7 +298,7 @@ export const ProductSection = () => {
                       e.stopPropagation();
                       addToWishlist(product);
                     }}
-                    className="bg-white p-1 sm:p-1.5 md:p-2 rounded-full shadow-lg"
+                    className="bg-white p-1 sm:p-1.5 md:p-2 rounded-full shadow-lg cursor-pointer hover:bg-gray-50 transition-colors"
                   >
                     <Heart
                       size={14}
@@ -314,7 +315,7 @@ export const ProductSection = () => {
                       e.stopPropagation();
                       openModal(product);
                     }}
-                    className="bg-white p-1 sm:p-1.5 md:p-2 rounded-full shadow-lg"
+                    className="bg-white p-1 sm:p-1.5 md:p-2 rounded-full shadow-lg cursor-pointer hover:bg-gray-50 transition-colors"
                   >
                     <Eye size={14} />
                   </button>
@@ -336,7 +337,7 @@ export const ProductSection = () => {
                 >
                   <button
                     onClick={(e) => handleQuickAddToCart(e, product)}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 text-xs sm:text-sm rounded-md transition-colors duration-200 flex items-center justify-center gap-2"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 text-xs sm:text-sm rounded-md transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <ShoppingCart size={14} /> Quick Add
                   </button>
@@ -363,8 +364,11 @@ export const ProductSection = () => {
                   </span>
                 </div>
                 <button
-                  onClick={() => openModal(product)}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 text-xs sm:text-sm rounded-md transition-all duration-300 flex items-center justify-center gap-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openModal(product);
+                  }}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 text-xs sm:text-sm rounded-md transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <ShoppingCart size={14} /> Add to Cart
                 </button>
@@ -390,7 +394,7 @@ export const ProductSection = () => {
               <div className="relative">
                 <button
                   onClick={() => setSelectedProduct(null)}
-                  className="absolute top-2 right-2 z-10 bg-white  text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-500 p-2 rounded-full shadow-lg transition-colors"
+                  className="absolute top-2 right-2 z-10 bg-white text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-500 p-2 rounded-full shadow-lg transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -434,8 +438,6 @@ export const ProductSection = () => {
 
                   {/* Price */}
                   <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-2.5 sm:p-3 w-32">
-                    {" "}
-                    {/* Adjust w-32 as needed */}
                     <div className="flex items-center gap-2">
                       <span className="text-xl sm:text-2xl font-semibold text-green-600">
                         ₦{selectedProduct.price.toLocaleString()}
@@ -449,7 +451,7 @@ export const ProductSection = () => {
                   {/* Add to Cart */}
                   <button
                     onClick={() => handleAddToCart(selectedProduct)}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 sm:py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg text-xs sm:text-sm"
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 sm:py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg text-xs sm:text-sm cursor-pointer"
                   >
                     <ShoppingCart size={16} />
                     Add to Cart
@@ -458,7 +460,7 @@ export const ProductSection = () => {
                   {/* Buy Now */}
                   <button
                     onClick={() => handleAddToCart(selectedProduct)}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 sm:py-3 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg text-xs sm:text-sm"
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 sm:py-3 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg text-xs sm:text-sm cursor-pointer"
                   >
                     Buy Now
                   </button>
@@ -466,7 +468,7 @@ export const ProductSection = () => {
                   {/* Wishlist */}
                   <button
                     onClick={() => addToWishlist(selectedProduct)}
-                    className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-medium py-2.5 sm:py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 text-xs sm:text-sm"
+                    className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-medium py-2.5 sm:py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 text-xs sm:text-sm cursor-pointer"
                   >
                     <Heart
                       size={16}

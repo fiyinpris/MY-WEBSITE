@@ -8,12 +8,10 @@ import {
   ArrowBigRight,
 } from "lucide-react";
 
-// keep your original filenames (spaces allowed) — ensure the files exist at these paths
 import myImage1 from "../Images/image 7.jpg";
 import myImage2 from "../Images/image 16.jpg";
 import myImage3 from "../Images/image 15.jpg";
 
-// small classnames helper (you used `cn` elsewhere)
 function cn(...inputs) {
   return inputs.filter(Boolean).join(" ");
 }
@@ -101,6 +99,7 @@ const reviews = [
 export const HomeSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentReview, setCurrentReview] = useState(0);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -108,6 +107,31 @@ export const HomeSection = () => {
     message: "",
   });
   const [isSending, setIsSending] = useState(false);
+
+  // Preload carousel images before showing content
+  useEffect(() => {
+    const preloadImages = async () => {
+      const imagePromises = carouselImages.map((src) => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.src = src;
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+      });
+
+      try {
+        await Promise.all(imagePromises);
+        setImagesLoaded(true);
+      } catch (error) {
+        console.error("Error preloading images:", error);
+        // Show content anyway after 3 seconds
+        setTimeout(() => setImagesLoaded(true), 3000);
+      }
+    };
+
+    preloadImages();
+  }, []);
 
   // Auto-scroll carousel every 4s
   useEffect(() => {
@@ -138,22 +162,46 @@ export const HomeSection = () => {
 
   return (
     <section className="relative w-full">
+      {/* Loading State */}
+      {!imagesLoaded && (
+        <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400 text-lg">
+              Loading...
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Full Width Auto-Scrolling Carousel */}
       <div className="relative w-full h-[80vh] sm:h-[75vh] md:h-[75vh] lg:h-[90vh] overflow-hidden md:mb-8">
-        {/* Background Image - centered properly */}
+        {/* Background Image with Priority Loading */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000 ease-in-out"
           style={{
             backgroundImage: `url(${carouselImages[currentSlide]})`,
             backgroundPosition: "center center",
           }}
-        />
+        >
+          {/* Preload next image */}
+          <link
+            rel="preload"
+            as="image"
+            href={carouselImages[(currentSlide + 1) % carouselImages.length]}
+          />
+        </div>
 
         {/* Dark Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70" />
 
-        {/* Content Container - Text Overlay on Image */}
-        <div className="relative h-full flex items-center justify-center px-4 sm:px-6 md:px-8">
+        {/* Content Container - Only show when images are loaded */}
+        <div
+          className={cn(
+            "relative h-full flex items-center justify-center px-4 sm:px-6 md:px-8 transition-opacity duration-500",
+            imagesLoaded ? "opacity-100" : "opacity-0"
+          )}
+        >
           <div className="text-center text-white drop-shadow-2xl max-w-5xl w-full">
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-4 md:mb-6">
               Manage, Organize and Enhance Your Digital Content!
@@ -168,7 +216,7 @@ export const HomeSection = () => {
           </div>
         </div>
 
-        {/* Navigation Arrows - Center Left and Right (Medium and Large Screens Only) */}
+        {/* Navigation Arrows */}
         <button
           onClick={() =>
             setCurrentSlide(
@@ -211,7 +259,7 @@ export const HomeSection = () => {
           </svg>
         </button>
 
-        {/* Arrow Buttons for Small Screens - Bottom Center */}
+        {/* Mobile Navigation */}
         <div className="sm:hidden absolute bottom-16 left-1/2 -translate-x-1/2 flex gap-20 z-10">
           <button
             onClick={() =>
@@ -226,7 +274,7 @@ export const HomeSection = () => {
             <svg
               width="20"
               height="20"
-              viewBox="0 0 24 24"git
+              viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -255,7 +303,7 @@ export const HomeSection = () => {
           </button>
         </div>
 
-        {/* Dot Indicators - Bottom Center */}
+        {/* Dot Indicators */}
         <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
           {carouselImages.map((_, index) => (
             <button
@@ -283,7 +331,6 @@ export const HomeSection = () => {
             to miss
           </p>
 
-          {/* Scrolling Container */}
           <div className="relative">
             <div className="flex gap-4 md:gap-6 animate-scroll-mobile md:animate-scroll hover:pause-scroll">
               {products.concat(products).map((product, index) => (
@@ -291,26 +338,22 @@ export const HomeSection = () => {
                   key={`${product.id}-${index}`}
                   className="flex-shrink-0 w-[150px] lg:w-[200px] md:w-[200px] bg-card rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group"
                 >
-                  {/* Image Container */}
                   <div className="relative overflow-hidden h-35 sm:h-44 md:h-48 bg-muted">
                     <img
                       src={product.image}
                       alt={product.name}
+                      loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
-                    {/* Badge */}
                     <div className="absolute top-3 left-3 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-semibold">
                       {product.badge}
                     </div>
-                    {/* Quick Add Button */}
                     <button className="absolute bottom-3 right-3 bg-card p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-primary hover:text-primary-foreground">
                       <ShoppingCart size={18} />
                     </button>
                   </div>
 
-                  {/* Card Content */}
                   <div className="p-3 md:p-4 text-left">
-                    {/* Rating */}
                     <div className="flex items-center gap-2 mb-2">
                       <div className="flex items-center gap-0.5">
                         {[...Array(5)].map((_, i) => (
@@ -333,7 +376,6 @@ export const HomeSection = () => {
                     <h3 className="text-sm md:text-base font-bold text-foreground mb-2">
                       {product.name}
                     </h3>
-
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-base md:text-lg font-bold text-primary">
                         {product.price}
@@ -371,6 +413,7 @@ export const HomeSection = () => {
             <img
               src={reviews[currentReview].image}
               alt={reviews[currentReview].name}
+              loading="lazy"
               className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border border-white dark:border-gray-800 shadow-md object-cover mb-8"
             />
           </div>
@@ -411,7 +454,6 @@ export const HomeSection = () => {
 
       {/* Contact Form Section */}
       <div className="flex flex-col lg:flex-row justify-center items-center gap-8 bg-white py-16 px-4 md:px-0 lg:px-12 dark:bg-background">
-        {/* Text Section */}
         <div className="text-center lg:text-left max-w-md px-4 md:px-8 lg:px-0">
           <h4 className="text-3xl sm:text-4xl font-bold text-primary mb-8">
             Contact Us
@@ -422,11 +464,7 @@ export const HomeSection = () => {
           </p>
         </div>
 
-        {/* Form Card */}
-        <div
-          className="w-full md:w-full lg:max-w-lg bg-white dark:bg-background sm:shadow-lg sm:border sm:rounded-2xl sm:p-8"
-          style={{ opacity: 1, transition: "opacity 0.1s ease-in" }}
-        >
+        <div className="w-full md:w-full lg:max-w-lg bg-white dark:bg-background sm:shadow-lg sm:border sm:rounded-2xl sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <input type="hidden" name="to_name" value="Fiyinfoluwa" />
             <input

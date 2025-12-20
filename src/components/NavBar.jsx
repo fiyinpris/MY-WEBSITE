@@ -100,7 +100,7 @@ export const NavBar = () => {
       const filtered = products
         .filter((product) => product.name.toLowerCase().includes(query))
         .slice(0, 5); // Show max 5 suggestions
-      
+
       setSuggestions(filtered);
       setShowSuggestions(true);
     } else {
@@ -198,7 +198,10 @@ export const NavBar = () => {
             </>
           ) : (
             /* Search Bar in Place of Navigation */
-            <div className="flex items-center gap-2 animate-fadeIn relative" ref={searchRef}>
+            <div
+              className="flex items-center gap-2 animate-fadeIn relative"
+              ref={searchRef}
+            >
               <div className="relative">
                 <input
                   type="text"
@@ -477,7 +480,10 @@ export const NavBar = () => {
 
         {/* MOBILE SEARCH BAR - Replaces logo on small screen */}
         {isSearchOpen && (
-          <div className="flex items-center gap-2 flex-1 mr-2 relative" ref={searchRef}>
+          <div
+            className="flex items-center gap-2 flex-1 mr-2 relative"
+            ref={searchRef}
+          >
             <div className="relative flex-1">
               <input
                 type="text"
@@ -491,7 +497,7 @@ export const NavBar = () => {
                   }
                 }}
                 onFocus={() => searchQuery && setShowSuggestions(true)}
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-border bg-card text-foreground text-base focus:outline-none focus:ring-2 focus:ring-primary"
                 autoFocus
               />
               <Search
@@ -610,7 +616,7 @@ export const NavBar = () => {
                   }
                 }}
                 onFocus={() => searchQuery && setShowSuggestions(true)}
-                className="w-full pl-10 pr-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-border bg-card text-foreground text-base focus:outline-none focus:ring-2 focus:ring-primary"
                 autoFocus
               />
               <Search
