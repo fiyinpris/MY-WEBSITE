@@ -364,7 +364,10 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
 
         <div className="w-full px-0 sm:px-4 lg:px-0 grid lg:grid-cols-3 gap-0 lg:gap-8">
           <div className="lg:col-span-2">
-            <form className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-slate-200">
+            <form
+              onSubmit={handleSubmit}
+              className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-slate-200"
+            >
               <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-4 sm:mb-6">
                 Shipping Information
               </h2>

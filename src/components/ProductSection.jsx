@@ -1,13 +1,22 @@
 import { ChevronDown, Heart, ShoppingCart, X, Eye, Star } from "lucide-react";
 import { useState } from "react";
-import ringlight from "../Images/image 6.webp";
-import tripodStand from "../Images/image 8.jpg";
-import ledLight from "../Images/image 10.jpg";
-import softbox from "../Images/image 6.webp";
-import podcastMic from "../Images/image 5.jpg";
-import miniRinglight from "../Images/image 1.jpg";
 import { useCart } from "./CartSection";
 import { useWishlist } from "./WishlistSection";
+
+// Import all product images with unique names
+import ringlight1 from "../Images/image R.jpeg";
+import tripodStand1 from "../Images/image T1.jpeg";
+import ledLight1 from "../Images/image L.jpeg";
+import softbox1 from "../Images/image S.jpeg";
+import Microphone1 from "../Images/image M.jpeg";
+import ringlight2 from "../Images/image R3.jpeg";
+
+import ringlight3 from "../Images/image R4.jpeg";
+import tripodStand2 from "../Images/image T.jpeg";
+import ledLight2 from "../Images/image L1.jpeg";
+import softbox2 from "../Images/image S.jpeg";
+import microphone2 from "../Images/image M.jpeg";
+import tripodStand3 from "../Images/image T4.jpeg";
 
 export const ProductSection = () => {
   const [activeTab, setActiveTab] = useState("all");
@@ -45,7 +54,7 @@ export const ProductSection = () => {
       rating: 4.5,
       reviews: 128,
       desc: "Professional ring light ideal for makeup, photography and streaming.",
-      img: miniRinglight,
+      img: ringlight1,
     },
     {
       id: 2,
@@ -57,18 +66,18 @@ export const ProductSection = () => {
       reviews: 95,
       desc: "Durable adjustable tripod stand perfect for cameras and ringlights.",
       discount: "SAVE 90%",
-      img: tripodStand,
+      img: tripodStand1,
     },
     {
       id: 3,
-      name: "Podcast Mic",
+      name: "Microphone",
       category: "Microphone",
       type: "newarrivals",
       price: 18000,
       rating: 4.7,
       reviews: 203,
       desc: "Studio-quality microphone suitable for podcasts and content creation.",
-      img: podcastMic,
+      img: Microphone1,
     },
     {
       id: 4,
@@ -79,7 +88,7 @@ export const ProductSection = () => {
       rating: 4.6,
       reviews: 156,
       desc: "LED light panel for professional photo and video shoots.",
-      img: ledLight,
+      img: ledLight1,
     },
     {
       id: 5,
@@ -91,7 +100,7 @@ export const ProductSection = () => {
       reviews: 87,
       desc: "Complete softbox kit for perfect lighting in photography studios.",
       discount: "SAVE 30%",
-      img: softbox,
+      img: softbox1,
     },
     {
       id: 6,
@@ -102,7 +111,7 @@ export const ProductSection = () => {
       rating: 4.5,
       reviews: 128,
       desc: "Professional ring light ideal for makeup, photography and streaming.",
-      img: miniRinglight,
+      img: ringlight2,
     },
     {
       id: 7,
@@ -114,7 +123,7 @@ export const ProductSection = () => {
       reviews: 95,
       desc: "Durable adjustable tripod stand perfect for cameras and ringlights.",
       discount: "SAVE 90%",
-      img: tripodStand,
+      img: tripodStand2,
     },
     {
       id: 8,
@@ -125,7 +134,7 @@ export const ProductSection = () => {
       rating: 4.7,
       reviews: 203,
       desc: "Studio-quality microphone suitable for podcasts and content creation.",
-      img: podcastMic,
+      img: microphone2,
     },
     {
       id: 9,
@@ -136,7 +145,7 @@ export const ProductSection = () => {
       rating: 4.6,
       reviews: 156,
       desc: "LED light panel for professional photo and video shoots.",
-      img: ledLight,
+      img: ledLight2,
     },
     {
       id: 10,
@@ -148,7 +157,7 @@ export const ProductSection = () => {
       reviews: 87,
       desc: "Complete softbox kit for perfect lighting in photography studios.",
       discount: "SAVE 30%",
-      img: softbox,
+      img: softbox2,
     },
     {
       id: 11,
@@ -159,7 +168,7 @@ export const ProductSection = () => {
       rating: 4.5,
       reviews: 128,
       desc: "Professional ring light ideal for makeup, photography and streaming.",
-      img: ringlight,
+      img: ringlight3,
     },
     {
       id: 12,
@@ -171,7 +180,7 @@ export const ProductSection = () => {
       reviews: 95,
       desc: "Durable adjustable tripod stand perfect for cameras and ringlights.",
       discount: "SAVE 90%",
-      img: tripodStand,
+      img: tripodStand3, // Reusing tripodStand2 since you don't have a tripodStanddd image
     },
   ];
 
@@ -343,19 +352,18 @@ export const ProductSection = () => {
                   </button>
                 </div>
               </div>
-
               {/* Product Details */}
               <div className="">
                 <div className="flex items-center gap-1 mb-2">
                   {renderStars(product.rating)}
-                  <span className="text-xs text-gray-500 ml-1">
+                  <span className="text-xs text-foreground/60 ml-1">
                     ({product.reviews})
                   </span>
                 </div>
-                <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-1 line-clamp-1">
+                <h3 className="text-sm sm:text-base font-semibold text-foreground mb-1 line-clamp-1">
                   {product.name}
                 </h3>
-                <p className="text-xs text-gray-600 mb-2 line-clamp-2 hidden sm:block">
+                <p className="text-xs text-foreground/70 mb-2 line-clamp-2 hidden sm:block">
                   {product.desc}
                 </p>
                 <div className="flex items-center gap-2 mb-3">
@@ -372,7 +380,7 @@ export const ProductSection = () => {
                 >
                   <ShoppingCart size={14} /> Add to Cart
                 </button>
-              </div>
+              </div>{" "}
             </div>
           ))
         ) : (

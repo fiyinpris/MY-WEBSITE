@@ -285,7 +285,6 @@ export const NavBar = () => {
                 {isSearchOpen ? "Close" : "Search"}
               </span>
             </div>
-
             {/* WISHLIST WITH BADGE and Tooltip */}
             <div className="relative group">
               <button
@@ -304,7 +303,6 @@ export const NavBar = () => {
                 Wishlist
               </span>
             </div>
-
             {/* SHOPPING CART WITH BADGE and Tooltip */}
             <div className="relative group">
               <button
@@ -323,7 +321,6 @@ export const NavBar = () => {
                 Cart
               </span>
             </div>
-
             {/* Account Icon with Tooltip */}
             <div className="relative group">
               <button
@@ -337,10 +334,9 @@ export const NavBar = () => {
                 Account
               </span>
             </div>
-
-            {/* ACCOUNT DROPDOWN */}
+            {/* ACCOUNT DROPDOWN - DESKTOP ONLY */}
             {isAccountOpen && (
-              <div className="fixed right-4 top-20 w-72 bg-card border border-border rounded-xl shadow-lg p-4 z-50">
+              <div className="hidden lg:block fixed right-4 top-20 w-72 bg-card border border-border rounded-xl shadow-lg p-4 z-50">
                 <button
                   onClick={() => setIsAccountOpen(false)}
                   className="absolute top-4 right-3 text-muted-foreground hover:text-foreground transition-colors p-2 cursor-pointer"
@@ -396,7 +392,7 @@ export const NavBar = () => {
                   )}
                 </div>
               </div>
-            )}
+            )}{" "}
           </div>
         </div>
       </div>
@@ -463,14 +459,13 @@ export const NavBar = () => {
           </button>
         </div>
       </div>
-
       {/* MOBILE LAYOUT (below md) */}
-      <div className="flex md:hidden w-full items-center justify-between px-4 sm:px-6 max-w-7xl mx-auto">
+      <div className="flex md:hidden w-full items-center justify-between">
         {/* Logo - Hidden on mobile when search is open */}
         {!isSearchOpen && (
           <Link
             to="/"
-            className="text-xl sm:text-2xl font-bold text-primary flex items-center"
+            className="text-xl sm:text-2xl font-bold text-primary flex items-center px-4"
           >
             <span className="relative z-10">
               <span className="text-glow text-foreground">my.</span>LIGHTSTORE
@@ -478,16 +473,13 @@ export const NavBar = () => {
           </Link>
         )}
 
-        {/* MOBILE SEARCH BAR - Replaces logo on small screen */}
+        {/* MOBILE SEARCH BAR - Full width edge to edge */}
         {isSearchOpen && (
-          <div
-            className="flex items-center gap-2 flex-1 mr-2 relative"
-            ref={searchRef}
-          >
-            <div className="relative flex-1">
+          <div className="flex-1 relative px-4" ref={searchRef}>
+            <div className="relative w-full bg-muted rounded-xl">
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder="Search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
@@ -497,65 +489,73 @@ export const NavBar = () => {
                   }
                 }}
                 onFocus={() => searchQuery && setShowSuggestions(true)}
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-border bg-card text-foreground text-base focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full pl-4 pr-24 py-3.5 rounded-xl border-0 bg-muted text-foreground font-normal focus:outline-none focus:ring-0 placeholder:text-foreground/60"
                 autoFocus
-              />
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-                size={18}
+                style={{ fontSize: "16px" }}
               />
 
-              {/* ✅ AUTOCOMPLETE DROPDOWN - MOBILE */}
-              {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute z-[60] w-full mt-2 bg-card border border-border rounded-lg shadow-xl overflow-hidden">
-                  <div className="py-1">
-                    {suggestions.map((product, index) => (
-                      <button
-                        key={product.id}
-                        onClick={() => handleSelectSuggestion(product)}
-                        className={cn(
-                          "w-full flex items-center gap-2 px-3 py-2 transition-colors text-left",
-                          index === highlightedIndex
-                            ? "bg-primary/10"
-                            : "hover:bg-muted"
-                        )}
-                      >
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-8 h-8 object-cover rounded"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs font-medium text-foreground truncate">
-                            {product.name}
-                          </div>
-                          <div className="text-xs text-primary font-semibold">
-                            ₦{product.price.toLocaleString()}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* Search Icon Button */}
+              <button
+                onClick={handleSearchSubmit}
+                className="absolute right-12 top-1/2 -translate-y-1/2 text-foreground/70 p-1.5 hover:text-foreground transition-colors"
+                aria-label="Search"
+              >
+                <Search size={22} />
+              </button>
+
+              {/* Close Icon Button */}
+              <button
+                onClick={() => {
+                  setIsSearchOpen(false);
+                  setSearchQuery("");
+                  setShowSuggestions(false);
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/70 p-1.5 hover:text-foreground transition-colors"
+                aria-label="Close search"
+              >
+                <X size={22} />
+              </button>
             </div>
-            <button
-              onClick={() => {
-                setIsSearchOpen(false);
-                setSearchQuery("");
-                setShowSuggestions(false);
-              }}
-              className="text-foreground p-2 hover:bg-primary/10 rounded-lg transition-colors flex-shrink-0"
-              aria-label="Close search"
-            >
-              <X size={24} />
-            </button>
+
+            {/* ✅ AUTOCOMPLETE DROPDOWN */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute z-[60] w-full mt-2 bg-card border border-border rounded-lg shadow-xl overflow-hidden left-0 right-0">
+                <div className="py-1">
+                  {suggestions.map((product, index) => (
+                    <button
+                      key={product.id}
+                      onClick={() => handleSelectSuggestion(product)}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-3 py-2 transition-colors text-left",
+                        index === highlightedIndex
+                          ? "bg-primary/10"
+                          : "hover:bg-muted"
+                      )}
+                    >
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-8 h-8 object-cover rounded"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium text-foreground truncate">
+                          {product.name}
+                        </div>
+                        <div className="text-xs text-primary font-semibold">
+                          ₦{product.price.toLocaleString()}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* MOBILE ICONS - Only visible when search is closed */}
         {!isSearchOpen && (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 px-4">
             <button
               onClick={() => setIsSearchOpen(true)}
               aria-label="Search"
@@ -801,9 +801,9 @@ export const NavBar = () => {
         </div>
       </div>
 
-      {/* ACCOUNT POPUP — CENTERED ON SMALL SCREEN */}
+      {/* ACCOUNT POPUP — MOBILE & TABLET ONLY (NOT DESKTOP) */}
       {isAccountOpen && (
-        <div className="fixed inset-0 flex items-center justify-center z-[999] bg-black/50 backdrop-blur-sm">
+        <div className="lg:hidden fixed inset-0 flex items-center justify-center z-[999] bg-black/50 backdrop-blur-sm">
           <div className="relative w-[90%] max-w-sm bg-card border border-border rounded-2xl shadow-lg p-6">
             <button
               onClick={() => setIsAccountOpen(false)}

@@ -1,4 +1,3 @@
-// src/components/HomeSection.jsx
 import React, { useState, useEffect } from "react";
 import {
   Send,
@@ -8,9 +7,18 @@ import {
   ArrowBigRight,
 } from "lucide-react";
 
+// Carousel images
 import myImage1 from "../Images/image 7.jpg";
 import myImage2 from "../Images/image 16.jpg";
 import myImage3 from "../Images/image 15.jpg";
+
+// Product images
+import ringlight from "../Images/image R.jpeg";
+import tripodStand from "../Images/image T.jpeg";
+import ledLight from "../Images/image L.jpeg";
+import softbox from "../Images/image S.jpeg";
+import Microphone from "../Images/image M.jpeg";
+import Ringlight from "../Images/image R1.jpeg";
 
 function cn(...inputs) {
   return inputs.filter(Boolean).join(" ");
@@ -21,56 +29,50 @@ const carouselImages = [myImage1, myImage2, myImage3];
 const products = [
   {
     id: 1,
-    name: "LED 600",
-    price: "#43,000.00 NGN",
-    rating: 4.8,
-    image:
-      "https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?w=500&q=80",
+    name: "Ringlight",
+    price: "₦25,000",
+    rating: 4.5,
+    image: Ringlight,
     badge: "Bestseller",
   },
   {
     id: 2,
-    name: "LED 800",
-    price: "#57,000.00 NGN",
-    rating: 4.9,
-    image:
-      "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&q=80",
-    badge: "Bestseller",
+    name: "LED Light",
+    price: "₦30,000",
+    rating: 4.6,
+    image: ledLight,
+    badge: "Hot",
   },
   {
     id: 3,
-    name: "K29 Tripod",
-    price: "#30,000.00 NGN",
-    rating: 4.7,
-    image:
-      "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&q=80",
+    name: "Tripod Stand",
+    price: "₦20,000",
+    rating: 4.8,
+    image: tripodStand,
     badge: "Bestseller",
   },
   {
     id: 4,
-    name: "K29 Tripod",
-    price: "#30,000.00 NGN",
-    rating: 4.7,
-    image:
-      "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&q=80",
-    badge: "Bestseller",
+    name: "Softbox",
+    price: "₦40,000",
+    rating: 4.9,
+    image: softbox,
+    badge: "Hot",
   },
   {
     id: 5,
-    name: "LED 800",
-    price: "#57,000.00 NGN",
-    rating: 4.9,
-    image:
-      "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&q=80",
-    badge: "Bestseller",
+    name: "Microphone",
+    price: "₦18,000",
+    rating: 4.7,
+    image: Microphone,
+    badge: "New",
   },
   {
     id: 6,
-    name: "K29 Tripod",
-    price: "#30,000.00 NGN",
-    rating: 4.7,
-    image:
-      "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&q=80",
+    name: "Ringlight",
+    price: "₦35,000",
+    rating: 4.5,
+    image: ringlight,
     badge: "Bestseller",
   },
 ];
