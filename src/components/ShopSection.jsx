@@ -4,7 +4,6 @@ import { useWishlist } from "./WishlistSection";
 import { Heart } from "lucide-react";
 import headerBg from "../Images/image 9.jpg";
 
-
 // Additional product images - UPDATE THESE PATHS TO MATCH YOUR ACTUAL FILES
 import microphone1 from "../Images/image M.jpeg";
 import ringlight1 from "../Images/image R.jpeg";
@@ -95,7 +94,7 @@ export const ShopSection = () => {
     { id: 63, name: "LEDLIGHT", price: 35000, image: ledLight2 },
   ];
 
-  const PRODUCTS_PER_PAGE = 9;
+  const PRODUCTS_PER_PAGE = 12;
 
   // Preload header image
   useEffect(() => {
@@ -375,7 +374,7 @@ export const ShopSection = () => {
               </select>
             </div>
 
-            {/* Product Grid */}
+            {/* Product Grid - 3 columns x 4 rows = 12 products */}
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {currentProducts.map((product) => (
                 <div
