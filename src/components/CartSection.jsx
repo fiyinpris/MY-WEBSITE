@@ -1,7 +1,12 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import {
   Trash2,
-  Edit,
   Plus,
   Minus,
   ShoppingCart,
@@ -20,7 +25,6 @@ const CartContext = createContext();
 
 // Paystack Configuration
 const PAYSTACK_PUBLIC_KEY = "pk_test_xxxxxxxxxxxxx"; // Replace with your public key
-const PAYSTACK_SECRET_KEY = "sk_test_xxxxxxxxxxxxx"; // Replace with your secret key
 
 const STATES = [
   "Abia",
@@ -78,10 +82,10 @@ const Toast = ({ message, type, onClose }) => {
 
   return (
     <div
-      className={`fixed top-20 right-4 ${bgColor} border rounded-lg p-4 shadow-lg z-[9999] max-w-md`}
+      className={`fixed top-20 right-4 ${bgColor} border rounded-lg p-4 shadow-lg z-9999 max-w-md`}
     >
       <div className="flex items-start gap-3">
-        <Icon className={`w-5 h-5 ${textColor} flex-shrink-0 mt-0.5`} />
+        <Icon className={`w-5 h-5 ${textColor} shrink-0 mt-0.5`} />
         <p className={`${textColor} text-sm flex-1`}>{message}</p>
         <button onClick={onClose} className={`${textColor} hover:opacity-70`}>
           <X className="w-4 h-4" />
@@ -97,31 +101,34 @@ export const CartSection = ({ children }) => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Safe localStorage operations
-  const safeGetFromStorage = (key) => {
+  const safeGetFromStorage = useCallback((key) => {
     try {
       const item = localStorage.getItem(key);
       return item ? JSON.parse(item) : null;
     } catch (error) {
       console.error(`Error reading from localStorage (${key}):`, error);
-      showToast("Failed to load saved cart data", "error");
       return null;
     }
-  };
+  }, []);
 
-  const safeSaveToStorage = (key, value) => {
+  const safeSaveToStorage = useCallback((key, value) => {
     try {
       localStorage.setItem(key, JSON.stringify(value));
       return true;
     } catch (error) {
       console.error(`Error saving to localStorage (${key}):`, error);
       if (error.name === "QuotaExceededError") {
-        showToast("Storage limit reached. Please clear some items.", "error");
+        console.error("Storage limit reached. Please clear some items.");
       } else {
-        showToast("Failed to save cart data", "error");
+        console.error("Failed to save cart data");
       }
       return false;
     }
-  };
+  }, []);
+
+  const showToast = useCallback((message, type = "success") => {
+    setToast({ message, type });
+  }, []);
 
   useEffect(() => {
     const savedCart = safeGetFromStorage("cartItems");
@@ -129,17 +136,13 @@ export const CartSection = ({ children }) => {
       setCartItems(savedCart);
     }
     setIsInitialized(true);
-  }, []);
+  }, [safeGetFromStorage]);
 
   useEffect(() => {
     if (isInitialized) {
       safeSaveToStorage("cartItems", cartItems);
     }
-  }, [cartItems, isInitialized]);
-
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-  };
+  }, [cartItems, isInitialized, safeSaveToStorage]);
 
   const validateProduct = (product) => {
     if (!product || typeof product !== "object") {
@@ -258,6 +261,7 @@ export const CartSection = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {
@@ -328,7 +332,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pt-16 sm:pt-20 pb-16 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800 p-3 sm:p-4 mb-4 sm:mb-6 rounded-lg flex items-center gap-2 sm:gap-3 mt-2 shadow-sm">
-          <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 flex-shrink-0" />
+          <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 shrink-0" />
           <p className="font-semibold text-xs sm:text-sm md:text-base">
             You have {totalItems} {totalItems === 1 ? "item" : "items"} in your
             cart
@@ -340,7 +344,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
         </h1>
 
         <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-8 md:mb-12 overflow-x-auto">
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <span
               className="text-slate-500 text-xs sm:text-sm md:text-base cursor-pointer whitespace-nowrap hover:text-slate-700 transition-colors"
               onClick={onBack}
@@ -349,13 +353,13 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
             </span>
           </div>
           <div className="h-px flex-1 bg-slate-300 min-w-4"></div>
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <span className="text-slate-900 font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap">
               2. Checkout
             </span>
           </div>
           <div className="h-px flex-1 bg-slate-300 min-w-4"></div>
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <span className="text-slate-500 text-xs sm:text-sm md:text-base whitespace-nowrap">
               3. Payment
             </span>
@@ -526,7 +530,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full sm:flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-2.5 sm:py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base shadow-lg"
+                  className="w-full sm:flex-1 bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-2.5 sm:py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base shadow-lg"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center justify-center gap-2">
@@ -573,13 +577,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
 };
 
 // Bank Transfer Component
-const BankTransferPayment = ({
-  amount,
-  email,
-  reference,
-  onBack,
-  onComplete,
-}) => {
+const BankTransferPayment = ({ amount, email, onBack, onComplete }) => {
   const [copied, setCopied] = useState({ account: false, amount: false });
   const [timeRemaining, setTimeRemaining] = useState(1800); // 30 minutes
   const { showToast } = useCart();
@@ -625,7 +623,7 @@ const BankTransferPayment = ({
       setTimeout(() => {
         setCopied((prev) => ({ ...prev, [field]: false }));
       }, 2000);
-    } catch (error) {
+    } catch {
       showToast("Failed to copy", "error");
     }
   };
@@ -726,7 +724,7 @@ const BankTransferPayment = ({
       <div className="flex flex-col gap-3">
         <button
           onClick={onComplete}
-          className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold py-3 rounded-lg transition-all shadow-lg shadow-emerald-500/30"
+          className="w-full bg-linear-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold py-3 rounded-lg transition-all shadow-lg shadow-emerald-500/30"
         >
           I've sent the money
         </button>
@@ -742,9 +740,8 @@ const BankTransferPayment = ({
 };
 
 // USSD Payment Component
-const USSDPayment = ({ amount, email, reference, onBack, onComplete }) => {
+const USSDPayment = ({ amount, email, onBack, onComplete }) => {
   const [selectedBank, setSelectedBank] = useState(null);
-  const { showToast } = useCart();
 
   const banks = [
     { name: "Guaranty Trust Bank", code: "*737#", shortCode: "737" },
@@ -806,7 +803,7 @@ const USSDPayment = ({ amount, email, reference, onBack, onComplete }) => {
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-6">
+          <div className="bg-linear-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-6">
             <div className="text-center mb-4">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full shadow-md mb-3">
                 <Smartphone className="w-8 h-8 text-green-600" />
@@ -845,7 +842,7 @@ const USSDPayment = ({ amount, email, reference, onBack, onComplete }) => {
           <div className="flex flex-col gap-3">
             <button
               onClick={onComplete}
-              className="w-full bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white font-semibold py-3 rounded-lg transition-all shadow-lg shadow-green-500/30"
+              className="w-full bg-linear-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white font-semibold py-3 rounded-lg transition-all shadow-lg shadow-green-500/30"
             >
               I've completed the payment
             </button>
@@ -870,7 +867,7 @@ const USSDPayment = ({ amount, email, reference, onBack, onComplete }) => {
 
       <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
         <div className="flex items-start gap-2 text-xs text-slate-600">
-          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           <p>
             Payment confirmation may take a few minutes. If you don't see
             confirmation immediately, please wait before trying again.
@@ -932,7 +929,7 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
           },
         ],
       },
-      callback: function (response) {
+      callback: function () {
         setIsProcessing(false);
         showToast("Payment successful! Order confirmed.", "success");
         // Verify payment on backend here
@@ -963,10 +960,10 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pt-16 sm:pt-20 pb-16 px-4">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 pt-16 sm:pt-20 pb-16 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800 p-3 sm:p-4 mb-4 sm:mb-6 rounded-lg flex items-center gap-2 sm:gap-3 mt-2 shadow-sm">
-          <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 flex-shrink-0" />
+          <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 shrink-0" />
           <p className="font-semibold text-xs sm:text-sm md:text-base">
             You have {totalItems} {totalItems === 1 ? "item" : "items"} in your
             cart
@@ -978,13 +975,13 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
         </h1>
 
         <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-8 md:mb-12 overflow-x-auto">
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <span className="text-slate-500 text-xs sm:text-sm md:text-base whitespace-nowrap">
               1. Cart
             </span>
           </div>
           <div className="h-px flex-1 bg-slate-300 min-w-4"></div>
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <span
               className="text-slate-500 text-xs sm:text-sm md:text-base cursor-pointer whitespace-nowrap hover:text-slate-700 transition-colors"
               onClick={onBack}
@@ -993,7 +990,7 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
             </span>
           </div>
           <div className="h-px flex-1 bg-slate-300 min-w-4"></div>
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <span className="text-slate-900 font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap">
               3. Payment
             </span>
@@ -1150,7 +1147,7 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
   );
 };
 
-// Cart Page Component (same as before with minor styling updates)
+// Cart Page Component
 export const CartPage = () => {
   const { cartItems, removeFromCart, updateQuantity, totalItems, showToast } =
     useCart();
@@ -1172,19 +1169,17 @@ export const CartPage = () => {
         return sum + item.price * item.quantity;
       }, 0);
       const discount = subtotal * appliedDiscount;
-      const tax = 0;
-      const shipping = 0;
-      const total = subtotal - discount + tax + shipping;
+      const total = subtotal - discount;
 
-      return { subtotal, discount, tax, shipping, total };
+      return { subtotal, discount, total };
     } catch (error) {
       console.error("Error calculating totals:", error);
       showToast("Error calculating cart total", "error");
-      return { subtotal: 0, discount: 0, tax: 0, shipping: 0, total: 0 };
+      return { subtotal: 0, discount: 0, total: 0 };
     }
   };
 
-  const { subtotal, discount, tax, shipping, total } = calculateTotals();
+  const { subtotal, discount, total } = calculateTotals();
 
   const handleApplyCoupon = () => {
     setIsApplyingCoupon(true);
@@ -1257,7 +1252,7 @@ export const CartPage = () => {
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 pt-16 sm:pt-20 bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="min-h-screen flex items-center justify-center px-4 pt-16 sm:pt-20 bg-linear-to-br from-slate-50 to-slate-100">
         <div className="text-center">
           <div className="w-24 h-24 mx-auto mb-6 bg-slate-200 rounded-full flex items-center justify-center">
             <ShoppingCart className="w-12 h-12 text-slate-400" />
@@ -1270,7 +1265,7 @@ export const CartPage = () => {
           </p>
           <a
             href="/products"
-            className="inline-block px-6 py-2.5 sm:py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg transition-all text-sm sm:text-base shadow-lg"
+            className="inline-block px-6 py-2.5 sm:py-3 bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg transition-all text-sm sm:text-base shadow-lg"
           >
             Continue Shopping
           </a>
@@ -1280,10 +1275,10 @@ export const CartPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pt-16 sm:pt-20 pb-16 px-4">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 pt-16 sm:pt-20 pb-16 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800 p-3 sm:p-4 mb-4 sm:mb-6 rounded-lg flex items-center gap-2 sm:gap-3 mt-2 shadow-sm">
-          <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 flex-shrink-0" />
+          <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 shrink-0" />
           <p className="font-semibold text-xs sm:text-sm md:text-base">
             You have {totalItems} {totalItems === 1 ? "item" : "items"} in your
             cart
@@ -1295,19 +1290,19 @@ export const CartPage = () => {
         </h1>
 
         <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-8 md:mb-12 overflow-x-auto">
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <span className="text-slate-900 font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap">
               1. Cart
             </span>
           </div>
           <div className="h-px flex-1 bg-slate-300 min-w-4"></div>
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <span className="text-slate-500 text-xs sm:text-sm md:text-base whitespace-nowrap">
               2. Checkout
             </span>
           </div>
           <div className="h-px flex-1 bg-slate-300 min-w-4"></div>
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <span className="text-slate-500 text-xs sm:text-sm md:text-base whitespace-nowrap">
               3. Payment
             </span>
@@ -1322,7 +1317,7 @@ export const CartPage = () => {
                 className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-slate-200 hover:shadow-xl transition-shadow"
               >
                 <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-                  <div className="flex-shrink-0 w-full sm:w-auto mx-auto sm:mx-0">
+                  <div className="shrink-0 w-full sm:w-auto mx-auto sm:mx-0">
                     <img
                       src={item.image || item.img}
                       alt={item.name}
@@ -1427,7 +1422,7 @@ export const CartPage = () => {
 
               <button
                 onClick={handleProceedToCheckout}
-                className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 rounded-lg transition-all mb-4 sm:mb-6 text-sm sm:text-base shadow-lg"
+                className="w-full bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 rounded-lg transition-all mb-4 sm:mb-6 text-sm sm:text-base shadow-lg"
               >
                 Proceed to Checkout
               </button>
@@ -1469,34 +1464,7 @@ export const CartPage = () => {
   );
 };
 
-export default function App() {
-  const sampleProducts = [
-    {
-      id: 1,
-      name: "Premium Wireless Headphones",
-      description: "High-quality sound with noise cancellation",
-      price: 45000,
-      oldPrice: 60000,
-      image:
-        "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop",
-    },
-    {
-      id: 2,
-      name: "Smart Watch Series 5",
-      description: "Track your fitness and stay connected",
-      price: 120000,
-      image:
-        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop",
-    },
-  ];
-
-  return (
-    <CartSection>
-      <CartDemo products={sampleProducts} />
-    </CartSection>
-  );
-}
-
+// Default export moved to separate component file would be ideal, but keeping here for now
 function CartDemo({ products }) {
   const { addToCart, cartItems } = useCart();
 
@@ -1515,7 +1483,7 @@ function CartDemo({ products }) {
               <button
                 key={product.id}
                 onClick={() => addToCart(product)}
-                className="px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-xs font-semibold rounded-lg transition-all shadow-md hover:shadow-lg"
+                className="px-3 py-2 bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-xs font-semibold rounded-lg transition-all shadow-md hover:shadow-lg"
               >
                 Add Item {product.id}
               </button>

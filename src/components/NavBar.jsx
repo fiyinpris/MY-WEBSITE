@@ -52,11 +52,12 @@ export const NavBar = () => {
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
   const location = useLocation();
 
-  // ✅ NEW: Autocomplete states
+  // ✅ Autocomplete states
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const searchRef = useRef(null);
+  const accountRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -93,13 +94,13 @@ export const NavBar = () => {
 
   const isLoggedIn = userName && userEmail;
 
-  // ✅ NEW: Update suggestions as user types
+  // ✅ Update suggestions as user types
   useEffect(() => {
     if (searchQuery.trim().length > 0) {
       const query = searchQuery.toLowerCase();
       const filtered = products
         .filter((product) => product.name.toLowerCase().includes(query))
-        .slice(0, 5); // Show max 5 suggestions
+        .slice(0, 5);
 
       setSuggestions(filtered);
       setShowSuggestions(true);
@@ -109,7 +110,7 @@ export const NavBar = () => {
     }
   }, [searchQuery]);
 
-  // ✅ NEW: Close suggestions when clicking outside
+  // ✅ Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -121,7 +122,25 @@ export const NavBar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ NEW: Handle keyboard navigation
+  // ✅ NEW: Close account dropdown when clicking outside (DESKTOP ONLY)
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Only for desktop account dropdown
+      if (window.innerWidth >= 1024) {
+        if (accountRef.current && !accountRef.current.contains(event.target)) {
+          setIsAccountOpen(false);
+        }
+      }
+    };
+
+    if (isAccountOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isAccountOpen]);
+
+  // ✅ Handle keyboard navigation
   const handleKeyDown = (e) => {
     if (!showSuggestions || suggestions.length === 0) return;
 
@@ -138,7 +157,7 @@ export const NavBar = () => {
     }
   };
 
-  // ✅ NEW: Handle suggestion selection
+  // ✅ Handle suggestion selection
   const handleSelectSuggestion = (product) => {
     setSearchQuery(product.name);
     setShowSuggestions(false);
@@ -322,7 +341,7 @@ export const NavBar = () => {
               </span>
             </div>
             {/* Account Icon with Tooltip */}
-            <div className="relative group">
+            <div className="relative group" ref={accountRef}>
               <button
                 onClick={() => setIsAccountOpen(!isAccountOpen)}
                 aria-label="User Account"
@@ -333,66 +352,67 @@ export const NavBar = () => {
               <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-50">
                 Account
               </span>
-            </div>
-            {/* ACCOUNT DROPDOWN - DESKTOP ONLY */}
-            {isAccountOpen && (
-              <div className="hidden lg:block fixed right-4 top-20 w-72 bg-card border border-border rounded-xl shadow-lg p-4 z-50">
-                <button
-                  onClick={() => setIsAccountOpen(false)}
-                  className="absolute top-4 right-3 text-muted-foreground hover:text-foreground transition-colors p-2 cursor-pointer"
-                >
-                  <X size={18} />
-                </button>
 
-                <h3 className="text-lg font-semibold text-foreground mb-3 pr-6">
-                  My Account
-                </h3>
+              {/* ACCOUNT DROPDOWN - DESKTOP ONLY */}
+              {isAccountOpen && (
+                <div className="absolute right-0 top-12 w-72 bg-card border border-border rounded-xl shadow-lg p-4 z-50">
+                  <button
+                    onClick={() => setIsAccountOpen(false)}
+                    className="absolute top-4 right-3 text-muted-foreground hover:text-foreground transition-colors p-2 cursor-pointer"
+                  >
+                    <X size={18} />
+                  </button>
 
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-foreground/70">Name</p>
-                    <p className="font-medium text-foreground">
-                      {userName || "Guest User"}
-                    </p>
+                  <h3 className="text-lg font-semibold text-foreground mb-3 pr-6">
+                    My Account
+                  </h3>
+
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-foreground/70">Name</p>
+                      <p className="font-medium text-foreground">
+                        {userName || "Not available"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-foreground/70">Email</p>
+                      <p className="font-medium text-foreground">
+                        {userEmail || "Not available"}
+                      </p>
+                    </div>
+                    <hr className="border-border my-2" />
+
+                    {!isLoggedIn ? (
+                      <Link
+                        to="/signin"
+                        onClick={() => {
+                          setIsAccountOpen(false);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 rounded-md border border-border hover:bg-primary/10 transition-colors"
+                      >
+                        Sign in
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          localStorage.removeItem("user");
+                          setUserName("");
+                          setUserEmail("");
+                          setIsAccountOpen(false);
+                          setIsMobileMenuOpen(false);
+                          setShowLogoutPopup(true);
+                          navigate("/signin");
+                        }}
+                        className="w-full text-left px-4 py-2 rounded-md border border-border hover:bg-primary/10 transition-colors"
+                      >
+                        Sign out
+                      </button>
+                    )}
                   </div>
-                  <div>
-                    <p className="text-sm text-foreground/70">Email</p>
-                    <p className="font-medium text-foreground">
-                      {userEmail || "Not available"}
-                    </p>
-                  </div>
-                  <hr className="border-border my-2" />
-
-                  {!isLoggedIn ? (
-                    <Link
-                      to="/signin"
-                      onClick={() => {
-                        setIsAccountOpen(false);
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="block w-full text-left px-4 py-2 rounded-md border border-border hover:bg-primary/10 transition-colors"
-                    >
-                      Sign in
-                    </Link>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        localStorage.removeItem("user");
-                        setUserName("");
-                        setUserEmail("");
-                        setIsAccountOpen(false);
-                        setIsMobileMenuOpen(false);
-                        setShowLogoutPopup(true);
-                        navigate("/signin");
-                      }}
-                      className="w-full text-left px-4 py-2 rounded-md border border-border hover:bg-primary/10 transition-colors"
-                    >
-                      Sign out
-                    </button>
-                  )}
                 </div>
-              </div>
-            )}{" "}
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -459,6 +479,7 @@ export const NavBar = () => {
           </button>
         </div>
       </div>
+
       {/* MOBILE LAYOUT (below md) */}
       <div className="flex md:hidden w-full items-center justify-between">
         {/* Logo - Hidden on mobile when search is open */}
@@ -803,8 +824,14 @@ export const NavBar = () => {
 
       {/* ACCOUNT POPUP — MOBILE & TABLET ONLY (NOT DESKTOP) */}
       {isAccountOpen && (
-        <div className="lg:hidden fixed inset-0 flex items-center justify-center z-[999] bg-black/50 backdrop-blur-sm">
-          <div className="relative w-[90%] max-w-sm bg-card border border-border rounded-2xl shadow-lg p-6">
+        <div
+          className="lg:hidden fixed inset-0 flex items-center justify-center z-[999] bg-black/50 backdrop-blur-sm"
+          onClick={() => setIsAccountOpen(false)}
+        >
+          <div
+            className="relative w-[90%] max-w-sm bg-card border border-border rounded-2xl shadow-lg p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => setIsAccountOpen(false)}
               className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors p-2 cursor-pointer"
