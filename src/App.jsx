@@ -12,6 +12,7 @@ import { WishlistSection, WishlistPage } from "./components/WishlistSection";
 import { SearchSection } from "./components/SearchSection";
 import { SearchProvider } from "./components/SearchContext"; // ✅ Changed path
 import { Footer } from "./components/Footer";
+import GoogleCallback from "./components/GoogleCallback";
 
 function App() {
   const [formData, setFormData] = React.useState({ email: "" });
@@ -35,6 +36,7 @@ function App() {
                   <Route path="/products" element={<ProductSection />} />
                   <Route path="/signin" element={<SigninSection />} />
                   <Route path="/search" element={<SearchSection />} />
+                  <Route path="/auth/callback" element={<GoogleCallback />} />
                 </Routes>
               </main>
 

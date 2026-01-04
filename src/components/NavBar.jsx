@@ -86,10 +86,21 @@ export const NavBar = () => {
     localStorage.setItem("theme", newTheme);
   };
 
+  // ✅ FIXED: Listen for user updates from SigninSection
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user")) || {};
-    if (storedUser.name) setUserName(storedUser.name);
-    if (storedUser.email) setUserEmail(storedUser.email);
+    const updateUserData = () => {
+      const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+      if (storedUser.name) setUserName(storedUser.name);
+      if (storedUser.email) setUserEmail(storedUser.email);
+    };
+
+    // Initial load
+    updateUserData();
+
+    // Listen for updates
+    window.addEventListener("userUpdated", updateUserData);
+
+    return () => window.removeEventListener("userUpdated", updateUserData);
   }, []);
 
   const isLoggedIn = userName && userEmail;
@@ -122,7 +133,7 @@ export const NavBar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ NEW: Close account dropdown when clicking outside (DESKTOP ONLY)
+  // ✅ Close account dropdown when clicking outside (DESKTOP ONLY)
   useEffect(() => {
     const handleClickOutside = (event) => {
       // Only for desktop account dropdown
@@ -402,7 +413,6 @@ export const NavBar = () => {
                           setIsAccountOpen(false);
                           setIsMobileMenuOpen(false);
                           setShowLogoutPopup(true);
-                          navigate("/signin");
                         }}
                         className="w-full text-left px-4 py-2 rounded-md border border-border hover:bg-primary/10 transition-colors"
                       >
@@ -884,8 +894,7 @@ export const NavBar = () => {
                     setUserEmail("");
                     setIsAccountOpen(false);
                     setIsMobileMenuOpen(false);
-                    alert("You have been logged out successfully.");
-                    navigate("/signin");
+                    setShowLogoutPopup(true);
                   }}
                   className="block w-full text-left px-4 py-2 rounded-md border border-border hover:bg-primary/10 transition-colors"
                 >
@@ -897,18 +906,37 @@ export const NavBar = () => {
         </div>
       )}
 
+      {/* ✅ FIXED LOGOUT POPUP - ALWAYS CENTERED */}
       {showLogoutPopup && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-xs z-[9999]">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-[9999] p-4">
           <div className="bg-card border border-border rounded-xl shadow-lg p-6 w-[90%] max-w-sm text-center animate-fadeIn">
-            <h2 className="text-lg font-semibold text-foreground mb-2">
-              Logged Out
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 text-green-600 dark:text-green-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              Logged Out Successfully
             </h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              You have been logged out successfully.
+            <p className="text-sm text-muted-foreground mb-6">
+              You have been logged out of your account.
             </p>
             <button
               onClick={() => setShowLogoutPopup(false)}
-              className="w-full bg-primary text-white py-2 rounded-md hover:bg-primary/80 transition"
+              className="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors"
             >
               Close
             </button>

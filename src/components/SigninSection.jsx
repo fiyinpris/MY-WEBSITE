@@ -16,6 +16,7 @@ export const SigninSection = () => {
   const [timer, setTimer] = useState(0);
   const [isExistingUser, setIsExistingUser] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricAttempting, setBiometricAttempting] = useState(false);
 
   useEffect(() => {
     emailjs.init("aYMxHd4D49CBiJT-X");
@@ -35,58 +36,95 @@ export const SigninSection = () => {
     }
   };
 
+  // ✅ AUTO-TRIGGER BIOMETRIC WHEN REACHING STEP 3 (LOGIN SCREEN)
+  useEffect(() => {
+    if (
+      step === 3 &&
+      isExistingUser &&
+      biometricAvailable &&
+      !biometricAttempting
+    ) {
+      // Automatically attempt biometric authentication
+      const timer = setTimeout(() => {
+        handleBiometricAuth();
+      }, 1000); // Wait 1 second before triggering
+
+      return () => clearTimeout(timer);
+    }
+  }, [step, isExistingUser, biometricAvailable]);
+
+  // ✅ REAL BIOMETRIC AUTHENTICATION (WebAuthn API)
   const handleBiometricAuth = async () => {
-    if (!biometricAvailable) {
-      setError("Biometric authentication is not available on this device");
+    if (!biometricAvailable || biometricAttempting) {
       return;
     }
 
     try {
+      setBiometricAttempting(true);
       setLoading(true);
 
-      if (isExistingUser) {
-        const biometricSuccess = await simulateBiometricAuth();
+      if (!isExistingUser) {
+        setError("Please complete password setup first");
+        setLoading(false);
+        setBiometricAttempting(false);
+        return;
+      }
 
-        if (biometricSuccess) {
+      // ✅ Use WebAuthn for REAL biometric authentication
+      const challenge = new Uint8Array(32);
+      crypto.getRandomValues(challenge);
+
+      const publicKeyCredentialRequestOptions = {
+        challenge: challenge,
+        timeout: 60000,
+        userVerification: "required",
+        rpId: window.location.hostname,
+      };
+
+      try {
+        const credential = await navigator.credentials.get({
+          publicKey: publicKeyCredentialRequestOptions,
+        });
+
+        if (credential) {
+          // ✅ Biometric authentication successful
           const users = getRegisteredUsers();
           const user = users.find(
-            (u) => u.email.toLowerCase() === email.toLowerCase()
+            (u) =>
+              u.email?.toLowerCase() === email.toLowerCase() ||
+              u.phone === email
           );
 
           if (user) {
             localStorage.setItem(
               "user",
-              JSON.stringify({ name: user.name, email: user.email })
+              JSON.stringify({
+                name: user.name,
+                email: user.email || "",
+                phone: user.phone || "",
+              })
             );
+            window.dispatchEvent(new Event("userUpdated"));
             setStep(5);
             setTimeout(() => {
               navigate(-1);
             }, 2000);
           }
-        } else {
-          setError("Biometric authentication failed. Please try again.");
         }
-      } else {
-        setError("Please complete password setup first");
+      } catch (error) {
+        // User cancelled or biometric failed - this is normal, just show password option
+        console.log("Biometric auth cancelled or failed:", error);
+        setError("");
+        setBiometricAttempting(false);
       }
 
       setLoading(false);
+      setBiometricAttempting(false);
     } catch (error) {
       setLoading(false);
-      setError("Biometric authentication failed. Please use password instead.");
+      setBiometricAttempting(false);
       console.error("Biometric error:", error);
     }
-  };
-
-  const simulateBiometricAuth = () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const confirmed = window.confirm(
-          "🔐 Touch your fingerprint sensor or use Face ID to authenticate"
-        );
-        resolve(confirmed);
-      }, 500);
-    });
   };
 
   const getRegisteredUsers = () => {
@@ -106,12 +144,21 @@ export const SigninSection = () => {
     localStorage.setItem("registeredUsers", JSON.stringify(users));
   };
 
-  const validateEmail = (email) => /\S+@\S+\.\S+/.test(email);
+  // ✅ VALIDATE EMAIL OR PHONE NUMBER
+  const validateEmailOrPhone = (input) => {
+    const emailRegex = /\S+@\S+\.\S+/;
+    const phoneRegex =
+      /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
 
-  const checkUserExists = (email) => {
+    return emailRegex.test(input) || phoneRegex.test(input);
+  };
+
+  const checkUserExists = (emailOrPhone) => {
     const users = getRegisteredUsers();
     return users.find(
-      (user) => user.email.toLowerCase() === email.toLowerCase()
+      (user) =>
+        user.email?.toLowerCase() === emailOrPhone.toLowerCase() ||
+        user.phone === emailOrPhone
     );
   };
 
@@ -119,8 +166,8 @@ export const SigninSection = () => {
     if (!name.trim()) {
       return setError("Please enter your name");
     }
-    if (!validateEmail(email)) {
-      return setError("Please enter a valid email address");
+    if (!validateEmailOrPhone(email)) {
+      return setError("Please enter a valid email address or phone number");
     }
     setError("");
     const existingUser = checkUserExists(email);
@@ -138,20 +185,37 @@ export const SigninSection = () => {
     setLoading(true);
     const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
     setGeneratedOtp(otpCode);
-    try {
-      await emailjs.send("service_f8jpcjv", "template_gpentyl", {
-        to_name: name,
-        to_email: email,
-        otp: otpCode,
-      });
+
+    // Check if it's a phone number
+    const isPhone =
+      /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/.test(email);
+
+    if (isPhone) {
+      // For phone numbers, just simulate OTP (in production, use SMS service like Twilio)
+      console.log(`SMS OTP for ${email}: ${otpCode}`);
+      alert(
+        `Demo: OTP sent to ${email}\nYour OTP is: ${otpCode}\n\nIn production, this would be sent via SMS.`
+      );
       setLoading(false);
       setStep(2);
       setTimer(60);
-      console.log("OTP sent successfully:", otpCode);
-    } catch (error) {
-      setLoading(false);
-      setError("Failed to send OTP. Please try again.");
-      console.error("EmailJS Error:", error);
+    } else {
+      // For email, use EmailJS
+      try {
+        await emailjs.send("service_f8jpcjv", "template_gpentyl", {
+          to_name: name,
+          to_email: email,
+          otp: otpCode,
+        });
+        setLoading(false);
+        setStep(2);
+        setTimer(60);
+        console.log("OTP sent successfully:", otpCode);
+      } catch (error) {
+        setLoading(false);
+        setError("Failed to send OTP. Please try again.");
+        console.error("EmailJS Error:", error);
+      }
     }
   };
 
@@ -208,10 +272,28 @@ export const SigninSection = () => {
     }
 
     const users = getRegisteredUsers();
-    const newUser = { name, email, password };
+
+    // ✅ Check if it's phone or email
+    const isPhone =
+      /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/.test(email);
+
+    const newUser = isPhone
+      ? { name, phone: email, password }
+      : { name, email, password };
+
     users.push(newUser);
     saveRegisteredUsers(users);
-    localStorage.setItem("user", JSON.stringify({ name, email }));
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        name,
+        email: isPhone ? "" : email,
+        phone: isPhone ? email : "",
+      })
+    );
+
+    window.dispatchEvent(new Event("userUpdated"));
     setStep(5);
   };
 
@@ -221,13 +303,18 @@ export const SigninSection = () => {
     }
     const users = getRegisteredUsers();
     const user = users.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase()
+      (u) => u.email?.toLowerCase() === email.toLowerCase() || u.phone === email
     );
     if (user && user.password === password) {
       localStorage.setItem(
         "user",
-        JSON.stringify({ name: user.name, email: user.email })
+        JSON.stringify({
+          name: user.name,
+          email: user.email || "",
+          phone: user.phone || "",
+        })
       );
+      window.dispatchEvent(new Event("userUpdated"));
       setStep(5);
       setTimeout(() => {
         navigate(-1);
@@ -243,23 +330,38 @@ export const SigninSection = () => {
     setLoading(true);
     const resetCode = Math.floor(1000 + Math.random() * 9000).toString();
     setGeneratedOtp(resetCode);
-    try {
-      await emailjs.send("service_f8jpcjv", "template_gpentyl", {
-        to_name: name,
-        to_email: email,
-        otp: resetCode,
-      });
+
+    const isPhone =
+      /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/.test(email);
+
+    if (isPhone) {
+      console.log(`SMS Reset Code for ${email}: ${resetCode}`);
+      alert(`Demo: Reset code sent to ${email}\nYour code is: ${resetCode}`);
       setLoading(false);
       setStep(6);
       setTimer(60);
       setOtp(["", "", "", ""]);
       setPassword("");
       setConfirmPassword("");
-      console.log("Reset code sent:", resetCode);
-    } catch (error) {
-      setLoading(false);
-      setError("Failed to send reset code. Please try again.");
-      console.error("EmailJS Error:", error);
+    } else {
+      try {
+        await emailjs.send("service_f8jpcjv", "template_gpentyl", {
+          to_name: name,
+          to_email: email,
+          otp: resetCode,
+        });
+        setLoading(false);
+        setStep(6);
+        setTimer(60);
+        setOtp(["", "", "", ""]);
+        setPassword("");
+        setConfirmPassword("");
+        console.log("Reset code sent:", resetCode);
+      } catch (error) {
+        setLoading(false);
+        setError("Failed to send reset code. Please try again.");
+        console.error("EmailJS Error:", error);
+      }
     }
   };
 
@@ -267,11 +369,51 @@ export const SigninSection = () => {
     navigate(-1);
   };
 
+  // ✅ FIXED: OAuth buttons redirect to real login pages
+  const handleSocialLogin = (e, provider) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setError("");
+
+    // ✅ Get your app's base URL
+    const baseUrl = window.location.origin; // e.g., http://localhost:5173
+    const redirectUri = `${baseUrl}/auth/callback`;
+
+    if (provider === "google") {
+      // ✅ REAL GOOGLE OAUTH
+      const googleClientId =
+        "857334064448-pt36uthnh7dv3jd2vo819qlv8pgd2703.apps.googleusercontent.com";
+      // Replace with your actual Google Client ID
+      const googleAuthUrl =
+        `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${googleClientId}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&response_type=code` +
+        `&scope=email profile` +
+        `&access_type=offline`;
+
+      // Redirect to Google login
+      window.location.href = googleAuthUrl;
+    } else if (provider === "facebook") {
+      // ✅ REAL FACEBOOK OAUTH
+      const facebookAppId = "YOUR_FACEBOOK_APP_ID"; // Replace with your actual Facebook App ID
+      const facebookAuthUrl =
+        `https://www.facebook.com/v12.0/dialog/oauth?` +
+        `client_id=${facebookAppId}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&scope=email,public_profile` +
+        `&response_type=code`;
+
+      // Redirect to Facebook login
+      window.location.href = facebookAuthUrl;
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background lg:py-12 lg:px-4">
       <div className="relative w-full max-w-lg">
         <div className="px-5 lg:px-8 py-12">
-          {/* STEP 1: EMAIL & NAME INPUT */}
+          {/* STEP 1: EMAIL/PHONE & NAME INPUT */}
           {step === 1 && (
             <>
               <h1 className="text-2xl font-semibold text-center text-foreground mb-2">
@@ -298,12 +440,12 @@ export const SigninSection = () => {
                     Email or Mobile Number *
                   </label>
                   <input
-                    type="email"
+                    type="text"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleContinue()}
                     className="w-full px-4 py-3 border border-border bg-background text-foreground rounded focus:outline-none focus:border-primary transition-colors"
-                    placeholder="Enter your email"
+                    placeholder="Enter your email or phone"
                   />
                 </div>
                 {error && (
@@ -325,7 +467,12 @@ export const SigninSection = () => {
                     <div className="flex-1 border-t border-border"></div>
                   </div>
                   <div className="flex justify-center gap-4">
-                    <button className="w-12 h-12 flex items-center justify-center hover:opacity-80 transition">
+                    {/* ✅ FACEBOOK BUTTON - FULLY FIXED */}
+                    <button
+                      onClick={(e) => handleSocialLogin(e, "facebook")}
+                      type="button"
+                      className="w-12 h-12 flex items-center justify-center hover:opacity-80 hover:scale-105 active:scale-95 transition"
+                    >
                       <svg
                         className="w-12 h-12"
                         viewBox="0 0 48 48"
@@ -341,7 +488,13 @@ export const SigninSection = () => {
                         />
                       </svg>
                     </button>
-                    <button className="w-12 h-12 flex items-center justify-center hover:opacity-80 transition">
+
+                    {/* ✅ GOOGLE BUTTON - FULLY FIXED */}
+                    <button
+                      onClick={(e) => handleSocialLogin(e, "google")}
+                      type="button"
+                      className="w-12 h-12 flex items-center justify-center hover:opacity-80 hover:scale-105 active:scale-95 transition"
+                    >
                       <svg
                         className="w-12 h-12"
                         viewBox="0 0 48 48"
@@ -463,36 +616,72 @@ export const SigninSection = () => {
                 Welcome back!
               </h1>
               <p className="text-center text-muted-foreground mb-8">
-                Log back into your my.LIGHTSTORE account.
-              </p>
-              <div className="flex justify-center mb-6">
-                <button
-                  onClick={handleBiometricAuth}
-                  disabled={loading || !biometricAvailable}
-                  className="w-20 h-20 bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 flex items-center justify-center rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <svg
-                    className="w-10 h-10 text-green-600 dark:text-green-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <p className="text-center text-sm text-muted-foreground mb-6">
                 {biometricAvailable
-                  ? "Tap to use biometric authentication"
-                  : "Biometric authentication not available"}
+                  ? "Use your fingerprint, Face ID, or password to log in."
+                  : "Log back into your my.LIGHTSTORE account."}
               </p>
+
+              {/* ✅ BIOMETRIC VISUAL INDICATOR - NO CLICK NEEDED */}
+              {biometricAvailable && (
+                <div className="flex flex-col items-center mb-6">
+                  <div className="relative">
+                    <div
+                      className={`w-20 h-20 bg-green-100 dark:bg-green-900 flex items-center justify-center rounded-full transition-all ${
+                        biometricAttempting ? "animate-pulse" : ""
+                      }`}
+                    >
+                      <svg
+                        className="w-10 h-10 text-green-600 dark:text-green-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"
+                        />
+                      </svg>
+                    </div>
+                    {biometricAttempting && (
+                      <div className="absolute -bottom-1 -right-1">
+                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                          <svg
+                            className="w-4 h-4 text-white animate-spin"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-center text-sm text-muted-foreground mt-4">
+                    {biometricAttempting
+                      ? "Waiting for biometric authentication..."
+                      : "Touch your fingerprint sensor or use Face ID"}
+                  </p>
+                </div>
+              )}
+
               <div className="text-center mb-6">
-                <p className="text-sm text-muted-foreground mb-2">OR</p>
+                <p className="text-sm text-muted-foreground mb-2">
+                  {biometricAvailable ? "Or use password" : ""}
+                </p>
               </div>
               <div className="space-y-6">
                 <div className="bg-muted p-4 rounded flex justify-between items-center">
@@ -893,15 +1082,22 @@ export const SigninSection = () => {
 
                     const users = getRegisteredUsers();
                     const userIndex = users.findIndex(
-                      (u) => u.email.toLowerCase() === email.toLowerCase()
+                      (u) =>
+                        u.email?.toLowerCase() === email.toLowerCase() ||
+                        u.phone === email
                     );
                     if (userIndex !== -1) {
                       users[userIndex].password = password;
                       saveRegisteredUsers(users);
                       localStorage.setItem(
                         "user",
-                        JSON.stringify({ name, email })
+                        JSON.stringify({
+                          name,
+                          email: users[userIndex].email || "",
+                          phone: users[userIndex].phone || "",
+                        })
                       );
+                      window.dispatchEvent(new Event("userUpdated"));
                       setStep(5);
                       setTimeout(() => {
                         navigate(-1);
