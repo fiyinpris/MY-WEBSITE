@@ -5,6 +5,8 @@ import {
   Star,
   ArrowBigLeft,
   ArrowBigRight,
+  Plus,
+  X,
 } from "lucide-react";
 
 // Carousel images
@@ -77,24 +79,37 @@ const products = [
   },
 ];
 
-const reviews = [
+// Default reviews if none exist in storage
+const defaultReviews = [
   {
     id: 1,
-    name: "Olawale A.",
-    image: "https://randomuser.me/api/portraits/men/32.jpg",
-    text: "These content tools have completely transformed how I manage and organize my work. They're easy to use, save me so much time, and keep everything neat and accessible. Highly recommended!",
+    customerName: "Olawale A.",
+    email: "olawale@example.com",
+    productName: "Ringlight",
+    rating: 5,
+    comment:
+      "These content tools have completely transformed how I manage and organize my work. They're easy to use, save me so much time, and keep everything neat and accessible. Highly recommended!",
+    date: "2025-01-10",
   },
   {
     id: 2,
-    name: "Fiyinfoluwa P.",
-    image: "https://randomuser.me/api/portraits/women/45.jpg",
-    text: "Honestly, I didn't expect it to be this good! The tools are smooth, fast, and super helpful for keeping my content workflow organized. I love the user-friendly interface.",
+    customerName: "Fiyinfoluwa P.",
+    email: "fiyinfoluwa@example.com",
+    productName: "LED Light",
+    rating: 5,
+    comment:
+      "Honestly, I didn't expect it to be this good! The tools are smooth, fast, and super helpful for keeping my content workflow organized. I love the user-friendly interface.",
+    date: "2025-01-08",
   },
   {
     id: 3,
-    name: "Michael O.",
-    image: "https://randomuser.me/api/portraits/men/55.jpg",
-    text: "The best experience I've had with a content tool so far. I can easily manage multiple files and projects without stress. Great work from the developers!",
+    customerName: "Michael O.",
+    email: "michael@example.com",
+    productName: "Tripod Stand",
+    rating: 5,
+    comment:
+      "The best experience I've had with a content tool so far. I can easily manage multiple files and projects without stress. Great work from the developers!",
+    date: "2025-01-05",
   },
 ];
 
@@ -102,6 +117,15 @@ export const HomeSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentReview, setCurrentReview] = useState(0);
   const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [reviews, setReviews] = useState(defaultReviews);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewFormData, setReviewFormData] = useState({
+    customerName: "",
+    email: "",
+    productName: "",
+    rating: 5,
+    comment: "",
+  });
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -109,6 +133,123 @@ export const HomeSection = () => {
     message: "",
   });
   const [isSending, setIsSending] = useState(false);
+
+  // Load reviews from storage
+  useEffect(() => {
+    const initializeReviews = () => {
+      try {
+        console.log("Attempting to load reviews from localStorage...");
+        const storedReviews = localStorage.getItem("customer-reviews");
+        console.log("Stored reviews:", storedReviews);
+
+        if (storedReviews) {
+          const loadedReviews = JSON.parse(storedReviews);
+          console.log("Loaded reviews:", loadedReviews);
+          setReviews(loadedReviews);
+        } else {
+          // No reviews found, initialize with defaults
+          console.log("No reviews in storage, initializing with defaults");
+          localStorage.setItem(
+            "customer-reviews",
+            JSON.stringify(defaultReviews)
+          );
+          console.log("Initialized localStorage with defaults");
+          setReviews(defaultReviews);
+        }
+      } catch (error) {
+        console.error("Error in initializeReviews:", error);
+        setReviews(defaultReviews);
+      }
+    };
+
+    initializeReviews();
+
+    // Check for new reviews every 5 seconds (in case multiple tabs are open)
+    const interval = setInterval(() => {
+      try {
+        const storedReviews = localStorage.getItem("customer-reviews");
+        if (storedReviews) {
+          const loadedReviews = JSON.parse(storedReviews);
+          setReviews(loadedReviews);
+        }
+      } catch (error) {
+        console.error("Error refreshing reviews:", error);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleReviewSubmit = () => {
+    if (
+      !reviewFormData.customerName ||
+      !reviewFormData.email ||
+      !reviewFormData.productName ||
+      !reviewFormData.comment
+    ) {
+      alert("Please fill in all fields");
+      return;
+    }
+
+    try {
+      const newReview = {
+        id: Date.now(),
+        ...reviewFormData,
+        date: new Date().toISOString().split("T")[0],
+      };
+
+      console.log("New review to add:", newReview);
+
+      // Get current reviews from localStorage
+      let currentReviews = reviews;
+      try {
+        console.log("Fetching current reviews from localStorage...");
+        const storedReviews = localStorage.getItem("customer-reviews");
+        if (storedReviews) {
+          currentReviews = JSON.parse(storedReviews);
+          console.log("Parsed current reviews:", currentReviews);
+        }
+      } catch (e) {
+        console.log("Could not fetch current reviews, using local state:", e);
+      }
+
+      const updatedReviews = [newReview, ...currentReviews];
+
+      console.log("Updated reviews array:", updatedReviews);
+      console.log("Attempting to save to localStorage...");
+
+      // Save to localStorage
+      localStorage.setItem("customer-reviews", JSON.stringify(updatedReviews));
+
+      console.log("Save completed successfully!");
+
+      // Update local state
+      setReviews(updatedReviews);
+
+      // Reset form
+      setReviewFormData({
+        customerName: "",
+        email: "",
+        productName: "",
+        rating: 5,
+        comment: "",
+      });
+      setShowReviewModal(false);
+      alert("Thank you for your review! It has been saved successfully.");
+    } catch (error) {
+      console.error("Detailed error submitting review:", error);
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
+      alert(
+        `Error saving review: ${error.message}. Please check the console for details.`
+      );
+    }
+  };
+
+  // Get first letter of email
+  const getEmailInitial = (email) => {
+    return email ? email.charAt(0).toUpperCase() : "U";
+  };
 
   // Preload carousel images before showing content
   useEffect(() => {
@@ -127,7 +268,6 @@ export const HomeSection = () => {
         setImagesLoaded(true);
       } catch (error) {
         console.error("Error preloading images:", error);
-        // Show content anyway after 3 seconds
         setTimeout(() => setImagesLoaded(true), 3000);
       }
     };
@@ -178,7 +318,6 @@ export const HomeSection = () => {
 
       {/* Full Width Auto-Scrolling Carousel */}
       <div className="relative w-full h-[80vh] sm:h-[75vh] md:h-[75vh] lg:h-[90vh] overflow-hidden md:mb-8">
-        {/* Background Image with Priority Loading */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000 ease-in-out"
           style={{
@@ -186,7 +325,6 @@ export const HomeSection = () => {
             backgroundPosition: "center center",
           }}
         >
-          {/* Preload next image */}
           <link
             rel="preload"
             as="image"
@@ -194,10 +332,8 @@ export const HomeSection = () => {
           />
         </div>
 
-        {/* Dark Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70" />
 
-        {/* Content Container - Only show when images are loaded */}
         <div
           className={cn(
             "relative h-full flex items-center justify-center px-4 sm:px-6 md:px-8 transition-opacity duration-500",
@@ -212,7 +348,7 @@ export const HomeSection = () => {
               Built to save time, boost accuracy, and make working with content
               smoother than ever.
             </p>
-            <button className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 sm:px-5 sm:py-2 md:px-4 md:py-3 text-sm sm:text-base md:text-lg rounded-lg font-semibold transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105">
+            <button className="inline-block bg-green-600 hover:bg-green-700 text-white px-4 py-2 sm:px-5 sm:py-2 md:px-4 md:py-3 text-sm sm:text-base md:text-lg rounded-lg font-semibold transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 cursor-pointer">
               Connect with me
             </button>
           </div>
@@ -398,9 +534,18 @@ export const HomeSection = () => {
 
       {/* Customer Review Section */}
       <div className="flex flex-col justify-center items-center bg-green-200 mt-20 w-full min-h-[400px] sm:min-h-[450px] px-4 py-10 dark:text-black relative">
-        <p className="font-bold text-2xl sm:text-3xl text-center">
-          What Our Customer says
-        </p>
+        <div className="flex items-center justify-between w-full max-w-4xl mb-6">
+          <p className="font-bold text-2xl sm:text-3xl text-center flex-1">
+            What Our Customer says
+          </p>
+          <button
+            onClick={() => setShowReviewModal(true)}
+            className="bg-primary hover:bg-primary/90 text-white rounded-full p-2 sm:p-3 transition shadow-lg"
+            title="Leave a review"
+          >
+            <Plus size={20} />
+          </button>
+        </div>
 
         <div className="relative border bg-white p-6 sm:p-8 shadow-md w-full sm:w-4/5 md:w-[600px] mt-10 border-transparent flex flex-col items-center rounded-xl">
           <button
@@ -411,20 +556,36 @@ export const HomeSection = () => {
             <ArrowBigLeft size={20} />
           </button>
 
-          <div className="flex justify-center -mt-16">
-            <img
-              src={reviews[currentReview].image}
-              alt={reviews[currentReview].name}
-              loading="lazy"
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border border-white dark:border-gray-800 shadow-md object-cover mb-8"
-            />
+          {/* Email Initial Avatar */}
+          <div className="flex justify-center -mt-16 mb-8">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl sm:text-4xl font-bold shadow-lg border-4 border-white">
+              {getEmailInitial(reviews[currentReview].email)}
+            </div>
+          </div>
+
+          {/* Star Rating Display */}
+          <div className="flex items-center gap-1 mb-3">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                size={20}
+                className={
+                  i < reviews[currentReview].rating
+                    ? "fill-yellow-400 text-yellow-400"
+                    : "fill-gray-300 text-gray-300"
+                }
+              />
+            ))}
           </div>
 
           <p className="text-center text-sm sm:text-base mb-2 px-2">
-            {reviews[currentReview].text}
+            {reviews[currentReview].comment}
           </p>
           <p className="font-semibold mt-2 text-primary text-sm sm:text-base">
-            - {reviews[currentReview].name}
+            - {reviews[currentReview].customerName}
+          </p>
+          <p className="text-xs text-gray-600 mt-1">
+            Product: {reviews[currentReview].productName}
           </p>
 
           <button
@@ -454,6 +615,134 @@ export const HomeSection = () => {
         </div>
       </div>
 
+      {/* Review Modal */}
+      {showReviewModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-gray-800">
+                  Leave a Review
+                </h3>
+                <button
+                  onClick={() => setShowReviewModal(false)}
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Your Name
+                  </label>
+                  <input
+                    type="text"
+                    value={reviewFormData.customerName}
+                    onChange={(e) =>
+                      setReviewFormData({
+                        ...reviewFormData,
+                        customerName: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-900"
+                    placeholder="Your full name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Your Email
+                  </label>
+                  <input
+                    type="email"
+                    value={reviewFormData.email}
+                    onChange={(e) =>
+                      setReviewFormData({
+                        ...reviewFormData,
+                        email: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-900"
+                    placeholder="your.email@example.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Product Name
+                  </label>
+                  <input
+                    type="text"
+                    value={reviewFormData.productName}
+                    onChange={(e) =>
+                      setReviewFormData({
+                        ...reviewFormData,
+                        productName: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-900"
+                    placeholder="Product you purchased"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Rating
+                  </label>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() =>
+                          setReviewFormData({ ...reviewFormData, rating: star })
+                        }
+                        className="focus:outline-none transition-transform hover:scale-110"
+                      >
+                        <Star
+                          size={24}
+                          className={
+                            star <= reviewFormData.rating
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-gray-300"
+                          }
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Your Review
+                  </label>
+                  <textarea
+                    value={reviewFormData.comment}
+                    onChange={(e) =>
+                      setReviewFormData({
+                        ...reviewFormData,
+                        comment: e.target.value,
+                      })
+                    }
+                    rows="4"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none bg-white text-gray-900"
+                    placeholder="Tell us about your experience..."
+                  />
+                </div>
+
+                <button
+                  onClick={handleReviewSubmit}
+                  className="w-full bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md"
+                >
+                  Submit Review
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Contact Form Section */}
       <div className="flex flex-col lg:flex-row justify-center items-center gap-8 bg-white py-16 px-4 md:px-0 lg:px-12 dark:bg-background">
         <div className="text-center lg:text-left max-w-md px-4 md:px-8 lg:px-0">
@@ -467,7 +756,7 @@ export const HomeSection = () => {
         </div>
 
         <div className="w-full md:w-full lg:max-w-lg bg-white dark:bg-background sm:shadow-lg sm:border sm:rounded-2xl sm:p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-6">
             <input type="hidden" name="to_name" value="Fiyinfoluwa" />
             <input
               type="hidden"
@@ -485,7 +774,6 @@ export const HomeSection = () => {
                   setFormData({ ...formData, name: e.target.value })
                 }
                 placeholder="Your Name"
-                required
                 className="w-full px-5 py-3 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60"
               />
               <input
@@ -497,7 +785,6 @@ export const HomeSection = () => {
                   setFormData({ ...formData, email: e.target.value })
                 }
                 placeholder="Your Email"
-                required
                 className="w-full px-5 py-3 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60"
               />
             </div>
@@ -511,7 +798,6 @@ export const HomeSection = () => {
                 setFormData({ ...formData, contactnumber: e.target.value })
               }
               placeholder="Phone Number"
-              required
               className="w-full px-5 py-3 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60"
             />
 
@@ -523,12 +809,11 @@ export const HomeSection = () => {
                 setFormData({ ...formData, message: e.target.value })
               }
               placeholder="Your Message"
-              required
               className="w-full border-border resize-none px-5 py-3 border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60 min-h-[150px]"
             />
 
             <button
-              type="submit"
+              onClick={handleSubmit}
               disabled={isSending}
               className={cn(
                 "w-full bg-primary text-white font-semibold py-3 rounded-lg transition-all duration-300 hover:bg-primary/90 flex items-center justify-center gap-2 disabled:opacity-70"
@@ -537,7 +822,7 @@ export const HomeSection = () => {
               {isSending ? "Sending..." : "Send Message"}
               {!isSending && <Send size={16} />}
             </button>
-          </form>
+          </div>
         </div>
       </div>
     </section>

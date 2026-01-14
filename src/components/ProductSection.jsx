@@ -1,9 +1,18 @@
-import { ChevronDown, Heart, ShoppingCart, X, Eye, Star } from "lucide-react";
-import { useState } from "react";
+import {
+  ChevronDown,
+  Heart,
+  ShoppingCart,
+  X,
+  Eye,
+  Star,
+  ArrowLeft,
+  ArrowRight,
+} from "lucide-react";
+import { useState, useEffect } from "react";
 import { useCart } from "./CartSection";
 import { useWishlist } from "./WishlistSection";
 
-// Import all product images with unique names
+/* ================= IMAGES ================= */
 import ringlight1 from "../Images/image R.jpeg";
 import tripodStand1 from "../Images/image T1.jpeg";
 import ledLight1 from "../Images/image L.jpeg";
@@ -17,6 +26,11 @@ import ledLight2 from "../Images/image L1.jpeg";
 import softbox2 from "../Images/image S.jpeg";
 import microphone2 from "../Images/image M.jpeg";
 import tripodStand3 from "../Images/image T4.jpeg";
+/* ========================================= */
+
+import Slider1 from "../Images/image 20.jpg";
+import Slider2 from "../Images/image 21.jpg";
+import Slider3 from "../Images/image 23.jpg";
 
 export const ProductSection = () => {
   const [activeTab, setActiveTab] = useState("all");
@@ -24,15 +38,17 @@ export const ProductSection = () => {
   const [hoveredProduct, setHoveredProduct] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
+  const [isTabsFixed, setIsTabsFixed] = useState(false);
 
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
 
   const tabs = [
-    { name: "sale", label: "🔥SALE" },
-    { name: "hot", label: "⚡HOT" },
-    { name: "newarrivals", label: "✨NEW ARRIVALS" },
-    { name: "all", label: "📦ALL" },
+    { name: "sale", label: "🔥 SALE" },
+    { name: "hot", label: "⚡ HOT" },
+    { name: "newarrivals", label: "✨ NEW ARRIVALS" },
+    { name: "all", label: "📦 ALL" },
   ];
 
   const categories = [
@@ -44,6 +60,64 @@ export const ProductSection = () => {
     "Softbox",
   ];
 
+  const heroSlides = [
+    {
+      image: Slider1,
+      title: "MEGA SALE",
+      subtitle: "Up to 90% OFF",
+      description: "Limited time offer on selected products",
+      buttonText: "Shop Sale",
+      tabName: "sale",
+    },
+    {
+      image: Slider2,
+      title: "HOT DEALS",
+      subtitle: "Trending Now",
+      description: "Most popular items flying off the shelves",
+      buttonText: "Shop Hot Deals",
+      tabName: "hot",
+    },
+    {
+      image: Slider3,
+      title: "NEW ARRIVALS",
+      subtitle: "Just Launched",
+      description: "Fresh stock of premium lighting equipment",
+      buttonText: "Explore New",
+      tabName: "newarrivals",
+    },
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const heroHeight =
+        document.querySelector(".hero-section")?.offsetHeight || 0;
+      if (window.scrollY > heroHeight) {
+        setIsTabsFixed(true);
+      } else {
+        setIsTabsFixed(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const nextSlide = () =>
+    setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length);
+
+  const prevSlide = () =>
+    setCurrentHeroSlide(
+      (prev) => (prev - 1 + heroSlides.length) % heroSlides.length
+    );
+
+  /* ================= PRODUCTS ================= */
   const products = [
     {
       id: 1,
@@ -180,7 +254,7 @@ export const ProductSection = () => {
       reviews: 95,
       desc: "Durable adjustable tripod stand perfect for cameras and ringlights.",
       discount: "SAVE 90%",
-      img: tripodStand3, // Reusing tripodStand2 since you don't have a tripodStanddd image
+      img: tripodStand3,
     },
   ];
 
@@ -207,6 +281,26 @@ export const ProductSection = () => {
     addToCart(product);
     setShowConfirmModal(true);
     setTimeout(() => setShowConfirmModal(false), 2000);
+  };
+
+  const handleHeroButtonClick = (tabName) => {
+    setActiveTab(tabName);
+    setSelectedCategory("All");
+    setTimeout(() => {
+      const productsSection = document.querySelector(".grid");
+      if (productsSection) {
+        const offset = 100;
+        const bodyRect = document.body.getBoundingClientRect().top;
+        const elementRect = productsSection.getBoundingClientRect().top;
+        const elementPosition = elementRect - bodyRect;
+        const offsetPosition = elementPosition - offset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth",
+        });
+      }
+    }, 100);
   };
 
   const renderStars = (rating, size = 14) => {
@@ -240,41 +334,103 @@ export const ProductSection = () => {
   };
 
   return (
-    <section className="my-6 mt-13 lg:mt-13">
-      {/* Tabs */}
-      <ul className="flex justify-center flex-wrap p-7 gap-6 md:gap-10 bg-black/20 backdrop-blur-md">
-        {tabs.map((tab) => (
-          <li key={tab.name} className="relative">
+    <section className="relative w-full overflow-hidden">
+      {/* ================= HERO SLIDER ================= */}
+      <div className="hero-section relative w-full overflow-hidden py-10">
+        <div
+          className="flex transition-transform duration-700 ease-in-out"
+          style={{
+            transform: `translateX(-${currentHeroSlide * 95}%)`,
+          }}
+        >
+          {heroSlides.map((slide, index) => (
+            <div
+              key={index}
+              className="min-w-full mt-5 lg:h-[70vh] md:h-[70vh] h-[55vh] px-2 py-3 md:px-3 relative"
+            >
+              <div className="relative w-full h-full rounded-2xl overflow-hidden">
+                <img
+                  src={slide.image}
+                  alt={slide.title}
+                  className="w-full h-full object-cover"
+                />
+
+                {/* Blur Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70" />
+
+                {/* Animated Text Layer */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white space-y-3 px-4">
+                  <h1
+                    key={currentHeroSlide + "title"}
+                    className="text-4xl md:text-6xl font-extrabold hero-title"
+                  >
+                    {slide.title}
+                  </h1>
+
+                  <p
+                    key={currentHeroSlide + "sub"}
+                    className="text-2xl md:text-4xl font-bold text-yellow-300 hero-sub"
+                  >
+                    {slide.subtitle}
+                  </p>
+
+                  <p
+                    key={currentHeroSlide + "desc"}
+                    className="max-w-2xl text-white/90 hero-desc"
+                  >
+                    {slide.description}
+                  </p>
+
+                  <button
+                    onClick={() => handleHeroButtonClick(slide.tabName)}
+                    className="bg-green-600 hover:bg-green-700 px-8 py-3 rounded-full font-semibold hero-btn cursor-pointer"
+                  >
+                    {slide.buttonText}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ================= TABS ================= */}
+      <div
+        className={`${
+          isTabsFixed ? "fixed top-[60px] left-0 right-0" : "relative"
+        } z-40 bg-card shadow-sm transition-all duration-300`}
+      >
+        <div className="flex justify-center flex-wrap gap-2 sm:gap-3 md:gap-10 py-3 sm:py-4 px-2 sm:px-4">
+          {tabs.map((tab) => (
             <button
+              key={tab.name}
               onClick={() => {
                 setActiveTab(tab.name);
                 setSelectedCategory("All");
               }}
-              className={`font-semibold text-foreground text-xs md:text-sm transition-all duration-200 cursor-pointer ${
+              className={`px-2 lg:px-6 md:px-7 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm md:text-base transition-all duration-300 border-2 ${
                 activeTab === tab.name
-                  ? "text-green-600 underline underline-offset-4"
-                  : "hover:text-green-600"
+                  ? "bg-green-600 text-white border-green-600"
+                  : "bg-card text-foreground border-border hover:border-green-600"
               }`}
             >
               {tab.label}
             </button>
-          </li>
-        ))}
-      </ul>
+          ))}
+        </div>
+      </div>
 
-      {/* Product Grid */}
+      {/* Spacer when tabs are fixed */}
+      {isTabsFixed && <div className="h-[60px] sm:h-[68px] md:h-[72px]"></div>}
+
+      {/* ================= PRODUCTS ================= */}
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 max-w-7xl mx-3 lg:mx-10 mb-20 my-7">
         {filteredProducts.length > 0 ? (
           filteredProducts.map((product) => (
             <div
               key={product.id}
               tabIndex={0}
-              className="
-    p-3 md:p-4 flex flex-col items-stretch space-y-3
-    rounded-lg shadow-md hover:shadow-lg
-    transition-shadow duration-300
-    border group focus:outline-none cursor-pointer
-  "
+              className="p-3 md:p-4 flex flex-col items-stretch space-y-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border group focus:outline-none cursor-pointer"
               onMouseEnter={() => setHoveredProduct(product.id)}
               onMouseLeave={() => setHoveredProduct(null)}
               onClick={() => openModal(product)}
@@ -288,20 +444,7 @@ export const ProductSection = () => {
                 )}
 
                 {/* Heart & Eye buttons on hover */}
-                <div
-                  className="
-    absolute top-2 right-2 z-20 flex flex-col gap-2
-    opacity-0
-
-    /* Small + Medium: tap/focus */
-    group-focus-within:opacity-100
-
-    /* Medium + Large: hover */
-    md:group-hover:opacity-100
-
-    transition-opacity duration-300
-  "
-                >
+                <div className="absolute top-2 right-2 z-20 flex flex-col gap-2 opacity-0 group-focus-within:opacity-100 md:group-hover:opacity-100 transition-opacity duration-300">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -352,8 +495,9 @@ export const ProductSection = () => {
                   </button>
                 </div>
               </div>
+
               {/* Product Details */}
-              <div className="">
+              <div>
                 <div className="flex items-center gap-1 mb-2">
                   {renderStars(product.rating)}
                   <span className="text-xs text-foreground/60 ml-1">
@@ -380,7 +524,7 @@ export const ProductSection = () => {
                 >
                   <ShoppingCart size={14} /> Add to Cart
                 </button>
-              </div>{" "}
+              </div>
             </div>
           ))
         ) : (
@@ -396,7 +540,7 @@ export const ProductSection = () => {
       {/* Product Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-          <div className="bg-card rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh] ">
+          <div className="bg-card rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh]">
             <div className="grid md:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6 md:p-8">
               {/* Image Section */}
               <div className="relative">
@@ -497,7 +641,86 @@ export const ProductSection = () => {
         </div>
       )}
 
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-2xl animate-slideInRight max-w-sm mx-4">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ShoppingCart className="text-green-600" size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                Added to Cart!
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Item successfully added to your cart
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
+        @keyframes heroTitle {
+          0% {
+            opacity: 0;
+            transform: translateY(40px) scale(0.9);
+          }
+          60% {
+            opacity: 1;
+            transform: translateY(-6px) scale(1.05);
+          }
+          100% {
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        @keyframes heroSub {
+          from {
+            opacity: 0;
+            transform: translateX(-60px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes heroDesc {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes heroBtn {
+          from {
+            opacity: 0;
+            transform: scale(0.6);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .hero-title {
+          animation: heroTitle 1s ease forwards;
+        }
+        .hero-sub {
+          animation: heroSub 0.8s ease forwards;
+        }
+        .hero-desc {
+          animation: heroDesc 0.8s ease forwards;
+        }
+        .hero-btn {
+          animation: heroBtn 0.8s ease forwards;
+        }
+
         @keyframes fadeIn {
           from {
             opacity: 0;

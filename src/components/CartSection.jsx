@@ -95,6 +95,116 @@ const Toast = ({ message, type, onClose }) => {
   );
 };
 
+// Full Screen Loading Overlay Component with Blur Effect
+const LoadingOverlay = () => {
+  return (
+    <>
+      {/* Blur overlay using CSS filter */}
+      <div
+        className="fixed inset-0 z-[9998] bg-black/20"
+        style={{
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
+      ></div>
+
+      {/* Loading content */}
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none">
+        <div className="text-center bg-white rounded-2xl p-8 shadow-2xl pointer-events-auto">
+          {/* Animated Shopping Bag Logo */}
+          <div className="relative w-32 h-32 mx-auto mb-8">
+            {/* Outer rotating ring */}
+            <div
+              className="absolute inset-0 border-4 border-green-100 rounded-full animate-spin"
+              style={{ animationDuration: "3s" }}
+            ></div>
+
+            {/* Middle pulsing ring */}
+            <div className="absolute inset-2 border-4 border-green-300 rounded-full animate-pulse"></div>
+
+            {/* Inner spinning ring */}
+            <div
+              className="absolute inset-4 border-4 border-green-600 rounded-full border-t-transparent animate-spin"
+              style={{ animationDuration: "1s" }}
+            ></div>
+
+            {/* Center Logo - Shopping Bag with animated cart */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative">
+                {/* Shopping bag */}
+                <svg
+                  className="w-16 h-16 text-green-600"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <path d="M16 10a4 4 0 0 1-8 0" />
+                </svg>
+
+                {/* Animated check mark that appears */}
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-600 rounded-full flex items-center justify-center animate-bounce">
+                  <svg
+                    className="w-4 h-4 text-white"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Loading Text with gradient */}
+          <div className="mb-6">
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
+              Loading Store
+            </h3>
+            <p className="text-sm text-slate-600">
+              Getting everything ready for you...
+            </p>
+          </div>
+
+          {/* Animated Progress Bar */}
+          <div className="w-48 h-1 bg-slate-200 rounded-full mx-auto overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full animate-progress"></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Add custom animation keyframes */}
+      <style>{`
+        @keyframes progress {
+          0% {
+            width: 0%;
+            margin-left: 0%;
+          }
+          50% {
+            width: 50%;
+            margin-left: 25%;
+          }
+          100% {
+            width: 100%;
+            margin-left: 0%;
+          }
+        }
+        .animate-progress {
+          animation: progress 1.5s ease-in-out infinite;
+        }
+      `}</style>
+    </>
+  );
+};
+
 export const CartSection = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [toast, setToast] = useState(null);
@@ -278,6 +388,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
     email: "",
     phone: "",
     address: "",
+    country: "Nigeria",
     state: "",
     city: "",
   });
@@ -300,8 +411,9 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
     }
     if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
     if (!formData.address.trim()) newErrors.address = "Address is required";
+    if (!formData.country.trim()) newErrors.country = "Country is required";
     if (!formData.state.trim()) newErrors.state = "State is required";
-    if (!formData.city.trim()) newErrors.city = "City is required";
+    // City is optional - no validation required
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -386,7 +498,8 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    style={{ fontSize: "16px" }}
                     placeholder="Enter your full name"
                   />
                   {errors.fullName && (
@@ -406,7 +519,8 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      style={{ fontSize: "16px" }}
                       placeholder="your@email.com"
                     />
                     {errors.email && (
@@ -425,7 +539,8 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      style={{ fontSize: "16px" }}
                       placeholder="080XXXXXXXX"
                     />
                     {errors.phone && (
@@ -445,7 +560,8 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    style={{ fontSize: "16px" }}
                     placeholder="Street address"
                   />
                   {errors.address && (
@@ -455,7 +571,31 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">
+                      Country
+                    </label>
+                    <select
+                      name="country"
+                      value={formData.country}
+                      onChange={handleChange}
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      style={{ fontSize: "16px" }}
+                    >
+                      <option value="Nigeria">Nigeria</option>
+                      <option value="Ghana">Ghana</option>
+                      <option value="Kenya">Kenya</option>
+                      <option value="South Africa">South Africa</option>
+                      <option value="Other">Other</option>
+                    </select>
+                    {errors.country && (
+                      <p className="text-red-500 text-xs sm:text-sm mt-1">
+                        {errors.country}
+                      </p>
+                    )}
+                  </div>
+
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">
                       State
@@ -464,7 +604,8 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                       name="state"
                       value={formData.state}
                       onChange={handleChange}
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      style={{ fontSize: "16px" }}
                     >
                       <option value="">Select State</option>
                       {STATES.map((state) => (
@@ -479,23 +620,23 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                       </p>
                     )}
                   </div>
+
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">
-                      City
+                      City{" "}
+                      <span className="text-slate-400 font-normal">
+                        (Optional)
+                      </span>
                     </label>
                     <input
                       type="text"
                       name="city"
                       value={formData.city}
                       onChange={handleChange}
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      style={{ fontSize: "16px" }}
                       placeholder="City"
                     />
-                    {errors.city && (
-                      <p className="text-red-500 text-xs sm:text-sm mt-1">
-                        {errors.city}
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -530,7 +671,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full sm:flex-1 bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-2.5 sm:py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base shadow-lg"
+                  className="w-full sm:flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-2.5 sm:py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base shadow-lg"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center justify-center gap-2">
@@ -724,7 +865,7 @@ const BankTransferPayment = ({ amount, email, onBack, onComplete }) => {
       <div className="flex flex-col gap-3">
         <button
           onClick={onComplete}
-          className="w-full bg-linear-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold py-3 rounded-lg transition-all shadow-lg shadow-emerald-500/30"
+          className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold py-3 rounded-lg transition-all shadow-lg shadow-emerald-500/30"
         >
           I've sent the money
         </button>
@@ -803,7 +944,7 @@ const USSDPayment = ({ amount, email, onBack, onComplete }) => {
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="bg-linear-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-6">
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-6">
             <div className="text-center mb-4">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full shadow-md mb-3">
                 <Smartphone className="w-8 h-8 text-green-600" />
@@ -842,7 +983,7 @@ const USSDPayment = ({ amount, email, onBack, onComplete }) => {
           <div className="flex flex-col gap-3">
             <button
               onClick={onComplete}
-              className="w-full bg-linear-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white font-semibold py-3 rounded-lg transition-all shadow-lg shadow-green-500/30"
+              className="w-full bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white font-semibold py-3 rounded-lg transition-all shadow-lg shadow-green-500/30"
             >
               I've completed the payment
             </button>
@@ -960,7 +1101,7 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 pt-16 sm:pt-20 pb-16 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pt-16 sm:pt-20 pb-16 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800 p-3 sm:p-4 mb-4 sm:mb-6 rounded-lg flex items-center gap-2 sm:gap-3 mt-2 shadow-sm">
           <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 shrink-0" />
@@ -1009,8 +1150,10 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
                 </p>
                 <p>{shippingInfo.address}</p>
                 <p>
-                  {shippingInfo.city}, {shippingInfo.state}
+                  {shippingInfo.city && `${shippingInfo.city}, `}
+                  {shippingInfo.state}
                 </p>
+                <p>{shippingInfo.country}</p>
                 <p>{shippingInfo.phone}</p>
                 <p className="text-green-600">{shippingInfo.email}</p>
               </div>
@@ -1147,7 +1290,7 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
   );
 };
 
-// Cart Page Component
+// Cart Page Component WITH LOADING STATE FOR "START SHOPPING" BUTTON
 export const CartPage = () => {
   const { cartItems, removeFromCart, updateQuantity, totalItems, showToast } =
     useCart();
@@ -1156,6 +1299,7 @@ export const CartPage = () => {
   const [appliedDiscount, setAppliedDiscount] = useState(0);
   const [currentPage, setCurrentPage] = useState("cart");
   const [shippingInfo, setShippingInfo] = useState(null);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const calculateTotals = () => {
     try {
@@ -1220,6 +1364,9 @@ export const CartPage = () => {
         }
       });
 
+      // Scroll to top before navigating
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
       setCurrentPage("checkout");
     } catch (error) {
       console.error("Checkout error:", error);
@@ -1228,8 +1375,22 @@ export const CartPage = () => {
   };
 
   const handleProceedToPayment = (formData) => {
+    // Scroll to top before navigating
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
     setShippingInfo(formData);
     setCurrentPage("payment");
+  };
+
+  // NEW: Handle "Start Shopping" button with loading state
+  const handleStartShopping = () => {
+    setIsNavigating(true);
+    // Simulate navigation delay (you can replace this with actual navigation)
+    setTimeout(() => {
+      // Replace with your actual navigation logic
+      window.location.href = "/products";
+      // Or if using React Router: navigate('/products');
+    }, 1500);
   };
 
   if (currentPage === "checkout") {
@@ -1252,30 +1413,37 @@ export const CartPage = () => {
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 pt-16 sm:pt-20 bg-linear-to-br from-slate-50 to-slate-100">
-        <div className="text-center">
-          <div className="w-24 h-24 mx-auto mb-6 bg-slate-200 rounded-full flex items-center justify-center">
-            <ShoppingCart className="w-12 h-12 text-slate-400" />
+      <>
+        {/* Show Loading Overlay when navigating */}
+        {isNavigating && <LoadingOverlay />}
+
+        <div className="min-h-screen flex items-center justify-center px-4 pt-16 sm:pt-20 bg-gradient-to-br from-slate-50 to-slate-100">
+          <div className="text-center max-w-md">
+            <div className="w-24 h-24 mx-auto mb-6 bg-slate-200 rounded-full flex items-center justify-center animate-pulse">
+              <ShoppingCart className="w-12 h-12 text-slate-400" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
+              Your cart is empty
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600 mb-8">
+              Add some products to see them here.
+            </p>
+            <button
+              onClick={handleStartShopping}
+              disabled={isNavigating}
+              className="relative inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg transition-all text-sm sm:text-base shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed min-w-[180px]"
+            >
+              <ShoppingCart className="w-5 h-5 mr-2" />
+              <span>Start Shopping</span>
+            </button>
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
-            Your cart is empty
-          </h2>
-          <p className="text-sm sm:text-base text-slate-600 mb-6">
-            Add some products to see them here.
-          </p>
-          <a
-            href="/products"
-            className="inline-block px-6 py-2.5 sm:py-3 bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg transition-all text-sm sm:text-base shadow-lg"
-          >
-            Continue Shopping
-          </a>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 pt-16 sm:pt-20 pb-16 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pt-16 sm:pt-20 pb-16 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800 p-3 sm:p-4 mb-4 sm:mb-6 rounded-lg flex items-center gap-2 sm:gap-3 mt-2 shadow-sm">
           <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 shrink-0" />
@@ -1422,7 +1590,7 @@ export const CartPage = () => {
 
               <button
                 onClick={handleProceedToCheckout}
-                className="w-full bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 rounded-lg transition-all mb-4 sm:mb-6 text-sm sm:text-base shadow-lg"
+                className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 rounded-lg transition-all mb-4 sm:mb-6 text-sm sm:text-base shadow-lg"
               >
                 Proceed to Checkout
               </button>
@@ -1445,7 +1613,8 @@ export const CartPage = () => {
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleApplyCoupon()}
-                    className="flex-1 px-3 sm:px-4 py-2 rounded-lg border-2 border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="flex-1 px-3 sm:px-4 py-2 rounded-lg border-2 border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    style={{ fontSize: "16px" }}
                   />
                   <button
                     onClick={handleApplyCoupon}
@@ -1464,8 +1633,8 @@ export const CartPage = () => {
   );
 };
 
-// Default export moved to separate component file would be ideal, but keeping here for now
-function CartDemo({ products }) {
+// Default export
+export default function CartDemo({ products }) {
   const { addToCart, cartItems } = useCart();
 
   return (
@@ -1483,7 +1652,7 @@ function CartDemo({ products }) {
               <button
                 key={product.id}
                 onClick={() => addToCart(product)}
-                className="px-3 py-2 bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-xs font-semibold rounded-lg transition-all shadow-md hover:shadow-lg"
+                className="px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-xs font-semibold rounded-lg transition-all shadow-md hover:shadow-lg"
               >
                 Add Item {product.id}
               </button>

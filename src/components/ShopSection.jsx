@@ -20,7 +20,7 @@ import tripodStand4 from "../Images/image T1.jpeg";
 export const ShopSection = () => {
   const { addToCart } = useCart();
   const { wishlistItems, addToWishlist, isInWishlist } = useWishlist();
-
+  const [sortOption, setSortOption] = useState("Default");
   const [wishlist, setWishlist] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("ALL");
@@ -118,9 +118,17 @@ export const ShopSection = () => {
     return categoryMatch && priceMatch;
   });
 
-  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+  // Apply sorting before pagination
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    if (sortOption === "Price: Low to High") return a.price - b.price;
+    if (sortOption === "Price: High to Low") return b.price - a.price;
+    return 0; // Default, no sorting
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(sortedProducts.length / PRODUCTS_PER_PAGE);
   const startIdx = (currentPage - 1) * PRODUCTS_PER_PAGE;
-  const currentProducts = filteredProducts.slice(
+  const currentProducts = sortedProducts.slice(
     startIdx,
     startIdx + PRODUCTS_PER_PAGE
   );
@@ -269,7 +277,7 @@ export const ShopSection = () => {
             id="sidebar"
             className={`${
               showFilters ? "block" : "hidden"
-            } lg:block w-full lg:w-1/5 lg:min-w-[180px] lg:max-w-[300px] space-y-6 mb-6 lg:mb-0`}
+            } lg:block w-full lg:w-1/5 lg:min-w-[180px] lg:max-w-[300px] space-y-6 mb-6 lg:mb-0 sticky top-24 h-[calc(100vh-6rem)]`}
           >
             <div className="space-y-6 bg-background lg:bg-transparent p-4 lg:p-0 rounded-lg lg:rounded-none shadow-lg lg:shadow-none">
               <div className="flex justify-between items-center lg:hidden mb-4">
@@ -291,7 +299,7 @@ export const ShopSection = () => {
                         "ALL",
                         "RINGLIGHT",
                         "LEDLIGHT",
-                        "TRIPOD",
+                        "TRIPOD STAND",
                         "MICROPHONE",
                         "SOFTBOX",
                       ].map((category) => (
@@ -367,8 +375,12 @@ export const ShopSection = () => {
               <p className="text-sm text-gray-400">
                 {filteredProducts.length} results
               </p>
-              <select className="border rounded px-3 py-2 text-sm bg-background">
-                <option>Default sorting</option>
+              <select
+                className="border rounded px-3 py-2 text-sm bg-background"
+                value={sortOption}
+                onChange={(e) => setSortOption(e.target.value)}
+              >
+                <option>Default</option>
                 <option>Price: Low to High</option>
                 <option>Price: High to Low</option>
               </select>
