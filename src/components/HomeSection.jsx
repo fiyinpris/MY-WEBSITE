@@ -134,27 +134,45 @@ export const HomeSection = () => {
   });
   const [isSending, setIsSending] = useState(false);
 
-  // Load reviews from storage
+  // Load reviews from storage - UPDATED to use shared storage for all users
   useEffect(() => {
-    const initializeReviews = () => {
+    const initializeReviews = async () => {
       try {
-        console.log("Attempting to load reviews from localStorage...");
-        const storedReviews = localStorage.getItem("customer-reviews");
-        console.log("Stored reviews:", storedReviews);
+        console.log("Attempting to load reviews from shared storage...");
 
-        if (storedReviews) {
-          const loadedReviews = JSON.parse(storedReviews);
-          console.log("Loaded reviews:", loadedReviews);
-          setReviews(loadedReviews);
+        // Check if window.storage exists (Claude artifacts environment)
+        if (typeof window !== "undefined" && window.storage) {
+          // Use shared storage API (visible to all users)
+          const result = await window.storage.get("customer-reviews", true);
+
+          if (result && result.value) {
+            const loadedReviews = JSON.parse(result.value);
+            console.log("Loaded reviews from shared storage:", loadedReviews);
+            setReviews(loadedReviews);
+          } else {
+            // No reviews found, initialize with defaults
+            console.log("No reviews in storage, initializing with defaults");
+            await window.storage.set(
+              "customer-reviews",
+              JSON.stringify(defaultReviews),
+              true // shared = true means visible to all users
+            );
+            setReviews(defaultReviews);
+          }
         } else {
-          // No reviews found, initialize with defaults
-          console.log("No reviews in storage, initializing with defaults");
-          localStorage.setItem(
-            "customer-reviews",
-            JSON.stringify(defaultReviews)
-          );
-          console.log("Initialized localStorage with defaults");
-          setReviews(defaultReviews);
+          // Fallback to localStorage for regular React app
+          const storedReviews = localStorage.getItem("customer-reviews");
+          if (storedReviews) {
+            const loadedReviews = JSON.parse(storedReviews);
+            console.log("Loaded reviews from localStorage:", loadedReviews);
+            setReviews(loadedReviews);
+          } else {
+            localStorage.setItem(
+              "customer-reviews",
+              JSON.stringify(defaultReviews)
+            );
+            setReviews(defaultReviews);
+          }
         }
       } catch (error) {
         console.error("Error in initializeReviews:", error);
@@ -164,13 +182,21 @@ export const HomeSection = () => {
 
     initializeReviews();
 
-    // Check for new reviews every 5 seconds (in case multiple tabs are open)
-    const interval = setInterval(() => {
+    // Check for new reviews every 5 seconds (in case other users add reviews)
+    const interval = setInterval(async () => {
       try {
-        const storedReviews = localStorage.getItem("customer-reviews");
-        if (storedReviews) {
-          const loadedReviews = JSON.parse(storedReviews);
-          setReviews(loadedReviews);
+        if (typeof window !== "undefined" && window.storage) {
+          const result = await window.storage.get("customer-reviews", true);
+          if (result && result.value) {
+            const loadedReviews = JSON.parse(result.value);
+            setReviews(loadedReviews);
+          }
+        } else {
+          const storedReviews = localStorage.getItem("customer-reviews");
+          if (storedReviews) {
+            const loadedReviews = JSON.parse(storedReviews);
+            setReviews(loadedReviews);
+          }
         }
       } catch (error) {
         console.error("Error refreshing reviews:", error);
@@ -180,7 +206,8 @@ export const HomeSection = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleReviewSubmit = () => {
+  // UPDATED handleReviewSubmit to use shared storage
+  const handleReviewSubmit = async () => {
     if (
       !reviewFormData.customerName ||
       !reviewFormData.email ||
@@ -200,28 +227,51 @@ export const HomeSection = () => {
 
       console.log("New review to add:", newReview);
 
-      // Get current reviews from localStorage
+      // Get current reviews
       let currentReviews = reviews;
-      try {
-        console.log("Fetching current reviews from localStorage...");
-        const storedReviews = localStorage.getItem("customer-reviews");
-        if (storedReviews) {
-          currentReviews = JSON.parse(storedReviews);
-          console.log("Parsed current reviews:", currentReviews);
+
+      if (typeof window !== "undefined" && window.storage) {
+        // Use shared storage API
+        try {
+          const result = await window.storage.get("customer-reviews", true);
+          if (result && result.value) {
+            currentReviews = JSON.parse(result.value);
+            console.log("Fetched current reviews from shared storage");
+          }
+        } catch (e) {
+          console.log("Could not fetch current reviews, using local state:", e);
         }
-      } catch (e) {
-        console.log("Could not fetch current reviews, using local state:", e);
+
+        const updatedReviews = [newReview, ...currentReviews];
+
+        // Save to shared storage (visible to ALL users)
+        await window.storage.set(
+          "customer-reviews",
+          JSON.stringify(updatedReviews),
+          true // IMPORTANT: shared = true means ALL users can see this
+        );
+
+        console.log("Review saved to shared storage successfully!");
+      } else {
+        // Fallback to localStorage
+        try {
+          const storedReviews = localStorage.getItem("customer-reviews");
+          if (storedReviews) {
+            currentReviews = JSON.parse(storedReviews);
+          }
+        } catch (e) {
+          console.log("Could not fetch current reviews:", e);
+        }
+
+        const updatedReviews = [newReview, ...currentReviews];
+        localStorage.setItem(
+          "customer-reviews",
+          JSON.stringify(updatedReviews)
+        );
+        console.log("Review saved to localStorage");
       }
 
       const updatedReviews = [newReview, ...currentReviews];
-
-      console.log("Updated reviews array:", updatedReviews);
-      console.log("Attempting to save to localStorage...");
-
-      // Save to localStorage
-      localStorage.setItem("customer-reviews", JSON.stringify(updatedReviews));
-
-      console.log("Save completed successfully!");
 
       // Update local state
       setReviews(updatedReviews);
@@ -235,14 +285,12 @@ export const HomeSection = () => {
         comment: "",
       });
       setShowReviewModal(false);
-      alert("Thank you for your review! It has been saved successfully.");
+      alert(
+        "Thank you for your review! It has been saved and is now visible to all users."
+      );
     } catch (error) {
       console.error("Detailed error submitting review:", error);
-      console.error("Error name:", error.name);
-      console.error("Error message:", error.message);
-      alert(
-        `Error saving review: ${error.message}. Please check the console for details.`
-      );
+      alert(`Error saving review: ${error.message}. Please try again.`);
     }
   };
 
@@ -304,14 +352,22 @@ export const HomeSection = () => {
 
   return (
     <section className="relative w-full">
-      {/* Loading State */}
+      {/* UPDATED Loading State - 3 bouncing dots with blur background */}
       {!imagesLoaded && (
-        <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400 text-lg">
-              Loading...
-            </p>
+        <div className="fixed inset-0 backdrop-blur-md bg-white/30 dark:bg-gray-900/30 z-50 flex items-center justify-center">
+          <div className="flex gap-3">
+            <div
+              className="w-4 h-4 rounded-full bg-primary animate-bounce"
+              style={{ animationDelay: "0s" }}
+            ></div>
+            <div
+              className="w-4 h-4 rounded-full bg-primary animate-bounce"
+              style={{ animationDelay: "0.2s" }}
+            ></div>
+            <div
+              className="w-4 h-4 rounded-full bg-primary animate-bounce"
+              style={{ animationDelay: "0.4s" }}
+            ></div>
           </div>
         </div>
       )}
@@ -348,7 +404,20 @@ export const HomeSection = () => {
               Built to save time, boost accuracy, and make working with content
               smoother than ever.
             </p>
-            <button className="inline-block bg-green-600 hover:bg-green-700 text-white px-4 py-2 sm:px-5 sm:py-2 md:px-4 md:py-3 text-sm sm:text-base md:text-lg rounded-lg font-semibold transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 cursor-pointer">
+            {/* UPDATED Connect button - scrolls to contact section */}
+            <button
+              onClick={() => {
+                const contactSection =
+                  document.getElementById("contact-section");
+                if (contactSection) {
+                  contactSection.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+                }
+              }}
+              className="inline-block bg-green-600 hover:bg-green-700 text-white px-4 py-2 sm:px-5 sm:py-2 md:px-4 md:py-3 text-sm sm:text-base md:text-lg rounded-lg font-semibold transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 cursor-pointer"
+            >
               Connect with me
             </button>
           </div>
@@ -534,8 +603,8 @@ export const HomeSection = () => {
 
       {/* Customer Review Section */}
       <div className="flex flex-col justify-center items-center bg-green-200 mt-20 w-full min-h-[400px] sm:min-h-[450px] px-4 py-10 dark:text-black relative">
-        <div className="flex items-center justify-between w-full max-w-4xl mb-6">
-          <p className="font-bold text-2xl sm:text-3xl text-center flex-1">
+        <div className="flex items-center justify-center gap-3 w-full max-w-4xl mb-6">
+          <p className="font-bold text-2xl sm:text-3xl">
             What Our Customer says
           </p>
           <button
@@ -743,8 +812,11 @@ export const HomeSection = () => {
         </div>
       )}
 
-      {/* Contact Form Section */}
-      <div className="flex flex-col lg:flex-row justify-center items-center gap-8 bg-white py-16 px-4 md:px-0 lg:px-12 dark:bg-background">
+      {/* UPDATED Contact Form Section - Added ID for scroll navigation */}
+      <div
+        id="contact-section"
+        className="flex flex-col lg:flex-row justify-center items-center gap-8 bg-white py-16 px-4 md:px-0 lg:px-12 dark:bg-background"
+      >
         <div className="text-center lg:text-left max-w-md px-4 md:px-8 lg:px-0">
           <h4 className="text-3xl sm:text-4xl font-bold text-primary mb-8">
             Contact Us

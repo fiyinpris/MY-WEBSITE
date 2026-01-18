@@ -113,7 +113,7 @@
 @media (min-width: 1024px) {
   .container {
     max-width: 1024px;
-      padding-inline: 5rem;
+    padding-inline: 5rem;
   }
 }
 @media (min-width: 1280px) {
@@ -169,7 +169,7 @@
   transform: scale(0.95);
 }
 
-/* BACKGROUND GRADIENT ANIMATION */
+/* BACKGROUND GRADIENT ANIMATION - CONTACT PAGE STYLE */
 body::before {
   content: "";
   position: fixed;
@@ -179,31 +179,34 @@ body::before {
   height: 100%;
   z-index: -2;
   background: linear-gradient(
-    315deg,
-    #006400 0%,
-    #0d7928 25%,
-    #228b22 50%,
-    #52a578 75%,
-    #90ee90 100%
+    to bottom right,
+    hsl(var(--primary) / 0.2) 0%,
+    hsl(var(--background)) 50%,
+    hsl(var(--primary) / 0.1) 100%
   );
-  background-size: 400% 400%;
-  animation: morphGradient 20s ease infinite;
-  opacity: 0.3;
-  transition: opacity 0.1s ease;
+  background-size: 100% 100%;
+  opacity: 1;
+  transition: background 0.4s ease;
 }
+
 :root.dark body::before {
-  background: linear-gradient(315deg, #064e3b, #10b981, #059669, #34d399);
-  opacity: 0.15;
+  background: linear-gradient(
+    to bottom right,
+    hsl(var(--primary) / 0.15) 0%,
+    hsl(var(--background)) 50%,
+    hsl(var(--primary) / 0.08) 100%
+  );
+  opacity: 1;
 }
+
+/* Remove the morphing animation */
 @keyframes morphGradient {
-  0% {
+  0%,
+  100% {
     background-position: 0% 50%;
   }
   50% {
     background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
   }
 }
 
@@ -211,10 +214,19 @@ body::before {
 .bubble {
   position: absolute;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
   animation: floatBubble linear infinite;
   pointer-events: none;
+  display: none; /* Hidden by default on mobile */
 }
+
+/* Only show bubbles on larger screens */
+@media (min-width: 768px) {
+  .bubble {
+    display: block;
+  }
+}
+
 .bubble:nth-child(1) {
   width: 80px;
   height: 80px;
@@ -246,50 +258,59 @@ body::before {
 @keyframes floatBubble {
   0% {
     transform: translateY(0) translateX(0) scale(1);
-    opacity: 0.3;
+    opacity: 0.2;
   }
   50% {
     transform: translateY(-50px) translateX(30px) scale(1.1);
-    opacity: 0.5;
+    opacity: 0.3;
   }
   100% {
     transform: translateY(0) translateX(0) scale(1);
-    opacity: 0.3;
+    opacity: 0.2;
   }
 }
 
 /* WAVES */
 .wave {
-  background: rgb(255 255 255 / 25%);
+  background: rgb(255 255 255 / 15%);
   border-radius: 200% 200% 0 0;
   position: fixed;
   width: 200%;
-  height: 15em;
-  animation: wave 10s -5s linear infinite;
+  height: 12em;
+  animation: wave 15s -5s linear infinite;
   transform: translate3d(0, 0, 0);
-  opacity: 0.8;
+  opacity: 0.4;
   bottom: 0;
   left: 0;
   z-index: -1;
+  display: none; /* Hidden by default on mobile */
 }
+
+/* Only show waves on larger screens */
+@media (min-width: 768px) {
+  .wave {
+    display: block;
+  }
+}
+
 :root.dark .wave {
-  background: rgb(16 185 129 / 10%);
+  background: rgb(100 100 100 / 8%);
 }
 .wave:nth-of-type(2) {
   bottom: -1.25em;
-  animation: wave 18s linear reverse infinite;
-  opacity: 0.8;
+  animation: wave 20s linear reverse infinite;
+  opacity: 0.3;
 }
 :root.dark .wave:nth-of-type(2) {
-  background: rgb(5 150 105 / 12%);
+  background: rgb(90 90 90 / 6%);
 }
 .wave:nth-of-type(3) {
   bottom: -2.5em;
-  animation: wave 20s -1s reverse infinite;
-  opacity: 0.9;
+  animation: wave 25s -1s reverse infinite;
+  opacity: 0.2;
 }
 :root.dark .wave:nth-of-type(3) {
-  background: rgb(52 211 153 / 8%);
+  background: rgb(80 80 80 / 5%);
 }
 
 @keyframes wave {
@@ -552,7 +573,7 @@ div::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
 .shadow-notification {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25); /* soft shadow */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); /* soft shadow */
 }
 .navbar {
   position: relative;

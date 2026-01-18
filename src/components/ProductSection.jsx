@@ -336,17 +336,17 @@ export const ProductSection = () => {
   return (
     <section className="relative w-full overflow-hidden">
       {/* ================= HERO SLIDER ================= */}
-      <div className="hero-section relative w-full overflow-hidden py-10">
+      <div className="hero-section relative w-full overflow-hidden py-3">
         <div
           className="flex transition-transform duration-700 ease-in-out"
           style={{
-            transform: `translateX(-${currentHeroSlide * 95}%)`,
+            transform: `translateX(-${currentHeroSlide * 96}%)`,
           }}
         >
           {heroSlides.map((slide, index) => (
             <div
               key={index}
-              className="min-w-full mt-5 lg:h-[70vh] md:h-[70vh] h-[55vh] px-2 py-3 md:px-3 relative"
+              className="min-w-full mt-5 lg:h-[75vh] md:h-[70vh] h-[55vh] py-3 relative lg:mr-5 mr-4 last:mr-0"
             >
               <div className="relative w-full h-full rounded-2xl overflow-hidden">
                 <img
@@ -356,28 +356,19 @@ export const ProductSection = () => {
                 />
 
                 {/* Blur Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/60" />
 
                 {/* Animated Text Layer */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white space-y-3 px-4">
-                  <h1
-                    key={currentHeroSlide + "title"}
-                    className="text-4xl md:text-6xl font-extrabold hero-title"
-                  >
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white space-y-3">
+                  <h1 className="text-4xl md:text-6xl font-extrabold hero-title">
                     {slide.title}
                   </h1>
 
-                  <p
-                    key={currentHeroSlide + "sub"}
-                    className="text-2xl md:text-4xl font-bold text-yellow-300 hero-sub"
-                  >
+                  <p className="text-2xl md:text-4xl font-bold text-yellow-300 hero-sub">
                     {slide.subtitle}
                   </p>
 
-                  <p
-                    key={currentHeroSlide + "desc"}
-                    className="max-w-2xl text-white/90 hero-desc"
-                  >
+                  <p className="max-w-2xl text-white/90 hero-desc">
                     {slide.description}
                   </p>
 
@@ -392,15 +383,32 @@ export const ProductSection = () => {
             </div>
           ))}
         </div>
+
+        {/* Navigation Arrows */}
+        <button
+          onClick={prevSlide}
+          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 bg-white/80 hover:bg-white text-gray-800 p-2 sm:p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 cursor-pointer group"
+          aria-label="Previous slide"
+        >
+          <ArrowLeft size={16} className="sm:w-4 sm:h-4" />
+        </button>
+
+        <button
+          onClick={nextSlide}
+          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 bg-white/80 hover:bg-white text-gray-800 p-2 sm:p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 cursor-pointer group"
+          aria-label="Next slide"
+        >
+          <ArrowRight size={16} className="sm:w-4 sm:h-4" />
+        </button>
       </div>
 
       {/* ================= TABS ================= */}
       <div
         className={`${
           isTabsFixed ? "fixed top-[60px] left-0 right-0" : "relative"
-        } z-40 bg-card shadow-sm transition-all duration-300`}
+        } z-40 border backdrop-blur-md shadow-lg transition-all duration-300`}
       >
-        <div className="flex justify-center flex-wrap gap-2 sm:gap-3 md:gap-10 py-3 sm:py-4 px-2 sm:px-4">
+        <div className="flex justify-center flex-wrap gap-6 sm:gap-3 md:gap-15 py-3 sm:py-4 px-2 sm:px-4">
           {tabs.map((tab) => (
             <button
               key={tab.name}

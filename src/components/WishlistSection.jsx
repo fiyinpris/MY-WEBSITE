@@ -79,13 +79,13 @@ export const WishlistPage = () => {
 
   if (wishlistItems.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 pt-16">
+      <div className="min-h-screen flex items-center justify-center px-4 pt-16 bg-gradient-to-br from-primary/20 via-background to-primary/10">
         <div className="text-center">
-          <Heart size={64} className="mx-auto mb-4 text-gray-300" />
+          <Heart size={64} className="mx-auto mb-4 text-foreground/30" />
           <h2 className="text-2xl font-bold text-foreground mb-2">
             Your wishlist is empty
           </h2>
-          <p className="text-muted-foreground mb-6">
+          <p className="text-foreground/60 mb-6">
             Add products you love to see them here.
           </p>
           <Link to="/shop" className="normal-button">
@@ -97,7 +97,7 @@ export const WishlistPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-16">
+    <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 pt-20 pb-16">
       {/* Success Notification */}
       {showNotification && (
         <div className="fixed top-20 right-2 sm:right-4 bg-green-600 px-3 py-2 rounded-lg shadow-lg z-50 animate-bounce text-white text-sm sm:text-base">
@@ -111,7 +111,7 @@ export const WishlistPage = () => {
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">
             My Wishlist
           </h1>
-          <div className="bg-red-100 border border-red-500 text-red-700 px-4 py-2 rounded-lg">
+          <div className="bg-red-100 dark:bg-red-900/30 border border-red-500 dark:border-red-700 text-red-700 dark:text-red-400 px-4 py-2 rounded-lg">
             <p className="font-semibold text-sm sm:text-base">
               {wishlistItems.length}{" "}
               {wishlistItems.length === 1 ? "item" : "items"}
@@ -140,7 +140,7 @@ export const WishlistPage = () => {
                 <h3 className="text-sm sm:text-base font-semibold text-foreground line-clamp-1">
                   {item.name}
                 </h3>
-                <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
+                <p className="text-xs sm:text-sm text-foreground/60 line-clamp-2">
                   {item.desc}
                 </p>
                 <p className="text-sm sm:text-base font-bold text-primary">
@@ -163,7 +163,7 @@ export const WishlistPage = () => {
 
                 <button
                   onClick={() => removeFromWishlist(item.id)}
-                  className="bg-red-50 hover:bg-red-100 text-red-500 px-4 py-2 rounded-lg text-sm flex items-center justify-center gap-2 w-full sm:w-auto lg:w-32"
+                  className="bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-500 dark:text-red-400 px-4 py-2 rounded-lg text-sm flex items-center justify-center gap-2 w-full sm:w-auto lg:w-32"
                 >
                   <Trash2 size={16} />
                   Remove

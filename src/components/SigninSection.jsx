@@ -5,7 +5,6 @@ import emailjs from "@emailjs/browser";
 export const SigninSection = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [otp, setOtp] = useState(["", "", "", ""]);
@@ -36,7 +35,6 @@ export const SigninSection = () => {
     }
   };
 
-  // ✅ AUTO-TRIGGER BIOMETRIC WHEN REACHING STEP 3 (LOGIN SCREEN)
   useEffect(() => {
     if (
       step === 3 &&
@@ -44,16 +42,13 @@ export const SigninSection = () => {
       biometricAvailable &&
       !biometricAttempting
     ) {
-      // Automatically attempt biometric authentication
       const timer = setTimeout(() => {
         handleBiometricAuth();
-      }, 1000); // Wait 1 second before triggering
-
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [step, isExistingUser, biometricAvailable]);
 
-  // ✅ REAL BIOMETRIC AUTHENTICATION (WebAuthn API)
   const handleBiometricAuth = async () => {
     if (!biometricAvailable || biometricAttempting) {
       return;
@@ -70,7 +65,6 @@ export const SigninSection = () => {
         return;
       }
 
-      // ✅ Use WebAuthn for REAL biometric authentication
       const challenge = new Uint8Array(32);
       crypto.getRandomValues(challenge);
 
@@ -87,7 +81,6 @@ export const SigninSection = () => {
         });
 
         if (credential) {
-          // ✅ Biometric authentication successful
           const users = getRegisteredUsers();
           const user = users.find(
             (u) =>
@@ -112,7 +105,6 @@ export const SigninSection = () => {
           }
         }
       } catch (error) {
-        // User cancelled or biometric failed - this is normal, just show password option
         console.log("Biometric auth cancelled or failed:", error);
         setError("");
         setBiometricAttempting(false);
@@ -129,27 +121,17 @@ export const SigninSection = () => {
 
   const getRegisteredUsers = () => {
     const users = localStorage.getItem("registeredUsers");
-    return users
-      ? JSON.parse(users)
-      : [
-          {
-            name: "John Doe",
-            email: "fiyinfoluwaojaleke@gmail.com",
-            password: "password123",
-          },
-        ];
+    return users ? JSON.parse(users) : [];
   };
 
   const saveRegisteredUsers = (users) => {
     localStorage.setItem("registeredUsers", JSON.stringify(users));
   };
 
-  // ✅ VALIDATE EMAIL OR PHONE NUMBER
   const validateEmailOrPhone = (input) => {
     const emailRegex = /\S+@\S+\.\S+/;
     const phoneRegex =
       /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
-
     return emailRegex.test(input) || phoneRegex.test(input);
   };
 
@@ -163,9 +145,6 @@ export const SigninSection = () => {
   };
 
   const handleContinue = () => {
-    if (!name.trim()) {
-      return setError("Please enter your name");
-    }
     if (!validateEmailOrPhone(email)) {
       return setError("Please enter a valid email address or phone number");
     }
@@ -173,7 +152,6 @@ export const SigninSection = () => {
     const existingUser = checkUserExists(email);
     if (existingUser) {
       setIsExistingUser(true);
-      setName(existingUser.name);
       setStep(3);
     } else {
       setIsExistingUser(false);
@@ -186,12 +164,10 @@ export const SigninSection = () => {
     const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
     setGeneratedOtp(otpCode);
 
-    // Check if it's a phone number
     const isPhone =
       /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/.test(email);
 
     if (isPhone) {
-      // For phone numbers, just simulate OTP (in production, use SMS service like Twilio)
       console.log(`SMS OTP for ${email}: ${otpCode}`);
       alert(
         `Demo: OTP sent to ${email}\nYour OTP is: ${otpCode}\n\nIn production, this would be sent via SMS.`
@@ -200,10 +176,9 @@ export const SigninSection = () => {
       setStep(2);
       setTimer(60);
     } else {
-      // For email, use EmailJS
       try {
         await emailjs.send("service_f8jpcjv", "template_gpentyl", {
-          to_name: name,
+          to_name: "User",
           to_email: email,
           otp: otpCode,
         });
@@ -272,14 +247,12 @@ export const SigninSection = () => {
     }
 
     const users = getRegisteredUsers();
-
-    // ✅ Check if it's phone or email
     const isPhone =
       /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/.test(email);
 
     const newUser = isPhone
-      ? { name, phone: email, password }
-      : { name, email, password };
+      ? { name: "User", phone: email, password }
+      : { name: "User", email, password };
 
     users.push(newUser);
     saveRegisteredUsers(users);
@@ -287,7 +260,7 @@ export const SigninSection = () => {
     localStorage.setItem(
       "user",
       JSON.stringify({
-        name,
+        name: "User",
         email: isPhone ? "" : email,
         phone: isPhone ? email : "",
       })
@@ -346,7 +319,7 @@ export const SigninSection = () => {
     } else {
       try {
         await emailjs.send("service_f8jpcjv", "template_gpentyl", {
-          to_name: name,
+          to_name: "User",
           to_email: email,
           otp: resetCode,
         });
@@ -369,21 +342,20 @@ export const SigninSection = () => {
     navigate(-1);
   };
 
-  // ✅ FIXED: OAuth buttons redirect to real login pages
   const handleSocialLogin = (e, provider) => {
     e.preventDefault();
     e.stopPropagation();
     setError("");
 
-    // ✅ Get your app's base URL
-    const baseUrl = window.location.origin; // e.g., http://localhost:5173
-    const redirectUri = `${baseUrl}/auth/callback`;
+    // Get the actual current URL without any path
+    const currentUrl = window.location.href.split("?")[0].split("#")[0];
+    const redirectUri = currentUrl.endsWith("/")
+      ? currentUrl.slice(0, -1)
+      : currentUrl;
 
     if (provider === "google") {
-      // ✅ REAL GOOGLE OAUTH
       const googleClientId =
         "857334064448-pt36uthnh7dv3jd2vo819qlv8pgd2703.apps.googleusercontent.com";
-      // Replace with your actual Google Client ID
       const googleAuthUrl =
         `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${googleClientId}` +
@@ -391,50 +363,33 @@ export const SigninSection = () => {
         `&response_type=code` +
         `&scope=email profile` +
         `&access_type=offline`;
-
-      // Redirect to Google login
       window.location.href = googleAuthUrl;
     } else if (provider === "facebook") {
-      // ✅ REAL FACEBOOK OAUTH
-      const facebookAppId = "YOUR_FACEBOOK_APP_ID"; // Replace with your actual Facebook App ID
+      const facebookAppId = "YOUR_FACEBOOK_APP_ID";
       const facebookAuthUrl =
         `https://www.facebook.com/v12.0/dialog/oauth?` +
         `client_id=${facebookAppId}` +
         `&redirect_uri=${encodeURIComponent(redirectUri)}` +
         `&scope=email,public_profile` +
         `&response_type=code`;
-
-      // Redirect to Facebook login
       window.location.href = facebookAuthUrl;
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background lg:py-12 lg:px-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 lg:py-12 lg:px-4">
       <div className="relative w-full max-w-lg">
         <div className="px-5 lg:px-8 py-12">
-          {/* STEP 1: EMAIL/PHONE & NAME INPUT */}
+          {/* STEP 1: EMAIL/PHONE INPUT */}
           {step === 1 && (
             <>
               <h1 className="text-2xl font-semibold text-center text-foreground mb-2">
                 Welcome to my.LIGHTSTORE
               </h1>
-              <p className="text-center text-muted-foreground mb-8">
+              <p className="text-center text-foreground/60 mb-8">
                 Use your email or phone to log in or sign up.
               </p>
               <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-primary mb-2">
-                    Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full px-4 py-3 border border-border bg-background text-foreground rounded focus:outline-none focus:border-primary transition-colors"
-                    placeholder="Enter your name"
-                  />
-                </div>
                 <div>
                   <label className="block text-sm font-medium text-primary mb-2">
                     Email or Mobile Number *
@@ -461,13 +416,10 @@ export const SigninSection = () => {
                 <div className="text-center">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="flex-1 border-t border-border"></div>
-                    <p className="text-muted-foreground text-sm">
-                      Or log in with
-                    </p>
+                    <p className="text-foreground/60 text-sm">Or log in with</p>
                     <div className="flex-1 border-t border-border"></div>
                   </div>
                   <div className="flex justify-center gap-4">
-                    {/* ✅ FACEBOOK BUTTON - FULLY FIXED */}
                     <button
                       onClick={(e) => handleSocialLogin(e, "facebook")}
                       type="button"
@@ -488,8 +440,6 @@ export const SigninSection = () => {
                         />
                       </svg>
                     </button>
-
-                    {/* ✅ GOOGLE BUTTON - FULLY FIXED */}
                     <button
                       onClick={(e) => handleSocialLogin(e, "google")}
                       type="button"
@@ -520,7 +470,7 @@ export const SigninSection = () => {
                     </button>
                   </div>
                 </div>
-                <p className="text-xs text-center text-muted-foreground mt-6">
+                <p className="text-xs text-center text-foreground/60 mt-6">
                   By continuing you agree to my.LIGHTSTORE's{" "}
                   <span className="text-primary underline cursor-pointer">
                     Terms and Conditions
@@ -531,7 +481,7 @@ export const SigninSection = () => {
                   </span>
                   .
                 </p>
-                <p className="text-xs text-center text-muted-foreground mt-4">
+                <p className="text-xs text-center text-foreground/60 mt-4">
                   Need help? Visit our Help Center or contact us.
                 </p>
               </div>
@@ -544,8 +494,8 @@ export const SigninSection = () => {
               <h1 className="text-2xl font-semibold text-center text-foreground mb-2">
                 Verify your email address
               </h1>
-              <p className="text-center text-muted-foreground mb-2">
-                Hello {name}! We have sent a verification code to
+              <p className="text-center text-foreground/60 mb-2">
+                We have sent a verification code to
               </p>
               <p className="text-center text-foreground font-medium mb-8">
                 {email}
@@ -585,7 +535,7 @@ export const SigninSection = () => {
               >
                 Submit
               </button>
-              <p className="text-center text-muted-foreground text-sm mb-2">
+              <p className="text-center text-foreground/60 text-sm mb-2">
                 Didn't receive the verification code?{" "}
                 {timer > 0 ? (
                   <span>
@@ -603,7 +553,7 @@ export const SigninSection = () => {
                   </button>
                 )}
               </p>
-              <p className="text-xs text-center text-muted-foreground mt-4">
+              <p className="text-xs text-center text-foreground/60 mt-4">
                 Need help? Visit our Help Center or contact us on 19586.
               </p>
             </>
@@ -615,13 +565,12 @@ export const SigninSection = () => {
               <h1 className="text-2xl font-semibold text-center text-foreground mb-2">
                 Welcome back!
               </h1>
-              <p className="text-center text-muted-foreground mb-8">
+              <p className="text-center text-foreground/60 mb-8">
                 {biometricAvailable
                   ? "Use your fingerprint, Face ID, or password to log in."
                   : "Log back into your my.LIGHTSTORE account."}
               </p>
 
-              {/* ✅ BIOMETRIC VISUAL INDICATOR - NO CLICK NEEDED */}
               {biometricAvailable && (
                 <div className="flex flex-col items-center mb-6">
                   <div className="relative">
@@ -670,7 +619,7 @@ export const SigninSection = () => {
                       </div>
                     )}
                   </div>
-                  <p className="text-center text-sm text-muted-foreground mt-4">
+                  <p className="text-center text-sm text-foreground/60 mt-4">
                     {biometricAttempting
                       ? "Waiting for biometric authentication..."
                       : "Touch your fingerprint sensor or use Face ID"}
@@ -679,7 +628,7 @@ export const SigninSection = () => {
               )}
 
               <div className="text-center mb-6">
-                <p className="text-sm text-muted-foreground mb-2">
+                <p className="text-sm text-foreground/60 mb-2">
                   {biometricAvailable ? "Or use password" : ""}
                 </p>
               </div>
@@ -707,7 +656,7 @@ export const SigninSection = () => {
                     }
                     className="w-full px-4 py-3 border-2 border-border bg-background text-foreground rounded focus:outline-none focus:border-green-500 transition-colors"
                   />
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="text-xs text-foreground/60 mt-2">
                     Password must be at least 8 characters long
                   </p>
                 </div>
@@ -732,7 +681,7 @@ export const SigninSection = () => {
                       : "Forgot your password?"}
                   </button>
                 </div>
-                <p className="text-xs text-center text-muted-foreground mt-4">
+                <p className="text-xs text-center text-foreground/60 mt-4">
                   Need help? Visit our Help Center or contact us.
                 </p>
               </div>
@@ -745,7 +694,7 @@ export const SigninSection = () => {
               <h1 className="text-2xl font-semibold text-center text-foreground mb-2">
                 Create your account
               </h1>
-              <p className="text-center text-muted-foreground mb-8">
+              <p className="text-center text-foreground/60 mb-8">
                 Set up your password to secure your account.
               </p>
               <div className="space-y-6">
@@ -803,7 +752,7 @@ export const SigninSection = () => {
                     className={`${
                       password.length >= 8
                         ? "text-green-600"
-                        : "text-muted-foreground"
+                        : "text-foreground/60"
                     }`}
                   >
                     {password.length >= 8 ? "✓" : "•"} Password must be at least
@@ -813,7 +762,7 @@ export const SigninSection = () => {
                     className={`${
                       /[A-Z]/.test(password)
                         ? "text-green-600"
-                        : "text-muted-foreground"
+                        : "text-foreground/60"
                     }`}
                   >
                     {/[A-Z]/.test(password) ? "✓" : "•"} Password must contain
@@ -823,7 +772,7 @@ export const SigninSection = () => {
                     className={`${
                       /[a-z]/.test(password)
                         ? "text-green-600"
-                        : "text-muted-foreground"
+                        : "text-foreground/60"
                     }`}
                   >
                     {/[a-z]/.test(password) ? "✓" : "•"} Password must contain
@@ -845,14 +794,14 @@ export const SigninSection = () => {
                 >
                   Continue
                 </button>
-                <p className="text-xs text-center text-muted-foreground mt-4">
+                <p className="text-xs text-center text-foreground/60 mt-4">
                   Need help? Visit our Help Center or contact us on 19586.
                 </p>
               </div>
             </>
           )}
 
-          {/* STEP 5: SUCCESS SCREEN */}
+          {/* STEP 5 */}
           {step === 5 && (
             <>
               <div className="text-center space-y-6">
@@ -879,9 +828,8 @@ export const SigninSection = () => {
                       ? "Login Successful!"
                       : "Account Created Successfully!"}
                   </h1>
-                  <p className="text-muted-foreground text-lg">
-                    Welcome {isExistingUser ? "back" : "to my.LIGHTSTORE"},{" "}
-                    {name}!
+                  <p className="text-foreground/60 text-lg">
+                    Welcome {isExistingUser ? "back" : "to my.LIGHTSTORE"}!
                   </p>
                 </div>
                 <button
@@ -894,13 +842,13 @@ export const SigninSection = () => {
             </>
           )}
 
-          {/* STEP 6: FORGOT PASSWORD - OTP VERIFICATION */}
+          {/* STEP 6 */}
           {step === 6 && (
             <>
               <h1 className="text-2xl font-semibold text-center text-foreground mb-2">
                 Reset your password
               </h1>
-              <p className="text-center text-muted-foreground mb-2">
+              <p className="text-center text-foreground/60 mb-2">
                 We have sent a verification code to
               </p>
               <p className="text-center text-foreground font-medium mb-8">
@@ -958,7 +906,7 @@ export const SigninSection = () => {
               >
                 Verify
               </button>
-              <p className="text-center text-muted-foreground text-sm mb-2">
+              <p className="text-center text-foreground/60 text-sm mb-2">
                 Didn't receive the code?{" "}
                 {timer > 0 ? (
                   <span>
@@ -985,13 +933,13 @@ export const SigninSection = () => {
             </>
           )}
 
-          {/* STEP 7: SET NEW PASSWORD */}
+          {/* STEP 7 */}
           {step === 7 && (
             <>
               <h1 className="text-2xl font-semibold text-center text-foreground mb-2">
                 Create new password
               </h1>
-              <p className="text-center text-muted-foreground mb-8">
+              <p className="text-center text-foreground/60 mb-8">
                 Your new password must be different from previous passwords.
               </p>
               <div className="space-y-6">
@@ -1034,31 +982,31 @@ export const SigninSection = () => {
                     Password Requirements:
                   </p>
                   <p
-                    className={`${
+                    className={
                       password.length >= 8
                         ? "text-green-600"
-                        : "text-muted-foreground"
-                    }`}
+                        : "text-foreground/60"
+                    }
                   >
                     {password.length >= 8 ? "✓" : "•"} Password must be at least
                     8 characters long
                   </p>
                   <p
-                    className={`${
+                    className={
                       /[A-Z]/.test(password)
                         ? "text-green-600"
-                        : "text-muted-foreground"
-                    }`}
+                        : "text-foreground/60"
+                    }
                   >
                     {/[A-Z]/.test(password) ? "✓" : "•"} Password must contain
                     at least one uppercase letter (A-Z)
                   </p>
                   <p
-                    className={`${
+                    className={
                       /[a-z]/.test(password)
                         ? "text-green-600"
-                        : "text-muted-foreground"
-                    }`}
+                        : "text-foreground/60"
+                    }
                   >
                     {/[a-z]/.test(password) ? "✓" : "•"} Password must contain
                     at least one lowercase letter (a-z)
@@ -1073,13 +1021,11 @@ export const SigninSection = () => {
                     if (passwordError) {
                       return setError(passwordError);
                     }
-
                     if (password !== confirmPassword) {
                       return setError(
                         "Passwords do not match. Please make sure both passwords are the same."
                       );
                     }
-
                     const users = getRegisteredUsers();
                     const userIndex = users.findIndex(
                       (u) =>
@@ -1092,7 +1038,7 @@ export const SigninSection = () => {
                       localStorage.setItem(
                         "user",
                         JSON.stringify({
-                          name,
+                          name: "User",
                           email: users[userIndex].email || "",
                           phone: users[userIndex].phone || "",
                         })
@@ -1128,10 +1074,3 @@ export const SigninSection = () => {
     </div>
   );
 };
-
-
-
-
-
-
-

@@ -441,7 +441,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pt-16 sm:pt-20 pb-16 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 pt-16 sm:pt-20 pb-16 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800 p-3 sm:p-4 mb-4 sm:mb-6 rounded-lg flex items-center gap-2 sm:gap-3 mt-2 shadow-sm">
           <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 shrink-0" />
@@ -451,28 +451,28 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
           </p>
         </div>
 
-        <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 mb-4 sm:mb-6 md:mb-8">
+        <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-4 sm:mb-6 md:mb-8">
           Checkout
         </h1>
 
         <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-8 md:mb-12 overflow-x-auto">
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <span
-              className="text-slate-500 text-xs sm:text-sm md:text-base cursor-pointer whitespace-nowrap hover:text-slate-700 transition-colors"
+              className="text-foreground/60 dark:text-foreground/70 text-xs sm:text-sm md:text-base cursor-pointer whitespace-nowrap hover:text-foreground transition-colors"
               onClick={onBack}
             >
               1. Cart
             </span>
           </div>
-          <div className="h-px flex-1 bg-slate-300 min-w-4"></div>
+          <div className="h-px flex-1 bg-border min-w-4"></div>
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <span className="text-slate-900 font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap">
+            <span className="text-foreground font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap">
               2. Checkout
             </span>
           </div>
-          <div className="h-px flex-1 bg-slate-300 min-w-4"></div>
+          <div className="h-px flex-1 bg-border min-w-4"></div>
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <span className="text-slate-500 text-xs sm:text-sm md:text-base whitespace-nowrap">
+            <span className="text-foreground/60 dark:text-foreground/70 text-xs sm:text-sm md:text-base whitespace-nowrap">
               3. Payment
             </span>
           </div>
@@ -482,15 +482,15 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
           <div className="lg:col-span-2">
             <form
               onSubmit={handleSubmit}
-              className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-slate-200"
+              className="bg-card rounded-xl p-4 sm:p-6 shadow-lg border border-border"
             >
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-bold text-foreground mb-4 sm:mb-6">
                 Shipping Information
               </h2>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-foreground/70 mb-2">
                     Full Name
                   </label>
                   <input
@@ -498,7 +498,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                     style={{ fontSize: "16px" }}
                     placeholder="Enter your full name"
                   />
@@ -511,7 +511,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-foreground/70 mb-2">
                       Email
                     </label>
                     <input
@@ -519,7 +519,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                       style={{ fontSize: "16px" }}
                       placeholder="your@email.com"
                     />
@@ -531,7 +531,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                   </div>
 
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-foreground/70 mb-2">
                       Phone
                     </label>
                     <input
@@ -539,7 +539,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                       style={{ fontSize: "16px" }}
                       placeholder="080XXXXXXXX"
                     />
@@ -552,7 +552,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-foreground/70 mb-2">
                     Address
                   </label>
                   <input
@@ -560,7 +560,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                     style={{ fontSize: "16px" }}
                     placeholder="Street address"
                   />
@@ -573,14 +573,14 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-foreground/70 mb-2">
                       Country
                     </label>
                     <select
                       name="country"
                       value={formData.country}
                       onChange={handleChange}
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                       style={{ fontSize: "16px" }}
                     >
                       <option value="Nigeria">Nigeria</option>
@@ -597,14 +597,14 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                   </div>
 
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-foreground/70 mb-2">
                       State
                     </label>
                     <select
                       name="state"
                       value={formData.state}
                       onChange={handleChange}
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                       style={{ fontSize: "16px" }}
                     >
                       <option value="">Select State</option>
@@ -622,9 +622,9 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                   </div>
 
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-foreground/70 mb-2">
                       City{" "}
-                      <span className="text-slate-400 font-normal">
+                      <span className="text-foreground/40 font-normal">
                         (Optional)
                       </span>
                     </label>
@@ -633,7 +633,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                       name="city"
                       value={formData.city}
                       onChange={handleChange}
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                       style={{ fontSize: "16px" }}
                       placeholder="City"
                     />
@@ -651,9 +651,9 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                           saveInfo: e.target.checked,
                         }))
                       }
-                      className="w-4 h-4 text-green-600 rounded focus:ring-2 focus:ring-green-500"
+                      className="w-4 h-4 text-green-600 rounded focus:ring-2 focus:ring-primary"
                     />
-                    <span className="text-slate-600 group-hover:text-slate-900 transition-colors">
+                    <span className="text-foreground/60 group-hover:text-foreground transition-colors">
                       Save this information for next time
                     </span>
                   </label>
@@ -664,7 +664,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                 <button
                   type="button"
                   onClick={onBack}
-                  className="w-full sm:flex-1 py-2.5 sm:py-3 border-2 border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors text-sm sm:text-base"
+                  className="w-full sm:flex-1 py-2.5 sm:py-3 border-2 border-border text-foreground font-medium rounded-lg hover:bg-background/50 transition-colors text-sm sm:text-base"
                 >
                   Back to Cart
                 </button>
@@ -687,23 +687,23 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-slate-200 lg:sticky lg:top-24">
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-4 sm:mb-6">
+            <div className="bg-card rounded-xl p-4 sm:p-6 shadow-lg border border-border lg:sticky lg:top-24">
+              <h2 className="text-lg sm:text-xl font-bold text-foreground mb-4 sm:mb-6">
                 Order Summary
               </h2>
               <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
-                <div className="flex justify-between text-sm sm:text-base text-slate-700">
+                <div className="flex justify-between text-sm sm:text-base text-foreground/70">
                   <span>Subtotal</span>
-                  <span className="font-semibold text-slate-900">
+                  <span className="font-semibold text-foreground">
                     ₦{subtotal.toLocaleString()}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm sm:text-base text-slate-700">
+                <div className="flex justify-between text-sm sm:text-base text-foreground/70">
                   <span>Shipping</span>
                   <span className="font-semibold text-emerald-600">Free</span>
                 </div>
-                <div className="border-t border-slate-200 pt-3 sm:pt-4">
-                  <div className="flex justify-between text-base sm:text-lg font-bold text-slate-900">
+                <div className="border-t border-border pt-3 sm:pt-4">
+                  <div className="flex justify-between text-base sm:text-lg font-bold text-foreground">
                     <span>Total</span>
                     <span>₦{subtotal.toLocaleString()}</span>
                   </div>
@@ -1101,7 +1101,7 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pt-16 sm:pt-20 pb-16 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 pt-16 sm:pt-20 pb-16 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800 p-3 sm:p-4 mb-4 sm:mb-6 rounded-lg flex items-center gap-2 sm:gap-3 mt-2 shadow-sm">
           <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 shrink-0" />
@@ -1111,28 +1111,28 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
           </p>
         </div>
 
-        <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 mb-4 sm:mb-6 md:mb-8">
+        <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-4 sm:mb-6 md:mb-8">
           Payment
         </h1>
 
         <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-8 md:mb-12 overflow-x-auto">
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <span className="text-slate-500 text-xs sm:text-sm md:text-base whitespace-nowrap">
+            <span className="text-foreground/60 dark:text-foreground/70 text-xs sm:text-sm md:text-base whitespace-nowrap">
               1. Cart
             </span>
           </div>
-          <div className="h-px flex-1 bg-slate-300 min-w-4"></div>
+          <div className="h-px flex-1 bg-border min-w-4"></div>
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <span
-              className="text-slate-500 text-xs sm:text-sm md:text-base cursor-pointer whitespace-nowrap hover:text-slate-700 transition-colors"
+              className="text-foreground/60 dark:text-foreground/70 text-xs sm:text-sm md:text-base cursor-pointer whitespace-nowrap hover:text-foreground transition-colors"
               onClick={onBack}
             >
               2. Checkout
             </span>
           </div>
-          <div className="h-px flex-1 bg-slate-300 min-w-4"></div>
+          <div className="h-px flex-1 bg-border min-w-4"></div>
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <span className="text-slate-900 font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap">
+            <span className="text-foreground font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap">
               3. Payment
             </span>
           </div>
@@ -1140,12 +1140,12 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
 
         <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-slate-200 mb-4 sm:mb-6">
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">
+            <div className="bg-card rounded-xl p-4 sm:p-6 shadow-lg border border-border mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3 sm:mb-4">
                 Shipping To
               </h2>
-              <div className="text-xs sm:text-sm text-slate-700 space-y-1 bg-slate-50 p-4 rounded-lg">
-                <p className="font-semibold text-slate-900">
+              <div className="text-xs sm:text-sm text-foreground/70 space-y-1 bg-background rounded-lg p-4 border border-border">
+                <p className="font-semibold text-foreground">
                   {shippingInfo.fullName}
                 </p>
                 <p>{shippingInfo.address}</p>
@@ -1160,8 +1160,8 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
             </div>
 
             {!paymentMethod ? (
-              <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-slate-200">
-                <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-4 sm:mb-6">
+              <div className="bg-card rounded-xl p-4 sm:p-6 shadow-lg border border-border">
+                <h2 className="text-lg sm:text-xl font-bold text-foreground mb-4 sm:mb-6">
                   Choose Payment Method
                 </h2>
 
@@ -1169,16 +1169,16 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
                   <button
                     onClick={() => handlePaymentMethodSelect("card")}
                     disabled={isProcessing}
-                    className="w-full flex items-center gap-4 p-4 sm:p-5 border-2 border-slate-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex items-center gap-4 p-4 sm:p-5 border-2 border-border rounded-xl hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/30 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <div className="p-3 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
-                      <CreditCard className="w-6 h-6 text-green-600" />
+                    <div className="p-3 bg-green-100 dark:bg-green-900/50 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-900 transition-colors">
+                      <CreditCard className="w-6 h-6 text-green-600 dark:text-green-400" />
                     </div>
                     <div className="flex-1 text-left">
-                      <div className="font-semibold text-slate-900 group-hover:text-green-700 transition-colors">
+                      <div className="font-semibold text-foreground group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">
                         Credit/Debit Card
                       </div>
-                      <div className="text-sm text-slate-500">
+                      <div className="text-sm text-foreground/60">
                         Pay with Visa, Mastercard, or Verve
                       </div>
                     </div>
@@ -1186,16 +1186,16 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
 
                   <button
                     onClick={() => handlePaymentMethodSelect("transfer")}
-                    className="w-full flex items-center gap-4 p-4 sm:p-5 border-2 border-slate-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all group"
+                    className="w-full flex items-center gap-4 p-4 sm:p-5 border-2 border-border rounded-xl hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/30 transition-all group"
                   >
-                    <div className="p-3 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
-                      <Building2 className="w-6 h-6 text-green-600" />
+                    <div className="p-3 bg-green-100 dark:bg-green-900/50 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-900 transition-colors">
+                      <Building2 className="w-6 h-6 text-green-600 dark:text-green-400" />
                     </div>
                     <div className="flex-1 text-left">
-                      <div className="font-semibold text-slate-900 group-hover:text-green-700 transition-colors">
+                      <div className="font-semibold text-foreground group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">
                         Bank Transfer
                       </div>
-                      <div className="text-sm text-slate-500">
+                      <div className="text-sm text-foreground/60">
                         Transfer from your bank app
                       </div>
                     </div>
@@ -1203,16 +1203,16 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
 
                   <button
                     onClick={() => handlePaymentMethodSelect("ussd")}
-                    className="w-full flex items-center gap-4 p-4 sm:p-5 border-2 border-slate-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all group"
+                    className="w-full flex items-center gap-4 p-4 sm:p-5 border-2 border-border rounded-xl hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/30 transition-all group"
                   >
-                    <div className="p-3 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
-                      <Smartphone className="w-6 h-6 text-purple-600" />
+                    <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-900 transition-colors">
+                      <Smartphone className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                     </div>
                     <div className="flex-1 text-left">
-                      <div className="font-semibold text-slate-900 group-hover:text-green-700 transition-colors">
+                      <div className="font-semibold text-foreground group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">
                         USSD
                       </div>
-                      <div className="text-sm text-slate-500">
+                      <div className="text-sm text-foreground/60">
                         Dial a code on your phone
                       </div>
                     </div>
@@ -1221,7 +1221,7 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
 
                 <button
                   onClick={onBack}
-                  className="w-full mt-6 py-3 border-2 border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors"
+                  className="w-full mt-6 py-3 border-2 border-border text-foreground font-medium rounded-lg hover:bg-background/50 transition-colors"
                 >
                   Back to Checkout
                 </button>
@@ -1246,8 +1246,8 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-slate-200 lg:sticky lg:top-24">
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-4 sm:mb-6">
+            <div className="bg-card rounded-xl p-4 sm:p-6 shadow-lg border border-border lg:sticky lg:top-24">
+              <h2 className="text-lg sm:text-xl font-bold text-foreground mb-4 sm:mb-6">
                 Order Summary
               </h2>
               <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
@@ -1256,23 +1256,23 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
                     key={item.id}
                     className="flex justify-between text-xs sm:text-sm"
                   >
-                    <span className="text-slate-600">
+                    <span className="text-foreground/60">
                       {item.name} x{item.quantity}
                     </span>
-                    <span className="text-slate-900 font-medium">
+                    <span className="text-foreground font-medium">
                       ₦{(item.price * item.quantity).toLocaleString()}
                     </span>
                   </div>
                 ))}
-                <div className="border-t border-slate-200 pt-3 sm:pt-4">
-                  <div className="flex justify-between text-base sm:text-lg font-bold text-slate-900">
+                <div className="border-t border-border pt-3 sm:pt-4">
+                  <div className="flex justify-between text-base sm:text-lg font-bold text-foreground">
                     <span>Total</span>
                     <span>₦{subtotal.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-center gap-2 text-xs text-slate-500 pt-4 border-t border-slate-200">
+              <div className="flex items-center justify-center gap-2 text-xs text-foreground/50 pt-4 border-t border-border">
                 <svg
                   className="w-4 h-4"
                   viewBox="0 0 24 24"
@@ -1417,15 +1417,15 @@ export const CartPage = () => {
         {/* Show Loading Overlay when navigating */}
         {isNavigating && <LoadingOverlay />}
 
-        <div className="min-h-screen flex items-center justify-center px-4 pt-16 sm:pt-20 bg-gradient-to-br from-slate-50 to-slate-100">
+        <div className="min-h-screen flex items-center justify-center px-4 pt-16 sm:pt-20 bg-gradient-to-br from-primary/20 via-background to-primary/10">
           <div className="text-center max-w-md">
-            <div className="w-24 h-24 mx-auto mb-6 bg-slate-200 rounded-full flex items-center justify-center animate-pulse">
-              <ShoppingCart className="w-12 h-12 text-slate-400" />
+            <div className="w-24 h-24 mx-auto mb-6 bg-foreground/10 rounded-full flex items-center justify-center animate-pulse">
+              <ShoppingCart className="w-12 h-12 text-foreground/40" />
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
               Your cart is empty
             </h2>
-            <p className="text-sm sm:text-base text-slate-600 mb-8">
+            <p className="text-sm sm:text-base text-foreground/60 mb-8">
               Add some products to see them here.
             </p>
             <button
@@ -1443,7 +1443,7 @@ export const CartPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pt-16 sm:pt-20 pb-16 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 pt-16 sm:pt-20 pb-16 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800 p-3 sm:p-4 mb-4 sm:mb-6 rounded-lg flex items-center gap-2 sm:gap-3 mt-2 shadow-sm">
           <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 shrink-0" />
@@ -1453,25 +1453,25 @@ export const CartPage = () => {
           </p>
         </div>
 
-        <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 mb-4 sm:mb-6 md:mb-8">
+        <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-4 sm:mb-6 md:mb-8">
           Shopping Cart
         </h1>
 
         <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-8 md:mb-12 overflow-x-auto">
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <span className="text-slate-900 font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap">
+            <span className="text-foreground font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap">
               1. Cart
             </span>
           </div>
-          <div className="h-px flex-1 bg-slate-300 min-w-4"></div>
+          <div className="h-px flex-1 bg-border min-w-4"></div>
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <span className="text-slate-500 text-xs sm:text-sm md:text-base whitespace-nowrap">
+            <span className="text-foreground/60 dark:text-foreground/70 text-xs sm:text-sm md:text-base whitespace-nowrap">
               2. Checkout
             </span>
           </div>
-          <div className="h-px flex-1 bg-slate-300 min-w-4"></div>
+          <div className="h-px flex-1 bg-border min-w-4"></div>
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <span className="text-slate-500 text-xs sm:text-sm md:text-base whitespace-nowrap">
+            <span className="text-foreground/60 dark:text-foreground/70 text-xs sm:text-sm md:text-base whitespace-nowrap">
               3. Payment
             </span>
           </div>
@@ -1482,7 +1482,7 @@ export const CartPage = () => {
             {cartItems.map((item) => (
               <div
                 key={item.id}
-                className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-slate-200 hover:shadow-xl transition-shadow"
+                className="bg-card rounded-xl p-4 sm:p-6 shadow-lg border border-border hover:shadow-xl transition-shadow"
               >
                 <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                   <div className="shrink-0 w-full sm:w-auto mx-auto sm:mx-0">
@@ -1498,19 +1498,19 @@ export const CartPage = () => {
                   </div>
 
                   <div className="flex-1">
-                    <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-1">
+                    <h3 className="text-base sm:text-lg font-bold text-foreground mb-1">
                       {item.name}
                     </h3>
-                    <p className="text-xs sm:text-sm text-slate-600 mb-3 line-clamp-2">
+                    <p className="text-xs sm:text-sm text-foreground/60 mb-3 line-clamp-2">
                       {item.description || item.desc || "Product description"}
                     </p>
 
                     <div className="flex items-center gap-2 sm:gap-3">
-                      <span className="text-xl sm:text-2xl font-bold text-slate-900">
+                      <span className="text-xl sm:text-2xl font-bold text-foreground">
                         ₦{item.price.toLocaleString()}
                       </span>
                       {item.oldPrice && (
-                        <span className="text-base sm:text-lg text-slate-400 line-through">
+                        <span className="text-base sm:text-lg text-foreground/40 line-through">
                           ₦{item.oldPrice.toLocaleString()}
                         </span>
                       )}
@@ -1518,35 +1518,35 @@ export const CartPage = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-slate-200">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-border">
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="w-10 h-10 rounded-lg border-2 border-slate-300 hover:bg-slate-100 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-10 h-10 rounded-lg border-2 border-border hover:bg-background/50 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={item.quantity <= 1}
                     >
-                      <Minus size={16} className="text-slate-700" />
+                      <Minus size={16} className="text-foreground" />
                     </button>
-                    <span className="w-12 text-center font-semibold text-slate-900">
+                    <span className="w-12 text-center font-semibold text-foreground">
                       {item.quantity}
                     </span>
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="w-10 h-10 rounded-lg border-2 border-slate-300 hover:bg-slate-100 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-10 h-10 rounded-lg border-2 border-border hover:bg-background/50 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={item.quantity >= 10}
                     >
-                      <Plus size={16} className="text-slate-700" />
+                      <Plus size={16} className="text-foreground" />
                     </button>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <button
-                      className="p-2 hover:bg-red-50 rounded-lg transition-colors group"
+                      className="p-2 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors group"
                       onClick={() => removeFromCart(item.id)}
                     >
                       <Trash2
                         size={20}
-                        className="text-slate-400 group-hover:text-red-500"
+                        className="text-foreground/40 group-hover:text-red-500"
                       />
                     </button>
                   </div>
@@ -1556,32 +1556,32 @@ export const CartPage = () => {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-slate-200 lg:sticky lg:top-24">
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-4 sm:mb-6">
+            <div className="bg-card rounded-xl p-4 sm:p-6 shadow-lg border border-border lg:sticky lg:top-24">
+              <h2 className="text-lg sm:text-xl font-bold text-foreground mb-4 sm:mb-6">
                 Order Summary
               </h2>
 
               <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
-                <div className="flex justify-between text-sm sm:text-base text-slate-700">
+                <div className="flex justify-between text-sm sm:text-base text-foreground/70">
                   <span>Sub Total</span>
-                  <span className="font-semibold text-slate-900">
+                  <span className="font-semibold text-foreground">
                     ₦{subtotal.toLocaleString()}
                   </span>
                 </div>
                 {appliedDiscount > 0 && (
-                  <div className="flex justify-between text-sm sm:text-base text-slate-700">
+                  <div className="flex justify-between text-sm sm:text-base text-foreground/70">
                     <span>Discount</span>
                     <span className="font-semibold text-red-500">
                       -₦{discount.toLocaleString()}
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm sm:text-base text-slate-700">
+                <div className="flex justify-between text-sm sm:text-base text-foreground/70">
                   <span>Shipping</span>
                   <span className="font-semibold text-emerald-600">Free</span>
                 </div>
-                <div className="border-t border-slate-200 pt-3 sm:pt-4">
-                  <div className="flex justify-between text-base sm:text-lg font-bold text-slate-900">
+                <div className="border-t border-border pt-3 sm:pt-4">
+                  <div className="flex justify-between text-base sm:text-lg font-bold text-foreground">
                     <span>Total</span>
                     <span>₦{total.toLocaleString()}</span>
                   </div>
@@ -1595,15 +1595,15 @@ export const CartPage = () => {
                 Proceed to Checkout
               </button>
 
-              <p className="text-xs sm:text-sm text-center text-slate-600 mb-4 sm:mb-6">
+              <p className="text-xs sm:text-sm text-center text-foreground/60 mb-4 sm:mb-6">
                 Estimated Delivery by{" "}
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold text-foreground">
                   25 December, 2025
                 </span>
               </p>
 
-              <div className="border-t border-slate-200 pt-4 sm:pt-6">
-                <h3 className="font-semibold text-sm sm:text-base text-slate-900 mb-3">
+              <div className="border-t border-border pt-4 sm:pt-6">
+                <h3 className="font-semibold text-sm sm:text-base text-foreground mb-3">
                   Have a Referral code?
                 </h3>
                 <div className="flex flex-col sm:flex-row gap-2">
@@ -1613,13 +1613,13 @@ export const CartPage = () => {
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleApplyCoupon()}
-                    className="flex-1 px-3 sm:px-4 py-2 rounded-lg border-2 border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="flex-1 px-3 sm:px-4 py-2 rounded-lg border-2 border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     style={{ fontSize: "16px" }}
                   />
                   <button
                     onClick={handleApplyCoupon}
                     disabled={isApplyingCoupon || !couponCode.trim()}
-                    className="px-4 sm:px-6 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 sm:px-6 py-2 bg-foreground hover:bg-foreground/90 text-background font-semibold rounded-lg transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isApplyingCoupon ? "Applying..." : "Apply"}
                   </button>
