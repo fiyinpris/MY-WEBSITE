@@ -5,27 +5,551 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "./CartSection";
 import { useWishlist } from "./WishlistSection";
 
-// Import your actual images
-import ringlight from "../Images/image 6.webp";
-import tripodStand from "../Images/image 8.jpg";
-import ledLight from "../Images/image 10.jpg";
-import softbox from "../Images/image 6.webp";
-import podcastMic from "../Images/image 5.jpg";
-import miniRinglight from "../Images/image 1.jpg";
+// Import images from ShopSection
+import microphone1 from "../Images/image M.jpeg";
+import ringlight1 from "../Images/image R.jpeg";
+import softbox1 from "../Images/image S.jpeg";
+import ringlight2 from "../Images/image R4.jpeg";
+import tripodStand1 from "../Images/image T1.jpeg";
+import ledLight1 from "../Images/image L.jpeg";
+import ringlight3 from "../Images/image R3.jpeg";
+import tripodStand2 from "../Images/image T.jpeg";
+import ledLight2 from "../Images/image L1.jpeg";
+import tripodStand3 from "../Images/image T4.jpeg";
 
-// ✅ YOUR ACTUAL PRODUCTS - Combined from ShopSection and ProductSection
-const products = [
-  { id: 1, name: "RINGLIGHT", price: 35000, image: miniRinglight },
-  { id: 2, name: "TRIPOD STAND", price: 120000, image: tripodStand },
-  { id: 3, name: "LEDLIGHT", price: 35000, image: ledLight },
-  { id: 4, name: "SOFTBOX", price: 100000, image: softbox },
-  { id: 5, name: "PODCAST MICROPHONE", price: 30000, image: podcastMic },
-  { id: 6, name: "RINGLIGHT", price: 35000, image: ringlight },
-  { id: 101, name: "Ringlight", price: 25000, image: miniRinglight },
-  { id: 102, name: "Tripod Stand", price: 20000, image: tripodStand },
-  { id: 103, name: "Podcast Mic", price: 18000, image: podcastMic },
-  { id: 104, name: "LED Light", price: 30000, image: ledLight },
-  { id: 105, name: "Softbox", price: 40000, image: softbox },
+// Import images from ProductSection
+import Microphone1 from "../Images/image M.jpeg";
+
+// ✅ COMBINED PRODUCTS from both ShopSection and ProductSection
+const allProducts = [
+  // From ShopSection (63 products)
+  {
+    id: 1,
+    name: "RINGLIGHT",
+    price: 35000,
+    image: ringlight1,
+    category: "Ringlight",
+  },
+  {
+    id: 2,
+    name: "TRIPOD STAND",
+    price: 12000,
+    image: tripodStand1,
+    category: "Tripod",
+  },
+  {
+    id: 3,
+    name: "LEDLIGHT",
+    price: 35000,
+    image: ledLight1,
+    category: "LED Light",
+  },
+  {
+    id: 4,
+    name: "SOFTBOX",
+    price: 10000,
+    image: softbox1,
+    category: "Softbox",
+  },
+  {
+    id: 5,
+    name: "MICROPHONE",
+    price: 30000,
+    image: microphone1,
+    category: "Microphone",
+  },
+  {
+    id: 6,
+    name: "RINGLIGHT",
+    price: 35000,
+    image: ringlight2,
+    category: "Ringlight",
+  },
+  {
+    id: 7,
+    name: "SOFTBOX",
+    price: 100000,
+    image: softbox1,
+    category: "Softbox",
+  },
+  {
+    id: 8,
+    name: "MICROPHONE",
+    price: 30000,
+    image: microphone1,
+    category: "Microphone",
+  },
+  {
+    id: 9,
+    name: "RINGLIGHT",
+    price: 35000,
+    image: ringlight3,
+    category: "Ringlight",
+  },
+  {
+    id: 10,
+    name: "TRIPOD STAND",
+    price: 12000,
+    image: tripodStand2,
+    category: "Tripod",
+  },
+  {
+    id: 11,
+    name: "LEDLIGHT",
+    price: 35000,
+    image: ledLight2,
+    category: "LED Light",
+  },
+  {
+    id: 12,
+    name: "SOFTBOX",
+    price: 10000,
+    image: softbox1,
+    category: "Softbox",
+  },
+  {
+    id: 13,
+    name: "MICROPHONE",
+    price: 30000,
+    image: microphone1,
+    category: "Microphone",
+  },
+  {
+    id: 14,
+    name: "RINGLIGHT",
+    price: 35000,
+    image: ringlight1,
+    category: "Ringlight",
+  },
+  {
+    id: 15,
+    name: "SOFTBOX",
+    price: 10000,
+    image: softbox1,
+    category: "Softbox",
+  },
+  {
+    id: 16,
+    name: "MICROPHONE",
+    price: 30000,
+    image: microphone1,
+    category: "Microphone",
+  },
+  {
+    id: 17,
+    name: "RINGLIGHT",
+    price: 35000,
+    image: ringlight2,
+    category: "Ringlight",
+  },
+  {
+    id: 18,
+    name: "TRIPOD STAND",
+    price: 12000,
+    image: tripodStand3,
+    category: "Tripod",
+  },
+  {
+    id: 19,
+    name: "LEDLIGHT",
+    price: 35000,
+    image: ledLight1,
+    category: "LED Light",
+  },
+  {
+    id: 20,
+    name: "SOFTBOX",
+    price: 10000,
+    image: softbox1,
+    category: "Softbox",
+  },
+  {
+    id: 21,
+    name: "MICROPHONE",
+    price: 30000,
+    image: microphone1,
+    category: "Microphone",
+  },
+  {
+    id: 22,
+    name: "RINGLIGHT",
+    price: 35000,
+    image: ringlight3,
+    category: "Ringlight",
+  },
+  {
+    id: 23,
+    name: "TRIPOD STAND",
+    price: 12000,
+    image: tripodStand1,
+    category: "Tripod",
+  },
+  {
+    id: 24,
+    name: "LEDLIGHT",
+    price: 35000,
+    image: ledLight2,
+    category: "LED Light",
+  },
+  {
+    id: 25,
+    name: "SOFTBOX",
+    price: 10000,
+    image: softbox1,
+    category: "Softbox",
+  },
+  {
+    id: 26,
+    name: "MICROPHONE",
+    price: 30000,
+    image: microphone1,
+    category: "Microphone",
+  },
+  {
+    id: 27,
+    name: "RINGLIGHT",
+    price: 35000,
+    image: ringlight1,
+    category: "Ringlight",
+  },
+  {
+    id: 28,
+    name: "TRIPOD STAND",
+    price: 12000,
+    image: tripodStand2,
+    category: "Tripod",
+  },
+  {
+    id: 29,
+    name: "LEDLIGHT",
+    price: 35000,
+    image: ledLight1,
+    category: "LED Light",
+  },
+  {
+    id: 30,
+    name: "SOFTBOX",
+    price: 10000,
+    image: softbox1,
+    category: "Softbox",
+  },
+  {
+    id: 31,
+    name: "MICROPHONE",
+    price: 30000,
+    image: microphone1,
+    category: "Microphone",
+  },
+  {
+    id: 32,
+    name: "RINGLIGHT",
+    price: 35000,
+    image: ringlight2,
+    category: "Ringlight",
+  },
+  {
+    id: 33,
+    name: "SOFTBOX",
+    price: 10000,
+    image: softbox1,
+    category: "Softbox",
+  },
+  {
+    id: 34,
+    name: "MICROPHONE",
+    price: 30000,
+    image: microphone1,
+    category: "Microphone",
+  },
+  {
+    id: 35,
+    name: "RINGLIGHT",
+    price: 35000,
+    image: ringlight3,
+    category: "Ringlight",
+  },
+  {
+    id: 36,
+    name: "TRIPOD STAND",
+    price: 12000,
+    image: tripodStand3,
+    category: "Tripod",
+  },
+  {
+    id: 37,
+    name: "LEDLIGHT",
+    price: 35000,
+    image: ledLight2,
+    category: "LED Light",
+  },
+  {
+    id: 38,
+    name: "SOFTBOX",
+    price: 10000,
+    image: softbox1,
+    category: "Softbox",
+  },
+  {
+    id: 39,
+    name: "MICROPHONE",
+    price: 30000,
+    image: microphone1,
+    category: "Microphone",
+  },
+  {
+    id: 40,
+    name: "RINGLIGHT",
+    price: 35000,
+    image: ringlight1,
+    category: "Ringlight",
+  },
+  {
+    id: 41,
+    name: "SOFTBOX",
+    price: 10000,
+    image: softbox1,
+    category: "Softbox",
+  },
+  {
+    id: 42,
+    name: "MICROPHONE",
+    price: 30000,
+    image: microphone1,
+    category: "Microphone",
+  },
+  {
+    id: 43,
+    name: "RINGLIGHT",
+    price: 35000,
+    image: ringlight2,
+    category: "Ringlight",
+  },
+  {
+    id: 44,
+    name: "TRIPOD STAND",
+    price: 12000,
+    image: tripodStand1,
+    category: "Tripod",
+  },
+  {
+    id: 45,
+    name: "LEDLIGHT",
+    price: 35000,
+    image: ledLight1,
+    category: "LED Light",
+  },
+  {
+    id: 46,
+    name: "SOFTBOX",
+    price: 10000,
+    image: softbox1,
+    category: "Softbox",
+  },
+  {
+    id: 47,
+    name: "MICROPHONE",
+    price: 30000,
+    image: microphone1,
+    category: "Microphone",
+  },
+  {
+    id: 48,
+    name: "RINGLIGHT",
+    price: 35000,
+    image: ringlight3,
+    category: "Ringlight",
+  },
+  {
+    id: 49,
+    name: "TRIPOD STAND",
+    price: 12000,
+    image: tripodStand2,
+    category: "Tripod",
+  },
+  {
+    id: 50,
+    name: "LEDLIGHT",
+    price: 35000,
+    image: ledLight2,
+    category: "LED Light",
+  },
+  {
+    id: 51,
+    name: "SOFTBOX",
+    price: 10000,
+    image: softbox1,
+    category: "Softbox",
+  },
+  {
+    id: 52,
+    name: "MICROPHONE",
+    price: 30000,
+    image: microphone1,
+    category: "Microphone",
+  },
+  {
+    id: 53,
+    name: "RINGLIGHT",
+    price: 35000,
+    image: ringlight1,
+    category: "Ringlight",
+  },
+  {
+    id: 54,
+    name: "SOFTBOX",
+    price: 10000,
+    image: softbox1,
+    category: "Softbox",
+  },
+  {
+    id: 55,
+    name: "MICROPHONE",
+    price: 30000,
+    image: microphone1,
+    category: "Microphone",
+  },
+  {
+    id: 56,
+    name: "RINGLIGHT",
+    price: 35000,
+    image: ringlight2,
+    category: "Ringlight",
+  },
+  {
+    id: 57,
+    name: "TRIPOD STAND",
+    price: 12000,
+    image: tripodStand3,
+    category: "Tripod",
+  },
+  {
+    id: 58,
+    name: "LEDLIGHT",
+    price: 35000,
+    image: ledLight1,
+    category: "LED Light",
+  },
+  {
+    id: 59,
+    name: "SOFTBOX",
+    price: 10000,
+    image: softbox1,
+    category: "Softbox",
+  },
+  {
+    id: 60,
+    name: "MICROPHONE",
+    price: 30000,
+    image: microphone1,
+    category: "Microphone",
+  },
+  {
+    id: 61,
+    name: "RINGLIGHT",
+    price: 35000,
+    image: ringlight3,
+    category: "Ringlight",
+  },
+  {
+    id: 62,
+    name: "TRIPOD STAND",
+    price: 12000,
+    image: tripodStand1,
+    category: "Tripod",
+  },
+  {
+    id: 63,
+    name: "LEDLIGHT",
+    price: 35000,
+    image: ledLight2,
+    category: "LED Light",
+  },
+
+  // From ProductSection (12 products with unique IDs starting from 101)
+  {
+    id: 101,
+    name: "Ringlight",
+    price: 25000,
+    image: ringlight1,
+    category: "Ringlight",
+  },
+  {
+    id: 102,
+    name: "Tripod Stand",
+    price: 20000,
+    image: tripodStand1,
+    category: "Tripod",
+  },
+  {
+    id: 103,
+    name: "Microphone",
+    price: 18000,
+    image: Microphone1,
+    category: "Microphone",
+  },
+  {
+    id: 104,
+    name: "LED Light",
+    price: 30000,
+    image: ledLight1,
+    category: "LED Light",
+  },
+  {
+    id: 105,
+    name: "Softbox",
+    price: 40000,
+    image: softbox1,
+    category: "Softbox",
+  },
+  {
+    id: 106,
+    name: "Ringlight",
+    price: 25000,
+    image: ringlight2,
+    category: "Ringlight",
+  },
+  {
+    id: 107,
+    name: "Tripod Stand",
+    price: 20000,
+    image: tripodStand2,
+    category: "Tripod",
+  },
+  {
+    id: 108,
+    name: "Podcast Mic",
+    price: 18000,
+    image: microphone1,
+    category: "Microphone",
+  },
+  {
+    id: 109,
+    name: "LED Light",
+    price: 30000,
+    image: ledLight2,
+    category: "LED Light",
+  },
+  {
+    id: 110,
+    name: "Softbox",
+    price: 40000,
+    image: softbox1,
+    category: "Softbox",
+  },
+  {
+    id: 111,
+    name: "Ringlight",
+    price: 25000,
+    image: ringlight3,
+    category: "Ringlight",
+  },
+  {
+    id: 112,
+    name: "Tripod Stand",
+    price: 20000,
+    image: tripodStand3,
+    category: "Tripod",
+  },
 ];
 
 export const SearchSection = () => {
@@ -35,16 +559,36 @@ export const SearchSection = () => {
   const { addToWishlist, isInWishlist } = useWishlist();
   const navigate = useNavigate();
 
-  // ✅ Search ONLY through YOUR products
+  // ✅ Search through ALL products from both sections with better matching
   useEffect(() => {
     if (searchQuery.trim() !== "") {
-      const query = searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase().trim();
 
-      const filteredProducts = products.filter((product) =>
-        product.name.toLowerCase().includes(query)
-      );
+      // More flexible search - matches partial words and categories
+      const filteredProducts = allProducts.filter((product) => {
+        const productName = product.name.toLowerCase();
+        const productCategory = product.category?.toLowerCase() || "";
 
-      setResults(filteredProducts);
+        return (
+          productName.includes(query) ||
+          query.includes(productName) ||
+          productCategory.includes(query) ||
+          query.includes(productCategory)
+        );
+      });
+
+      // Remove duplicates based on name and price (in case same product appears in both sections)
+      const uniqueProducts = filteredProducts.reduce((acc, current) => {
+        const duplicate = acc.find(
+          (item) => item.name === current.name && item.price === current.price,
+        );
+        if (!duplicate) {
+          acc.push(current);
+        }
+        return acc;
+      }, []);
+
+      setResults(uniqueProducts);
     } else {
       setResults([]);
     }
@@ -52,12 +596,20 @@ export const SearchSection = () => {
 
   const handleAddToCart = (product) => {
     addToCart(product);
-    alert(`${product.name} added to cart!`);
+    // Create a success toast/notification
+    const notification = document.createElement("div");
+    notification.className =
+      "fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-slideInRight";
+    notification.textContent = `${product.name} added to cart!`;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+      notification.remove();
+    }, 3000);
   };
 
   return (
-    <section className="pt-24 pb-10 min-h-screen bg-background">
-      <div className="container mx-auto max-w-6xl">
+    <section className="pt-24 px-8 pb-10 min-h-screen bg-background">
+      <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-2">
         {/* Back Navigation */}
         <div className="flex items-center gap-4 mb-6">
           <button
@@ -132,7 +684,7 @@ export const SearchSection = () => {
         {/* Product Results Grid - CENTERED */}
         {results.length > 0 && (
           <div className="flex justify-center">
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 max-w-full">
+            <div className="grid w-full grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 mx-5">
               {results.map((product) => (
                 <div
                   key={product.id}
@@ -165,9 +717,16 @@ export const SearchSection = () => {
                   {/* Product Details */}
                   <div className="p-2 md:p-4">
                     {/* Product Name */}
-                    <h3 className="text-sm md:text-base font-bold text-foreground mb-3">
+                    <h3 className="text-sm md:text-base font-bold text-foreground mb-2">
                       {product.name}
                     </h3>
+
+                    {/* Category Badge */}
+                    {product.category && (
+                      <span className="inline-block text-xs bg-primary/10 text-primary px-2 py-1 rounded-md mb-3">
+                        {product.category}
+                      </span>
+                    )}
 
                     {/* Price */}
                     <div className="flex items-center justify-between mb-3">
@@ -205,7 +764,8 @@ export const SearchSection = () => {
             </h3>
             <p className="text-muted-foreground max-w-md mx-auto mb-6">
               Use the search bar in the navigation to find ringlights, tripods,
-              LED lights, and more
+              LED lights, and more. We have {allProducts.length} products
+              available!
             </p>
             <div className="flex flex-wrap justify-center gap-3 max-w-lg mx-auto">
               <button
@@ -224,6 +784,24 @@ export const SearchSection = () => {
           </div>
         )}
       </div>
+
+      {/* Toast notification styles */}
+      <style jsx>{`
+        @keyframes slideInRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+
+        .animate-slideInRight {
+          animation: slideInRight 0.4s ease-out;
+        }
+      `}</style>
     </section>
   );
 };

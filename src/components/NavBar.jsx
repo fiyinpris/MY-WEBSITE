@@ -1,14 +1,6 @@
 import { cn } from "../lib/utils";
 import { useEffect, useState, useContext, useRef } from "react";
-import {
-  ShoppingCart,
-  User,
-  Search,
-  Menu,
-  X,
-  Heart,
-  Loader2,
-} from "lucide-react";
+import { ShoppingCart, User, Search, Menu, X, Heart } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "./CartSection";
 import { useWishlist } from "./WishlistSection";
@@ -22,19 +14,39 @@ import softbox from "../Images/image 6.webp";
 import podcastMic from "../Images/image 5.jpg";
 import miniRinglight from "../Images/image 1.jpg";
 
-// ✅ YOUR ACTUAL PRODUCTS
+// Additional images from ShopSection
+import microphone1 from "../Images/image M.jpeg";
+import ringlight1 from "../Images/image R.jpeg";
+import softbox1 from "../Images/image S.jpeg";
+import ringlight2 from "../Images/image R4.jpeg";
+import tripodStand1 from "../Images/image T1.jpeg";
+import ledLight1 from "../Images/image L.jpeg";
+import ringlight3 from "../Images/image R3.jpeg";
+import tripodStand2 from "../Images/image T.jpeg";
+import ledLight2 from "../Images/image L1.jpeg";
+import tripodStand3 from "../Images/image T4.jpeg";
+
+// ✅ COMBINED PRODUCTS from both ShopSection and ProductSection
 const products = [
+  // Original NavBar products
   { id: 1, name: "RINGLIGHT", price: 35000, image: miniRinglight },
   { id: 2, name: "TRIPOD STAND", price: 120000, image: tripodStand },
   { id: 3, name: "LEDLIGHT", price: 35000, image: ledLight },
   { id: 4, name: "SOFTBOX", price: 100000, image: softbox },
   { id: 5, name: "PODCAST MICROPHONE", price: 30000, image: podcastMic },
   { id: 6, name: "RINGLIGHT", price: 35000, image: ringlight },
-  { id: 101, name: "Ringlight", price: 25000, image: miniRinglight },
-  { id: 102, name: "Tripod Stand", price: 20000, image: tripodStand },
-  { id: 103, name: "Podcast Mic", price: 18000, image: podcastMic },
-  { id: 104, name: "LED Light", price: 30000, image: ledLight },
-  { id: 105, name: "Softbox", price: 40000, image: softbox },
+
+  // From ShopSection (sample - key products)
+  { id: 101, name: "Ringlight", price: 25000, image: ringlight1 },
+  { id: 102, name: "Tripod Stand", price: 20000, image: tripodStand1 },
+  { id: 103, name: "Podcast Mic", price: 18000, image: microphone1 },
+  { id: 104, name: "LED Light", price: 30000, image: ledLight1 },
+  { id: 105, name: "Softbox", price: 40000, image: softbox1 },
+  { id: 106, name: "MICROPHONE", price: 30000, image: microphone1 },
+  { id: 107, name: "LED LIGHT", price: 35000, image: ledLight2 },
+  { id: 108, name: "TRIPOD", price: 12000, image: tripodStand2 },
+  { id: 109, name: "Professional Ringlight", price: 35000, image: ringlight2 },
+  { id: 110, name: "Studio Softbox", price: 10000, image: softbox1 },
 ];
 
 const navItems = [
@@ -44,44 +56,45 @@ const navItems = [
   { name: "Contact us", href: "/contact" },
 ];
 
-// ✅ NEW: Loading Overlay Component
+// ✅ Exact spinner from your image - thicker bars, radial pattern
 const LoadingOverlay = () => {
   return (
     <>
       <div
-        className="fixed inset-0 z-[9998] bg-black/20"
+        className="fixed inset-0 z-[9998] bg-black/20 pointer-events-none"
         style={{
           backdropFilter: "blur(8px)",
           WebkitBackdropFilter: "blur(8px)",
         }}
       ></div>
 
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none">
-        <div className="text-center bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-2xl pointer-events-auto">
-          <div className="relative w-24 h-24 mx-auto mb-6">
+      <div className="fixed inset-0 z-[10002] flex items-center justify-center pointer-events-none">
+        {/* Spinner with 12 thick bars like the image */}
+        <div className="relative w-20 h-20">
+          {[...Array(12)].map((_, i) => (
             <div
-              className="absolute inset-0 border-4 border-green-100 rounded-full animate-spin"
-              style={{ animationDuration: "3s" }}
-            ></div>
-            <div className="absolute inset-2 border-4 border-green-300 rounded-full animate-pulse"></div>
-            <div
-              className="absolute inset-4 border-4 border-green-600 rounded-full border-t-transparent animate-spin"
-              style={{ animationDuration: "1s" }}
-            ></div>
-
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Search className="w-10 h-10 text-green-600 animate-pulse" />
-            </div>
-          </div>
-
-          <h3 className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
-            Loading Results
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Please wait...
-          </p>
+              key={i}
+              className="absolute w-2 h-6 bg-green-600 rounded-full"
+              style={{
+                left: "50%",
+                top: "50%",
+                transformOrigin: "1px -24px",
+                transform: `rotate(${i * 30}deg)`,
+                opacity: 1 - i * 0.08,
+                animation: `spin-fade 1.2s linear infinite`,
+                animationDelay: `${-1.2 + i * 0.1}s`,
+              }}
+            />
+          ))}
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin-fade {
+          0% { opacity: 1; }
+          100% { opacity: 0.1; }
+        }
+      `}</style>
     </>
   );
 };
@@ -98,7 +111,7 @@ export const NavBar = () => {
   const [theme, setTheme] = useState("light");
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
-  const [isNavigating, setIsNavigating] = useState(false); // ✅ NEW STATE
+  const [isNavigating, setIsNavigating] = useState(false);
   const navigate = useNavigate();
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
   const location = useLocation();
@@ -173,8 +186,8 @@ export const NavBar = () => {
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -199,7 +212,7 @@ export const NavBar = () => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setHighlightedIndex((prev) =>
-        prev < suggestions.length - 1 ? prev + 1 : prev
+        prev < suggestions.length - 1 ? prev + 1 : prev,
       );
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
@@ -209,43 +222,34 @@ export const NavBar = () => {
     }
   };
 
-  // ✅ UPDATED: Handle suggestion selection WITH LOADING
   const handleSelectSuggestion = (product) => {
     setSearchQuery(product.name);
     setShowSuggestions(false);
     setIsSearchOpen(false);
-
-    // Show loading overlay
     setIsNavigating(true);
 
-    // Navigate after delay
-    setTimeout(() => {
-      navigate("/search");
-      setIsNavigating(false);
-    }, 800);
+    navigate("/search");
+    setIsNavigating(false);
   };
 
-  // ✅ UPDATED: Handle search submit WITH LOADING
+  // ✅ Show green loading overlay for manual search
   const handleSearchSubmit = (e) => {
     if (e) e.preventDefault();
     if (searchQuery.trim()) {
       setIsSearchOpen(false);
       setShowSuggestions(false);
-
-      // Show loading overlay
       setIsNavigating(true);
 
-      // Navigate after delay
       setTimeout(() => {
         navigate("/search");
         setIsNavigating(false);
-      }, 800);
+      }, 600);
     }
   };
 
   return (
     <>
-      {/* ✅ NEW: Loading Overlay */}
+      {/* ✅ Green Loading Overlay */}
       {isNavigating && <LoadingOverlay />}
 
       <nav
@@ -253,7 +257,7 @@ export const NavBar = () => {
           "fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300",
           isScrolled
             ? "py-3 bg-background/80 backdrop-blur-md shadow-sm"
-            : "py-4 bg-background"
+            : "py-4 bg-background",
         )}
       >
         {/* LARGE DESKTOP LAYOUT (lg and above) */}
@@ -278,7 +282,7 @@ export const NavBar = () => {
                     className={cn(
                       "inline-block text-foreground hover:text-primary transition-colors duration-300 text-base lg:text-lg pb-1 whitespace-nowrap",
                       location.pathname === item.href &&
-                        "text-primary border-b-2 border-primary"
+                        "text-primary border-b-2 border-primary",
                     )}
                   >
                     {item.name}
@@ -311,8 +315,9 @@ export const NavBar = () => {
                     size={18}
                   />
 
+                  {/* ✅ Suggestions dropdown - stays visible for clicks */}
                   {showSuggestions && suggestions.length > 0 && (
-                    <div className="absolute z-[60] w-full mt-2 bg-card border border-border rounded-lg shadow-xl overflow-hidden">
+                    <div className="absolute z-[10001] w-full mt-2 bg-card border border-border rounded-lg shadow-xl overflow-hidden pointer-events-auto">
                       <div className="py-1">
                         {suggestions.map((product, index) => (
                           <button
@@ -323,7 +328,7 @@ export const NavBar = () => {
                               "w-full flex items-center gap-3 px-3 py-2 transition-colors text-left",
                               index === highlightedIndex
                                 ? "bg-primary/10"
-                                : "hover:bg-muted"
+                                : "hover:bg-muted",
                             )}
                           >
                             <img
@@ -355,11 +360,7 @@ export const NavBar = () => {
                     disabled={isNavigating}
                     className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors whitespace-nowrap disabled:opacity-50"
                   >
-                    {isNavigating ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      "Search"
-                    )}
+                    Search
                   </button>
                 )}
               </div>
@@ -459,6 +460,11 @@ export const NavBar = () => {
                         <Link
                           to="/signin"
                           onClick={() => {
+                            // Save current page before redirecting
+                            sessionStorage.setItem(
+                              "returnTo",
+                              location.pathname,
+                            );
                             setIsAccountOpen(false);
                             setIsMobileMenuOpen(false);
                           }}
@@ -585,11 +591,7 @@ export const NavBar = () => {
                   className="absolute right-12 top-1/2 -translate-y-1/2 text-foreground/70 p-1.5 hover:text-foreground transition-colors disabled:opacity-50"
                   aria-label="Search"
                 >
-                  {isNavigating ? (
-                    <Loader2 size={22} className="animate-spin" />
-                  ) : (
-                    <Search size={22} />
-                  )}
+                  <Search size={22} />
                 </button>
 
                 <button
@@ -605,8 +607,9 @@ export const NavBar = () => {
                 </button>
               </div>
 
+              {/* ✅ Mobile suggestions - stay visible for clicks */}
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute z-[60] w-full mt-2 bg-card border border-border rounded-lg shadow-xl overflow-hidden left-0 right-0">
+                <div className="absolute z-[10001] w-full mt-2 bg-card border border-border rounded-lg shadow-xl overflow-hidden left-0 right-0">
                   <div className="py-1">
                     {suggestions.map((product, index) => (
                       <button
@@ -616,7 +619,7 @@ export const NavBar = () => {
                           "w-full flex items-center gap-2 px-3 py-2 transition-colors text-left",
                           index === highlightedIndex
                             ? "bg-primary/10"
-                            : "hover:bg-muted"
+                            : "hover:bg-muted",
                         )}
                       >
                         <img
@@ -715,16 +718,13 @@ export const NavBar = () => {
                     disabled={isNavigating}
                     className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
                   >
-                    {isNavigating ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : (
-                      "Search"
-                    )}
+                    Search
                   </button>
                 )}
 
+                {/* ✅ Medium screen suggestions - stay visible for clicks */}
                 {showSuggestions && suggestions.length > 0 && (
-                  <div className="absolute z-[60] w-full mt-2 bg-card border border-border rounded-lg shadow-xl overflow-hidden">
+                  <div className="absolute z-[10001] w-full mt-2 bg-card border border-border rounded-lg shadow-xl overflow-hidden">
                     <div className="py-1">
                       {suggestions.map((product, index) => (
                         <button
@@ -735,7 +735,7 @@ export const NavBar = () => {
                             "w-full flex items-center gap-3 px-3 py-2 transition-colors text-left",
                             index === highlightedIndex
                               ? "bg-primary/10"
-                              : "hover:bg-muted"
+                              : "hover:bg-muted",
                           )}
                         >
                           <img
@@ -774,7 +774,7 @@ export const NavBar = () => {
         <div
           className={cn(
             "fixed top-0 right-0 w-[280px] h-screen bg-card border-l border-border z-50 transition-transform duration-300 ease-in-out overflow-y-auto",
-            isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
+            isMobileMenuOpen ? "translate-x-0" : "translate-x-full",
           )}
         >
           <div className="flex justify-end p-4 border-b border-border sticky top-0 bg-card z-10">
@@ -797,7 +797,7 @@ export const NavBar = () => {
                     "text-lg py-2 transition-colors duration-300",
                     location.pathname === item.href
                       ? "text-primary font-semibold"
-                      : "text-foreground/80 hover:text-primary"
+                      : "text-foreground/80 hover:text-primary",
                   )}
                 >
                   {item.name}
@@ -962,44 +962,45 @@ export const NavBar = () => {
             </div>
           </div>
         )}
-
-        {showLogoutPopup && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-[9999] p-4">
-            <div className="bg-card border border-border rounded-xl shadow-lg p-6 w-[90%] max-w-sm text-center animate-fadeIn">
-              <div className="flex justify-center mb-4">
-                <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-8 h-8 text-green-600 dark:text-green-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-              </div>
-
-              <h2 className="text-xl font-semibold text-foreground mb-2">
-                Logged Out Successfully
-              </h2>
-              <p className="text-sm text-muted-foreground mb-6">
-                You have been logged out of your account.
-              </p>
-              <button
-                onClick={() => setShowLogoutPopup(false)}
-                className="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )}
       </nav>
+
+      {/* ✅ LOGOUT POPUP - Outside nav element so it's truly fixed to viewport */}
+      {showLogoutPopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-[9999] p-4 overflow-y-auto">
+          <div className="bg-card border border-border rounded-xl shadow-lg p-6 w-[90%] max-w-sm text-center animate-fadeIn my-auto">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 text-green-600 dark:text-green-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              Logged Out Successfully
+            </h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              You have been logged out of your account.
+            </p>
+            <button
+              onClick={() => setShowLogoutPopup(false)}
+              className="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };

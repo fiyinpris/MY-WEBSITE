@@ -5,7 +5,7 @@ export const SearchContext = createContext();
 export const SearchProvider = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [results, setResults] = useState([]);
-  const [allProducts, setAllProducts] = useState([]); // 👈 ADD THIS
+  const [allProducts, setAllProducts] = useState([]);
 
   return (
     <SearchContext.Provider

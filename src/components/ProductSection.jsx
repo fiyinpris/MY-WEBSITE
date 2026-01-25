@@ -408,7 +408,7 @@ export const ProductSection = () => {
           isTabsFixed ? "fixed top-[60px] left-0 right-0" : "relative"
         } z-40 border backdrop-blur-md shadow-lg transition-all duration-300`}
       >
-        <div className="flex justify-center flex-wrap gap-6 sm:gap-3 md:gap-15 py-3 sm:py-4 px-2 sm:px-4">
+        <div className="flex justify-center flex-wrap gap-4 sm:gap-3 md:gap-15 py-3 sm:py-4 px-2 sm:px-4">
           {tabs.map((tab) => (
             <button
               key={tab.name}
