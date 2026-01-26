@@ -13,18 +13,20 @@ import {
   AlertCircle,
   CheckCircle,
   X,
-  Copy,
-  Check,
   Loader2,
   CreditCard,
   Building2,
   Smartphone,
+  Banknote,
 } from "lucide-react";
 
 const CartContext = createContext();
 
 // Paystack Configuration
-const PAYSTACK_PUBLIC_KEY = "pk_test_xxxxxxxxxxxxx"; // Replace with your public key
+const PAYSTACK_PUBLIC_KEY = "pk_test_efd6d18db02f5a001af1b1016bdc30622a381cf7";
+const EMAILJS_PUBLIC_KEY = "Abc123XyZ_MyRealPublicKey456";
+const EMAILJS_SERVICE_ID = "service_gmail_7d8f9a0";
+const EMAILJS_TEMPLATE_ID = "template_order_confirmation_x1y2z3";
 
 const STATES = [
   "Abia",
@@ -95,112 +97,26 @@ const Toast = ({ message, type, onClose }) => {
   );
 };
 
-// Full Screen Loading Overlay Component with Blur Effect
+// Full Screen Loading Overlay Component
 const LoadingOverlay = () => {
   return (
     <>
-      {/* Blur overlay using CSS filter */}
-      <div
-        className="fixed inset-0 z-[9998] bg-black/20"
-        style={{
-          backdropFilter: "blur(8px)",
-          WebkitBackdropFilter: "blur(8px)",
-        }}
-      ></div>
-
-      {/* Loading content */}
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none">
-        <div className="text-center bg-white rounded-2xl p-8 shadow-2xl pointer-events-auto">
-          {/* Animated Shopping Bag Logo */}
-          <div className="relative w-32 h-32 mx-auto mb-8">
-            {/* Outer rotating ring */}
-            <div
-              className="absolute inset-0 border-4 border-green-100 rounded-full animate-spin"
-              style={{ animationDuration: "3s" }}
-            ></div>
-
-            {/* Middle pulsing ring */}
-            <div className="absolute inset-2 border-4 border-green-300 rounded-full animate-pulse"></div>
-
-            {/* Inner spinning ring */}
-            <div
-              className="absolute inset-4 border-4 border-green-600 rounded-full border-t-transparent animate-spin"
-              style={{ animationDuration: "1s" }}
-            ></div>
-
-            {/* Center Logo - Shopping Bag with animated cart */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative">
-                {/* Shopping bag */}
-                <svg
-                  className="w-16 h-16 text-green-600"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <path d="M16 10a4 4 0 0 1-8 0" />
-                </svg>
-
-                {/* Animated check mark that appears */}
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-600 rounded-full flex items-center justify-center animate-bounce">
-                  <svg
-                    className="w-4 h-4 text-white"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Loading Text with gradient */}
-          <div className="mb-6">
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
-              Loading Store
-            </h3>
-            <p className="text-sm text-slate-600">
-              Getting everything ready for you...
-            </p>
-          </div>
-
-          {/* Animated Progress Bar */}
-          <div className="w-48 h-1 bg-slate-200 rounded-full mx-auto overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full animate-progress"></div>
-          </div>
+      <div className="fixed inset-0 bg-white/20 dark:bg-gray-900/30 z-50 flex items-center justify-center">
+        <div className="flex gap-3">
+          <div
+            className="w-4 h-4 rounded-full bg-primary animate-bounce"
+            style={{ animationDelay: "0s" }}
+          ></div>
+          <div
+            className="w-4 h-4 rounded-full bg-primary animate-bounce"
+            style={{ animationDelay: "0.2s" }}
+          ></div>
+          <div
+            className="w-4 h-4 rounded-full bg-primary animate-bounce"
+            style={{ animationDelay: "0.4s" }}
+          ></div>
         </div>
       </div>
-
-      {/* Add custom animation keyframes */}
-      <style>{`
-        @keyframes progress {
-          0% {
-            width: 0%;
-            margin-left: 0%;
-          }
-          50% {
-            width: 50%;
-            margin-left: 25%;
-          }
-          100% {
-            width: 100%;
-            margin-left: 0%;
-          }
-        }
-        .animate-progress {
-          animation: progress 1.5s ease-in-out infinite;
-        }
-      `}</style>
     </>
   );
 };
@@ -210,7 +126,6 @@ export const CartSection = ({ children }) => {
   const [toast, setToast] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Safe localStorage operations
   const safeGetFromStorage = useCallback((key) => {
     try {
       const item = localStorage.getItem(key);
@@ -227,11 +142,6 @@ export const CartSection = ({ children }) => {
       return true;
     } catch (error) {
       console.error(`Error saving to localStorage (${key}):`, error);
-      if (error.name === "QuotaExceededError") {
-        console.error("Storage limit reached. Please clear some items.");
-      } else {
-        console.error("Failed to save cart data");
-      }
       return false;
     }
   }, []);
@@ -284,7 +194,7 @@ export const CartSection = ({ children }) => {
           return prev.map((item) =>
             item.id === product.id
               ? { ...item, quantity: item.quantity + 1 }
-              : item
+              : item,
           );
         }
         showToast(`${product.name} added to cart`, "success");
@@ -326,7 +236,7 @@ export const CartSection = ({ children }) => {
           throw new Error("Item not found in cart");
         }
         return prev.map((item) =>
-          item.id === id ? { ...item, quantity: newQuantity } : item
+          item.id === id ? { ...item, quantity: newQuantity } : item,
         );
       });
     } catch (error) {
@@ -397,7 +307,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
-    0
+    0,
   );
 
   const validateForm = () => {
@@ -413,7 +323,6 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
     if (!formData.address.trim()) newErrors.address = "Address is required";
     if (!formData.country.trim()) newErrors.country = "Country is required";
     if (!formData.state.trim()) newErrors.state = "State is required";
-    // City is optional - no validation required
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -717,580 +626,377 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
   );
 };
 
-// Bank Transfer Component
-const BankTransferPayment = ({ amount, email, onBack, onComplete }) => {
-  const [copied, setCopied] = useState({ account: false, amount: false });
-  const [timeRemaining, setTimeRemaining] = useState(1800); // 30 minutes
-  const { showToast } = useCart();
-
-  // Bank details
-  const bankDetails = {
-    bankName: "Paystack-Titan",
-    accountNumber: "9903311438",
-    accountName: "Paystack Checkout",
-    amount: amount,
-  };
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 0) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
-  };
-
-  const copyToClipboard = async (text, field) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied((prev) => ({ ...prev, [field]: true }));
-      showToast(
-        `${field === "account" ? "Account number" : "Amount"} copied!`,
-        "success"
-      );
-      setTimeout(() => {
-        setCopied((prev) => ({ ...prev, [field]: false }));
-      }, 2000);
-    } catch {
-      showToast("Failed to copy", "error");
-    }
-  };
-
-  return (
-    <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-slate-200">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-green-100 rounded-lg">
-          <Building2 className="w-6 h-6 text-green-600" />
-        </div>
-        <div>
-          <h3 className="text-lg font-bold text-slate-900">
-            Pay with Transfer
-          </h3>
-          <p className="text-sm text-slate-600">
-            Transfer to the account below
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-slate-700">Email</span>
-        </div>
-        <p className="text-base font-medium text-slate-900">{email}</p>
-      </div>
-
-      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-slate-700">Amount to Pay</span>
-          <button
-            onClick={() => copyToClipboard(amount.toString(), "amount")}
-            className="p-1.5 hover:bg-emerald-100 rounded transition-colors"
-          >
-            {copied.amount ? (
-              <Check className="w-4 h-4 text-emerald-600" />
-            ) : (
-              <Copy className="w-4 h-4 text-emerald-600" />
-            )}
-          </button>
-        </div>
-        <p className="text-2xl font-bold text-emerald-700">
-          NGN {amount.toLocaleString()}
-        </p>
-      </div>
-
-      <div className="space-y-4 mb-6">
-        <div className="bg-slate-50 rounded-lg p-4">
-          <div className="text-xs text-slate-500 uppercase mb-1">Bank Name</div>
-          <div className="text-base font-semibold text-slate-900">
-            {bankDetails.bankName}
-          </div>
-        </div>
-
-        <div className="bg-slate-50 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-1">
-            <div className="text-xs text-slate-500 uppercase">
-              Account Number
-            </div>
-            <button
-              onClick={() =>
-                copyToClipboard(bankDetails.accountNumber, "account")
-              }
-              className="p-1.5 hover:bg-slate-200 rounded transition-colors"
-            >
-              {copied.account ? (
-                <Check className="w-4 h-4 text-emerald-600" />
-              ) : (
-                <Copy className="w-4 h-4 text-slate-600" />
-              )}
-            </button>
-          </div>
-          <div className="text-xl font-bold text-slate-900 tracking-wider">
-            {bankDetails.accountNumber}
-          </div>
-        </div>
-
-        <div className="bg-slate-50 rounded-lg p-4">
-          <div className="text-xs text-slate-500 uppercase mb-1">Amount</div>
-          <div className="text-xl font-bold text-slate-900">
-            NGN {bankDetails.amount.toLocaleString()}
-          </div>
-        </div>
-      </div>
-
-      <div className="border-t border-slate-200 pt-4 mb-6">
-        <div className="flex items-center justify-center gap-2 text-sm text-slate-600">
-          <AlertCircle className="w-4 h-4" />
-          <span>
-            This account is for this transaction only and expires in{" "}
-            <span className="font-semibold text-red-600">
-              {formatTime(timeRemaining)}
-            </span>
-          </span>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <button
-          onClick={onComplete}
-          className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold py-3 rounded-lg transition-all shadow-lg shadow-emerald-500/30"
-        >
-          I've sent the money
-        </button>
-        <button
-          onClick={onBack}
-          className="w-full border-2 border-slate-300 text-slate-700 font-medium py-3 rounded-lg hover:bg-slate-50 transition-colors"
-        >
-          Change Payment Method
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// USSD Payment Component
-const USSDPayment = ({ amount, email, onBack, onComplete }) => {
-  const [selectedBank, setSelectedBank] = useState(null);
-
-  const banks = [
-    { name: "Guaranty Trust Bank", code: "*737#", shortCode: "737" },
-    { name: "Access Bank", code: "*901#", shortCode: "901" },
-    { name: "Zenith Bank", code: "*966#", shortCode: "966" },
-    { name: "First Bank", code: "*894#", shortCode: "894" },
-    { name: "UBA", code: "*919#", shortCode: "919" },
-    { name: "Sterling Bank", code: "*822#", shortCode: "822" },
-  ];
-
-  const handleBankSelect = (bank) => {
-    setSelectedBank(bank);
-  };
-
-  return (
-    <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-slate-200">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-green-100 rounded-lg">
-          <Smartphone className="w-6 h-6 text-green-600" />
-        </div>
-        <div>
-          <h3 className="text-lg font-bold text-slate-900">Pay with USSD</h3>
-          <p className="text-sm text-slate-600">
-            Choose your bank to start the payment
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-sm text-slate-600 mb-1">{email}</div>
-            <div className="text-lg font-bold text-slate-900">
-              Pay NGN {amount.toLocaleString()}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {!selectedBank ? (
-        <div className="space-y-3 mb-6">
-          <h4 className="text-sm font-semibold text-slate-700 mb-3">
-            Choose your bank to start the payment
-          </h4>
-          {banks.map((bank) => (
-            <button
-              key={bank.shortCode}
-              onClick={() => handleBankSelect(bank)}
-              className="w-full flex items-center justify-between p-4 border-2 border-slate-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all group"
-            >
-              <span className="font-medium text-slate-900 group-hover:text-green-700">
-                {bank.name}
-              </span>
-              <span className="text-sm text-slate-500 font-mono">
-                *{bank.shortCode}#
-              </span>
-            </button>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-6">
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-6">
-            <div className="text-center mb-4">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full shadow-md mb-3">
-                <Smartphone className="w-8 h-8 text-green-600" />
-              </div>
-              <h4 className="text-lg font-bold text-slate-900 mb-2">
-                Dial on your phone
-              </h4>
-              <div className="text-4xl font-bold text-green-700 tracking-wider mb-3">
-                {selectedBank.code}
-              </div>
-              <p className="text-sm text-slate-600">
-                Follow the prompts on your phone to complete the payment
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg p-4 space-y-2 text-sm text-slate-700">
-              <div className="flex items-start gap-2">
-                <span className="font-semibold text-slate-900">1.</span>
-                <span>Dial {selectedBank.code} on your phone</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="font-semibold text-slate-900">2.</span>
-                <span>Select "Paystack" or "Make Payment"</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="font-semibold text-slate-900">3.</span>
-                <span>Enter the amount: NGN {amount.toLocaleString()}</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="font-semibold text-slate-900">4.</span>
-                <span>Confirm the transaction with your PIN</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={onComplete}
-              className="w-full bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white font-semibold py-3 rounded-lg transition-all shadow-lg shadow-green-500/30"
-            >
-              I've completed the payment
-            </button>
-            <button
-              onClick={() => setSelectedBank(null)}
-              className="w-full border-2 border-slate-300 text-slate-700 font-medium py-3 rounded-lg hover:bg-slate-50 transition-colors"
-            >
-              Choose another bank
-            </button>
-          </div>
-        </div>
-      )}
-
-      {!selectedBank && (
-        <button
-          onClick={onBack}
-          className="w-full border-2 border-slate-300 text-slate-700 font-medium py-3 rounded-lg hover:bg-slate-50 transition-colors mt-3"
-        >
-          Change Payment Method
-        </button>
-      )}
-
-      <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
-        <div className="flex items-start gap-2 text-xs text-slate-600">
-          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-          <p>
-            Payment confirmation may take a few minutes. If you don't see
-            confirmation immediately, please wait before trying again.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Payment Page Component with Paystack Integration
+// Payment Page Component with Paystack Inline Checkout
 const PaymentPage = ({ shippingInfo, onBack }) => {
   const { cartItems, totalItems, clearCart, showToast } = useCart();
-  const [paymentMethod, setPaymentMethod] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentReference, setPaymentReference] = useState(null);
+  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
-    0
+    0,
   );
+
+  // Load Paystack script on mount
+  useEffect(() => {
+    // Check if script already exists
+    if (window.PaystackPop) {
+      setIsScriptLoaded(true);
+      return;
+    }
+
+    // Check if script tag already exists
+    const existingScript = document.querySelector(
+      'script[src="https://js.paystack.co/v1/inline.js"]',
+    );
+    if (existingScript) {
+      existingScript.addEventListener("load", () => setIsScriptLoaded(true));
+      return;
+    }
+
+    // Create and load script
+    const script = document.createElement("script");
+    script.src = "https://js.paystack.co/v1/inline.js";
+    script.async = true;
+    script.onload = () => {
+      setIsScriptLoaded(true);
+      console.log("Paystack script loaded successfully");
+    };
+    script.onerror = () => {
+      showToast(
+        "Failed to load payment system. Please check your internet connection.",
+        "error",
+      );
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      // Cleanup if needed
+    };
+  }, [showToast]);
 
   // Generate unique reference
   const generateReference = () => {
     return `PSK_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
 
-  const handlePaymentMethodSelect = (method) => {
-    setPaymentMethod(method);
-    if (method === "card") {
-      initiateCardPayment();
-    } else {
-      const reference = generateReference();
-      setPaymentReference(reference);
+  // Initiate Paystack payment with all channels
+  const initiatePaystackPayment = () => {
+    if (!isScriptLoaded || !window.PaystackPop) {
+      showToast(
+        "Payment system is still loading. Please wait a moment and try again.",
+        "error",
+      );
+      return;
     }
-  };
 
-  const initiateCardPayment = () => {
     setIsProcessing(true);
 
-    // Initialize Paystack Popup
-    const handler = window.PaystackPop.setup({
-      key: PAYSTACK_PUBLIC_KEY,
-      email: shippingInfo.email,
-      amount: subtotal * 100, // Paystack expects amount in kobo
-      currency: "NGN",
-      ref: generateReference(),
-      metadata: {
-        custom_fields: [
-          {
-            display_name: "Customer Name",
-            variable_name: "customer_name",
-            value: shippingInfo.fullName,
-          },
-          {
-            display_name: "Phone Number",
-            variable_name: "phone_number",
-            value: shippingInfo.phone,
-          },
-        ],
-      },
-      callback: function () {
-        setIsProcessing(false);
-        showToast("Payment successful! Order confirmed.", "success");
-        // Verify payment on backend here
-        clearCart();
-        // Redirect to success page
-      },
-      onClose: function () {
-        setIsProcessing(false);
-        showToast("Payment cancelled", "error");
-      },
-    });
+    try {
+      const config = {
+        key: PAYSTACK_PUBLIC_KEY,
+        email: shippingInfo.email,
+        amount: subtotal * 100, // Convert to kobo (NGN smallest unit)
+        currency: "NGN",
+        ref: generateReference(),
+        metadata: {
+          custom_fields: [
+            {
+              display_name: "Customer Name",
+              variable_name: "customer_name",
+              value: shippingInfo.fullName,
+            },
+            {
+              display_name: "Phone Number",
+              variable_name: "phone_number",
+              value: shippingInfo.phone,
+            },
+            {
+              display_name: "Shipping Address",
+              variable_name: "shipping_address",
+              value: `${shippingInfo.address}, ${shippingInfo.city ? shippingInfo.city + ", " : ""}${shippingInfo.state}, ${shippingInfo.country}`,
+            },
+          ],
+          cart_items: cartItems.map((item) => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+        },
+        callback: function (response) {
+          setIsProcessing(false);
+          console.log("Payment successful:", response);
+          showToast("Payment successful! Order confirmed.", "success");
 
-    handler.openIframe();
-  };
+          // IMPORTANT: Verify payment on your backend before fulfilling order
+          // Example API call:
+          // fetch('/api/verify-payment', {
+          //   method: 'POST',
+          //   headers: { 'Content-Type': 'application/json' },
+          //   body: JSON.stringify({ reference: response.reference })
+          // }).then(res => res.json()).then(data => {
+          //   if (data.status === 'success') {
+          //     clearCart();
+          //     window.location.href = "/order-success";
+          //   }
+          // });
 
-  const handlePaymentComplete = () => {
-    setIsProcessing(true);
-    // Simulate payment verification
-    setTimeout(() => {
+          setTimeout(() => {
+            clearCart();
+            // Redirect to success page
+            // window.location.href = "/order-success";
+          }, 1500);
+        },
+        onClose: function () {
+          setIsProcessing(false);
+          showToast("Payment window closed", "error");
+        },
+      };
+
+      const handler = window.PaystackPop.setup(config);
+      handler.openIframe();
+    } catch (error) {
       setIsProcessing(false);
-      showToast("Payment received! Verifying transaction...", "success");
-      setTimeout(() => {
-        showToast("Payment confirmed! Order successful.", "success");
-        clearCart();
-        // Redirect to order confirmation
-      }, 2000);
-    }, 1500);
+      console.error("Payment initialization error:", error);
+      showToast(
+        error.message || "Failed to initialize payment. Please try again.",
+        "error",
+      );
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 pt-16 sm:pt-20 pb-16 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800 p-3 sm:p-4 mb-4 sm:mb-6 rounded-lg flex items-center gap-2 sm:gap-3 mt-2 shadow-sm">
-          <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 shrink-0" />
-          <p className="font-semibold text-xs sm:text-sm md:text-base">
-            You have {totalItems} {totalItems === 1 ? "item" : "items"} in your
-            cart
+      <div className="max-w-2xl mx-auto">
+        {/* Paystack Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-green-600 mb-2">
+            PAYSTACK CHECKOUT
+          </h1>
+          <p className="text-foreground/70">
+            Use one of the payment methods below to pay NGN{" "}
+            {subtotal.toLocaleString()} to {shippingInfo.fullName}
           </p>
         </div>
 
-        <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-4 sm:mb-6 md:mb-8">
-          Payment
-        </h1>
-
-        <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-8 md:mb-12 overflow-x-auto">
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <span className="text-foreground/60 dark:text-foreground/70 text-xs sm:text-sm md:text-base whitespace-nowrap">
-              1. Cart
-            </span>
-          </div>
-          <div className="h-px flex-1 bg-border min-w-4"></div>
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <span
-              className="text-foreground/60 dark:text-foreground/70 text-xs sm:text-sm md:text-base cursor-pointer whitespace-nowrap hover:text-foreground transition-colors"
-              onClick={onBack}
+        {/* Payment Methods */}
+        <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
+          {/* Pay with Zap */}
+          <button
+            onClick={initiatePaystackPayment}
+            disabled={isProcessing || !isScriptLoaded}
+            className="w-full flex items-center gap-4 p-5 border-b border-border hover:bg-background/50 transition-colors text-left group disabled:opacity-50"
+          >
+            <div className="flex items-center gap-3 flex-1">
+              <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center text-white text-xs font-bold">
+                Z
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-foreground">
+                    Pay with Zap
+                  </span>
+                  <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded">
+                    NEW
+                  </span>
+                </div>
+              </div>
+            </div>
+            <svg
+              className="w-5 h-5 text-foreground/40"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              2. Checkout
-            </span>
-          </div>
-          <div className="h-px flex-1 bg-border min-w-4"></div>
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <span className="text-foreground font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap">
-              3. Payment
-            </span>
-          </div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+
+          {/* Pay with Card */}
+          <button
+            onClick={initiatePaystackPayment}
+            disabled={isProcessing || !isScriptLoaded}
+            className="w-full flex items-center gap-4 p-5 border-b border-border hover:bg-background/50 transition-colors text-left group disabled:opacity-50"
+          >
+            <div className="flex items-center gap-3 flex-1">
+              <CreditCard className="w-6 h-6 text-foreground/60" />
+              <span className="font-medium text-foreground">Pay with Card</span>
+            </div>
+            <svg
+              className="w-5 h-5 text-foreground/40"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+
+          {/* Pay with Transfer */}
+          <button
+            onClick={initiatePaystackPayment}
+            disabled={isProcessing || !isScriptLoaded}
+            className="w-full flex items-center gap-4 p-5 border-b border-border hover:bg-background/50 transition-colors text-left group disabled:opacity-50"
+          >
+            <div className="flex items-center gap-3 flex-1">
+              <Banknote className="w-6 h-6 text-foreground/60" />
+              <span className="font-medium text-foreground">
+                Pay with Transfer
+              </span>
+            </div>
+            <svg
+              className="w-5 h-5 text-foreground/40"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+
+          {/* Pay with Bank */}
+          <button
+            onClick={initiatePaystackPayment}
+            disabled={isProcessing || !isScriptLoaded}
+            className="w-full flex items-center gap-4 p-5 border-b border-border hover:bg-background/50 transition-colors text-left group disabled:opacity-50"
+          >
+            <div className="flex items-center gap-3 flex-1">
+              <Building2 className="w-6 h-6 text-foreground/60" />
+              <span className="font-medium text-foreground">Pay with Bank</span>
+            </div>
+            <svg
+              className="w-5 h-5 text-foreground/40"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+
+          {/* Pay with USSD */}
+          <button
+            onClick={initiatePaystackPayment}
+            disabled={isProcessing || !isScriptLoaded}
+            className="w-full flex items-center gap-4 p-5 border-b border-border hover:bg-background/50 transition-colors text-left group disabled:opacity-50"
+          >
+            <div className="flex items-center gap-3 flex-1">
+              <Smartphone className="w-6 h-6 text-foreground/60" />
+              <span className="font-medium text-foreground">Pay with USSD</span>
+            </div>
+            <svg
+              className="w-5 h-5 text-foreground/40"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+
+          {/* Pay with OPay */}
+          <button
+            onClick={initiatePaystackPayment}
+            disabled={isProcessing || !isScriptLoaded}
+            className="w-full flex items-center gap-4 p-5 hover:bg-background/50 transition-colors text-left group disabled:opacity-50"
+          >
+            <div className="flex items-center gap-3 flex-1">
+              <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                <span className="text-white text-xs font-bold">O</span>
+              </div>
+              <span className="font-medium text-foreground">Pay with OPay</span>
+            </div>
+            <svg
+              className="w-5 h-5 text-foreground/40"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
-          <div className="lg:col-span-2">
-            <div className="bg-card rounded-xl p-4 sm:p-6 shadow-lg border border-border mb-4 sm:mb-6">
-              <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3 sm:mb-4">
-                Shipping To
-              </h2>
-              <div className="text-xs sm:text-sm text-foreground/70 space-y-1 bg-background rounded-lg p-4 border border-border">
-                <p className="font-semibold text-foreground">
-                  {shippingInfo.fullName}
-                </p>
-                <p>{shippingInfo.address}</p>
-                <p>
-                  {shippingInfo.city && `${shippingInfo.city}, `}
-                  {shippingInfo.state}
-                </p>
-                <p>{shippingInfo.country}</p>
-                <p>{shippingInfo.phone}</p>
-                <p className="text-green-600">{shippingInfo.email}</p>
-              </div>
-            </div>
-
-            {!paymentMethod ? (
-              <div className="bg-card rounded-xl p-4 sm:p-6 shadow-lg border border-border">
-                <h2 className="text-lg sm:text-xl font-bold text-foreground mb-4 sm:mb-6">
-                  Choose Payment Method
-                </h2>
-
-                <div className="space-y-3 sm:space-y-4">
-                  <button
-                    onClick={() => handlePaymentMethodSelect("card")}
-                    disabled={isProcessing}
-                    className="w-full flex items-center gap-4 p-4 sm:p-5 border-2 border-border rounded-xl hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/30 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="p-3 bg-green-100 dark:bg-green-900/50 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-900 transition-colors">
-                      <CreditCard className="w-6 h-6 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="font-semibold text-foreground group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">
-                        Credit/Debit Card
-                      </div>
-                      <div className="text-sm text-foreground/60">
-                        Pay with Visa, Mastercard, or Verve
-                      </div>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => handlePaymentMethodSelect("transfer")}
-                    className="w-full flex items-center gap-4 p-4 sm:p-5 border-2 border-border rounded-xl hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/30 transition-all group"
-                  >
-                    <div className="p-3 bg-green-100 dark:bg-green-900/50 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-900 transition-colors">
-                      <Building2 className="w-6 h-6 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="font-semibold text-foreground group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">
-                        Bank Transfer
-                      </div>
-                      <div className="text-sm text-foreground/60">
-                        Transfer from your bank app
-                      </div>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => handlePaymentMethodSelect("ussd")}
-                    className="w-full flex items-center gap-4 p-4 sm:p-5 border-2 border-border rounded-xl hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/30 transition-all group"
-                  >
-                    <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-900 transition-colors">
-                      <Smartphone className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="font-semibold text-foreground group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">
-                        USSD
-                      </div>
-                      <div className="text-sm text-foreground/60">
-                        Dial a code on your phone
-                      </div>
-                    </div>
-                  </button>
-                </div>
-
-                <button
-                  onClick={onBack}
-                  className="w-full mt-6 py-3 border-2 border-border text-foreground font-medium rounded-lg hover:bg-background/50 transition-colors"
-                >
-                  Back to Checkout
-                </button>
-              </div>
-            ) : paymentMethod === "transfer" ? (
-              <BankTransferPayment
-                amount={subtotal}
-                email={shippingInfo.email}
-                reference={paymentReference}
-                onBack={() => setPaymentMethod(null)}
-                onComplete={handlePaymentComplete}
-              />
-            ) : paymentMethod === "ussd" ? (
-              <USSDPayment
-                amount={subtotal}
-                email={shippingInfo.email}
-                reference={paymentReference}
-                onBack={() => setPaymentMethod(null)}
-                onComplete={handlePaymentComplete}
-              />
-            ) : null}
-          </div>
-
-          <div className="lg:col-span-1">
-            <div className="bg-card rounded-xl p-4 sm:p-6 shadow-lg border border-border lg:sticky lg:top-24">
-              <h2 className="text-lg sm:text-xl font-bold text-foreground mb-4 sm:mb-6">
-                Order Summary
-              </h2>
-              <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
-                {cartItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex justify-between text-xs sm:text-sm"
-                  >
-                    <span className="text-foreground/60">
-                      {item.name} x{item.quantity}
-                    </span>
-                    <span className="text-foreground font-medium">
-                      ₦{(item.price * item.quantity).toLocaleString()}
-                    </span>
-                  </div>
-                ))}
-                <div className="border-t border-border pt-3 sm:pt-4">
-                  <div className="flex justify-between text-base sm:text-lg font-bold text-foreground">
-                    <span>Total</span>
-                    <span>₦{subtotal.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-center gap-2 text-xs text-foreground/50 pt-4 border-t border-border">
-                <svg
-                  className="w-4 h-4"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
-                </svg>
-                <span>Secured by Paystack</span>
-              </div>
+        {/* Loading Indicator */}
+        {!isScriptLoaded && (
+          <div className="mt-4 text-center">
+            <div className="inline-flex items-center gap-2 text-sm text-foreground/60">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Loading payment methods...</span>
             </div>
           </div>
+        )}
+
+        {/* Cancel Payment Button */}
+        <div className="mt-8 text-center">
+          <button
+            onClick={onBack}
+            disabled={isProcessing}
+            className="inline-flex items-center gap-2 px-6 py-3 text-foreground/60 hover:text-foreground transition-colors disabled:opacity-50"
+          >
+            <X className="w-5 h-5" />
+            <span>Cancel Payment</span>
+          </button>
+        </div>
+
+        {/* Secured by Paystack */}
+        <div className="mt-8 flex items-center justify-center gap-2 text-sm text-foreground/50">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
+          </svg>
+          <span>
+            Secured by <strong className="text-foreground">paystack</strong>
+          </span>
         </div>
       </div>
+
+      {/* Processing Overlay */}
+      {isProcessing && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-card rounded-2xl p-8 shadow-2xl text-center max-w-sm mx-4">
+            <Loader2 className="w-16 h-16 text-green-600 animate-spin mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-foreground mb-2">
+              Initializing Payment
+            </h3>
+            <p className="text-sm text-foreground/60">Please wait...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-// Cart Page Component WITH LOADING STATE FOR "START SHOPPING" BUTTON
+// Cart Page Component
 export const CartPage = () => {
   const { cartItems, removeFromCart, updateQuantity, totalItems, showToast } =
     useCart();
@@ -1364,9 +1070,7 @@ export const CartPage = () => {
         }
       });
 
-      // Scroll to top before navigating
       window.scrollTo({ top: 0, behavior: "smooth" });
-
       setCurrentPage("checkout");
     } catch (error) {
       console.error("Checkout error:", error);
@@ -1375,21 +1079,15 @@ export const CartPage = () => {
   };
 
   const handleProceedToPayment = (formData) => {
-    // Scroll to top before navigating
     window.scrollTo({ top: 0, behavior: "smooth" });
-
     setShippingInfo(formData);
     setCurrentPage("payment");
   };
 
-  // NEW: Handle "Start Shopping" button with loading state
   const handleStartShopping = () => {
     setIsNavigating(true);
-    // Simulate navigation delay (you can replace this with actual navigation)
     setTimeout(() => {
-      // Replace with your actual navigation logic
       window.location.href = "/products";
-      // Or if using React Router: navigate('/products');
     }, 1500);
   };
 
@@ -1414,9 +1112,7 @@ export const CartPage = () => {
   if (cartItems.length === 0) {
     return (
       <>
-        {/* Show Loading Overlay when navigating */}
         {isNavigating && <LoadingOverlay />}
-
         <div className="min-h-screen flex items-center justify-center px-4 pt-16 sm:pt-20 bg-gradient-to-br from-primary/20 via-background to-primary/10">
           <div className="text-center max-w-md">
             <div className="w-24 h-24 mx-auto mb-6 bg-foreground/10 rounded-full flex items-center justify-center animate-pulse">
@@ -1639,9 +1335,6 @@ export default function CartDemo({ products }) {
 
   return (
     <div>
-      {/* Add Paystack Script */}
-      <script src="https://js.paystack.co/v1/inline.js"></script>
-
       {cartItems.length === 0 && (
         <div className="fixed top-4 right-4 bg-white p-4 rounded-lg shadow-xl border border-slate-200 z-50">
           <p className="text-sm text-slate-600 mb-3 font-medium">

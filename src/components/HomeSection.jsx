@@ -155,7 +155,7 @@ export const HomeSection = () => {
             await window.storage.set(
               "customer-reviews",
               JSON.stringify(defaultReviews),
-              true // shared = true means visible to all users
+              true, // shared = true means visible to all users
             );
             setReviews(defaultReviews);
           }
@@ -169,7 +169,7 @@ export const HomeSection = () => {
           } else {
             localStorage.setItem(
               "customer-reviews",
-              JSON.stringify(defaultReviews)
+              JSON.stringify(defaultReviews),
             );
             setReviews(defaultReviews);
           }
@@ -248,7 +248,7 @@ export const HomeSection = () => {
         await window.storage.set(
           "customer-reviews",
           JSON.stringify(updatedReviews),
-          true // IMPORTANT: shared = true means ALL users can see this
+          true, // IMPORTANT: shared = true means ALL users can see this
         );
 
         console.log("Review saved to shared storage successfully!");
@@ -266,7 +266,7 @@ export const HomeSection = () => {
         const updatedReviews = [newReview, ...currentReviews];
         localStorage.setItem(
           "customer-reviews",
-          JSON.stringify(updatedReviews)
+          JSON.stringify(updatedReviews),
         );
         console.log("Review saved to localStorage");
       }
@@ -286,7 +286,7 @@ export const HomeSection = () => {
       });
       setShowReviewModal(false);
       alert(
-        "Thank you for your review! It has been saved and is now visible to all users."
+        "Thank you for your review! It has been saved and is now visible to all users.",
       );
     } catch (error) {
       console.error("Detailed error submitting review:", error);
@@ -352,9 +352,9 @@ export const HomeSection = () => {
 
   return (
     <section className="relative w-full">
-      {/* UPDATED Loading State - 3 bouncing dots with blur background */}
+      {/* UPDATED Loading State - 3 bouncing dots with lighter background */}
       {!imagesLoaded && (
-        <div className="fixed inset-0 backdrop-blur-md bg-white/30 dark:bg-gray-900/30 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-white/50 dark:bg-gray-900/30 z-50 flex items-center justify-center">
           <div className="flex gap-3">
             <div
               className="w-4 h-4 rounded-full bg-primary animate-bounce"
@@ -393,7 +393,7 @@ export const HomeSection = () => {
         <div
           className={cn(
             "relative h-full flex items-center justify-center px-4 sm:px-6 md:px-8 transition-opacity duration-500",
-            imagesLoaded ? "opacity-100" : "opacity-0"
+            imagesLoaded ? "opacity-100" : "opacity-0",
           )}
         >
           <div className="text-center text-white drop-shadow-2xl max-w-5xl w-full">
@@ -427,7 +427,8 @@ export const HomeSection = () => {
         <button
           onClick={() =>
             setCurrentSlide(
-              (currentSlide - 1 + carouselImages.length) % carouselImages.length
+              (currentSlide - 1 + carouselImages.length) %
+                carouselImages.length,
             )
           }
           className="hidden sm:block absolute left-2 sm:left-4 md:left-1 lg:left-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 transition-all duration-300 z-10"
@@ -472,7 +473,7 @@ export const HomeSection = () => {
             onClick={() =>
               setCurrentSlide(
                 (currentSlide - 1 + carouselImages.length) %
-                  carouselImages.length
+                  carouselImages.length,
               )
             }
             className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 transition-all duration-300"
@@ -888,7 +889,7 @@ export const HomeSection = () => {
               onClick={handleSubmit}
               disabled={isSending}
               className={cn(
-                "w-full bg-primary text-white font-semibold py-3 rounded-lg transition-all duration-300 hover:bg-primary/90 flex items-center justify-center gap-2 disabled:opacity-70"
+                "w-full bg-primary text-white font-semibold py-3 rounded-lg transition-all duration-300 hover:bg-primary/90 flex items-center justify-center gap-2 disabled:opacity-70",
               )}
             >
               {isSending ? "Sending..." : "Send Message"}
