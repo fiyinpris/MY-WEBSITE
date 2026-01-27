@@ -45,10 +45,10 @@ export const ProductSection = () => {
   const { addToWishlist, isInWishlist } = useWishlist();
 
   const tabs = [
-    { name: "sale", label: "🔥 SALE" },
-    { name: "hot", label: "⚡ HOT" },
-    { name: "newarrivals", label: "✨ NEW ARRIVALS" },
-    { name: "all", label: "📦 ALL" },
+    { name: "sale", label: "SALE" },
+    { name: "hot", label: "HOT" },
+    { name: "newarrivals", label: "NEW ARRIVALS" },
+    { name: "all", label: "ALL" },
   ];
 
   const categories = [
@@ -114,7 +114,7 @@ export const ProductSection = () => {
 
   const prevSlide = () =>
     setCurrentHeroSlide(
-      (prev) => (prev - 1 + heroSlides.length) % heroSlides.length
+      (prev) => (prev - 1 + heroSlides.length) % heroSlides.length,
     );
 
   /* ================= PRODUCTS ================= */
@@ -314,7 +314,7 @@ export const ProductSection = () => {
             key={i}
             size={size}
             className="text-yellow-400 fill-yellow-400"
-          />
+          />,
         );
       else if (i === fullStars && hasHalfStar)
         stars.push(
@@ -326,7 +326,7 @@ export const ProductSection = () => {
             >
               <Star size={size} className="text-yellow-400 fill-yellow-400" />
             </div>
-          </div>
+          </div>,
         );
       else stars.push(<Star key={i} size={size} className="text-gray-300" />);
     }
@@ -337,16 +337,15 @@ export const ProductSection = () => {
     <section className="relative w-full overflow-hidden">
       {/* ================= HERO SLIDER ================= */}
       <div className="hero-section relative w-full overflow-hidden py-3">
-        <div
-          className="flex transition-transform duration-700 ease-in-out"
-          style={{
-            transform: `translateX(-${currentHeroSlide * 96}%)`,
-          }}
-        >
+        <div className="relative w-full mt-10.5 lg:h-[75vh] md:h-[75vh] h-[75vh] py-3">
           {heroSlides.map((slide, index) => (
             <div
               key={index}
-              className="min-w-full mt-5 lg:h-[75vh] md:h-[70vh] h-[55vh] py-3 relative lg:mr-5 mr-4 last:mr-0"
+              className={`absolute inset-0 transition-all duration-[1.5s] ease-out ${
+                index === currentHeroSlide
+                  ? "opacity-100 scale-100 z-10"
+                  : "opacity-0 scale-110 z-0"
+              }`}
             >
               <div className="relative w-full h-full rounded-2xl overflow-hidden">
                 <img
@@ -359,24 +358,68 @@ export const ProductSection = () => {
                 <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/60" />
 
                 {/* Animated Text Layer */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white space-y-3">
-                  <h1 className="text-4xl md:text-6xl font-extrabold hero-title">
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white space-y-3 px-4">
+                  {/* Title - slides from LEFT */}
+                  <h1
+                    className={`relative text-5xl md:text-7xl lg:text-8xl mb-6 font-extrabold transition-all duration-[1.2s] ease-out ${
+                      index === currentHeroSlide
+                        ? "opacity-100 translate-x-0"
+                        : "opacity-0 -translate-x-full"
+                    }`}
+                    style={{
+                      transitionDelay:
+                        index === currentHeroSlide ? "0.3s" : "0s",
+                    }}
+                  >
                     {slide.title}
                   </h1>
 
-                  <p className="text-2xl md:text-4xl font-bold text-yellow-300 hero-sub">
+                  {/* Subtitle - slides from RIGHT */}
+                  <p
+                    className={`text-2xl md:text-4xl font-bold mb-8 text-yellow-300 transition-all duration-[1.2s] ease-out ${
+                      index === currentHeroSlide
+                        ? "opacity-100 translate-x-0"
+                        : "opacity-0 translate-x-full"
+                    }`}
+                    style={{
+                      transitionDelay:
+                        index === currentHeroSlide ? "0.6s" : "0s",
+                    }}
+                  >
                     {slide.subtitle}
                   </p>
 
-                  <p className="max-w-2xl text-white/90 hero-desc">
+                  {/* Description - slides from LEFT */}
+                  <p
+                    className={`max-w-2xl text-white/90 text-sm md:text-base transition-all duration-[1.2s] ease-out ${
+                      index === currentHeroSlide
+                        ? "opacity-100 translate-x-0"
+                        : "opacity-0 -translate-x-full"
+                    }`}
+                    style={{
+                      transitionDelay:
+                        index === currentHeroSlide ? "0.9s" : "0s",
+                    }}
+                  >
                     {slide.description}
                   </p>
 
+                  {/* Button - appears with fade and scale */}
                   <button
                     onClick={() => handleHeroButtonClick(slide.tabName)}
-                    className="bg-green-600 hover:bg-green-700 px-8 py-3 rounded-full font-semibold hero-btn cursor-pointer"
+                    className={`liquid-button relative px-8 py-3 rounded-full font-semibold cursor-pointer transition-all duration-[1.2s] ease-out overflow-hidden ${
+                      index === currentHeroSlide
+                        ? "opacity-100 scale-100"
+                        : "opacity-0 scale-50"
+                    }`}
+                    style={{
+                      transitionDelay:
+                        index === currentHeroSlide ? "1.2s" : "0s",
+                    }}
                   >
-                    {slide.buttonText}
+                    <span className="relative z-10 text-white">
+                      {slide.buttonText}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -408,7 +451,7 @@ export const ProductSection = () => {
           isTabsFixed ? "fixed top-[60px] left-0 right-0" : "relative"
         } z-40 border backdrop-blur-md shadow-lg transition-all duration-300`}
       >
-        <div className="flex justify-center flex-wrap gap-4 sm:gap-3 md:gap-15 py-3 sm:py-4 px-2 sm:px-4">
+        <div className="flex justify-center flex-wrap gap-3 sm:gap-3 lg:gap-15 md:gap-8 py-3 sm:py-4 px-2 sm:px-3">
           {tabs.map((tab) => (
             <button
               key={tab.name}
@@ -497,9 +540,11 @@ export const ProductSection = () => {
                 >
                   <button
                     onClick={(e) => handleQuickAddToCart(e, product)}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 text-xs sm:text-sm rounded-md transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer"
+                    className="liquid-button-small w-full font-semibold py-2 text-xs sm:text-sm rounded-md transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer relative overflow-hidden"
                   >
-                    <ShoppingCart size={14} /> Quick Add
+                    <span className="relative z-10 text-white flex items-center gap-2">
+                      <ShoppingCart size={14} /> Quick Add
+                    </span>
                   </button>
                 </div>
               </div>
@@ -528,9 +573,11 @@ export const ProductSection = () => {
                     e.stopPropagation();
                     openModal(product);
                   }}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 text-xs sm:text-sm rounded-md transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
+                  className="liquid-button-small w-full font-semibold py-2 text-xs sm:text-sm rounded-md transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer relative overflow-hidden"
                 >
-                  <ShoppingCart size={14} /> Add to Cart
+                  <span className="relative z-10 text-white flex items-center gap-2">
+                    <ShoppingCart size={14} /> Add to Cart
+                  </span>
                 </button>
               </div>
             </div>
@@ -611,18 +658,20 @@ export const ProductSection = () => {
                   {/* Add to Cart */}
                   <button
                     onClick={() => handleAddToCart(selectedProduct)}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 sm:py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg text-xs sm:text-sm cursor-pointer"
+                    className="liquid-button-modal flex-1 font-semibold py-2.5 sm:py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg text-xs sm:text-sm cursor-pointer relative overflow-hidden"
                   >
-                    <ShoppingCart size={16} />
-                    Add to Cart
+                    <span className="relative z-10 text-white flex items-center gap-1.5">
+                      <ShoppingCart size={16} />
+                      Add to Cart
+                    </span>
                   </button>
 
                   {/* Buy Now */}
                   <button
                     onClick={() => handleAddToCart(selectedProduct)}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 sm:py-3 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg text-xs sm:text-sm cursor-pointer"
+                    className="liquid-button-modal flex-1 font-semibold py-2.5 sm:py-3 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg text-xs sm:text-sm cursor-pointer relative overflow-hidden"
                   >
-                    Buy Now
+                    <span className="relative z-10 text-white">Buy Now</span>
                   </button>
 
                   {/* Wishlist */}
@@ -669,66 +718,6 @@ export const ProductSection = () => {
       )}
 
       <style jsx>{`
-        @keyframes heroTitle {
-          0% {
-            opacity: 0;
-            transform: translateY(40px) scale(0.9);
-          }
-          60% {
-            opacity: 1;
-            transform: translateY(-6px) scale(1.05);
-          }
-          100% {
-            transform: translateY(0) scale(1);
-          }
-        }
-
-        @keyframes heroSub {
-          from {
-            opacity: 0;
-            transform: translateX(-60px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        @keyframes heroDesc {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes heroBtn {
-          from {
-            opacity: 0;
-            transform: scale(0.6);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-
-        .hero-title {
-          animation: heroTitle 1s ease forwards;
-        }
-        .hero-sub {
-          animation: heroSub 0.8s ease forwards;
-        }
-        .hero-desc {
-          animation: heroDesc 0.8s ease forwards;
-        }
-        .hero-btn {
-          animation: heroBtn 0.8s ease forwards;
-        }
-
         @keyframes fadeIn {
           from {
             opacity: 0;
@@ -749,12 +738,70 @@ export const ProductSection = () => {
           }
         }
 
+        @keyframes liquidFill {
+          0% {
+            transform: translateY(100%) scale(1.5);
+            opacity: 0;
+          }
+          50% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+          }
+        }
+
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
         }
 
         .animate-slideInRight {
           animation: slideInRight 0.4s ease-out;
+        }
+
+        /* Liquid Button Styles */
+        .liquid-button::before,
+        .liquid-button-small::before,
+        .liquid-button-modal::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+          border-radius: inherit;
+          transform: translateY(100%) scale(1.5);
+          transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+          z-index: 0;
+        }
+
+        .liquid-button::after,
+        .liquid-button-small::after,
+        .liquid-button-modal::after {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: #16a34a;
+          border-radius: inherit;
+          z-index: 0;
+        }
+
+        .liquid-button:hover::before,
+        .liquid-button-small:hover::before,
+        .liquid-button-modal:hover::before {
+          transform: translateY(0) scale(1);
+          animation: liquidFill 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .liquid-button:active,
+        .liquid-button-small:active,
+        .liquid-button-modal:active {
+          transform: scale(0.95);
         }
       `}</style>
     </section>

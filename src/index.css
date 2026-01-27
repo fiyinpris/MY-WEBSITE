@@ -81,7 +81,9 @@
   body {
     color: hsl(var(--foreground));
     background-color: hsl(var(--background));
-    transition: color 0.4s ease, background-color 0.4s ease;
+    transition:
+      color 0.4s ease,
+      background-color 0.4s ease;
     overflow: auto;
     margin: 0;
     padding: 0;
@@ -138,7 +140,9 @@
 
 /* CARD HOVER EFFECT */
 .card-hover {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 .card-hover:hover {
   transform: scale(1.03);
@@ -578,4 +582,55 @@ div::-webkit-scrollbar-thumb:hover {
 .navbar {
   position: relative;
   z-index: 50;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes bouncyPeriod {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    transform: translateY(-15px) scale(1.2);
+  }
+  50% {
+    transform: translateY(0) scale(1);
+  }
+  65% {
+    transform: translateY(-8px) scale(1.1);
+  }
+  80% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.4s ease-out;
+}
+
+.bouncy-period {
+  animation: bouncyPeriod 1s ease-out;
+  transform-origin: center bottom;
 }

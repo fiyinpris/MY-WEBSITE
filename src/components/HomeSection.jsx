@@ -26,8 +26,6 @@ function cn(...inputs) {
   return inputs.filter(Boolean).join(" ");
 }
 
-const carouselImages = [myImage1, myImage2, myImage3];
-
 const products = [
   {
     id: 1,
@@ -134,15 +132,38 @@ export const HomeSection = () => {
   });
   const [isSending, setIsSending] = useState(false);
 
-  // Load reviews from storage - UPDATED to use shared storage for all users
+  // Hero slides with dynamic text
+  const heroSlides = [
+    {
+      image: myImage1,
+      title: "Manage, Organize and Enhance Your Digital Content!",
+      subtitle:
+        "Built to save time, boost accuracy, and make working with content smoother than ever.",
+      buttonText: "Connect with me",
+    },
+    {
+      image: myImage2,
+      title: "Transform Your Workflow with Smart Tools!",
+      subtitle:
+        "Streamline your content creation and management like never before.",
+      buttonText: "Get Started",
+    },
+    {
+      image: myImage3,
+      title: "Professional Content Management Made Easy!",
+      subtitle:
+        "Everything you need to create, organize, and optimize your digital content.",
+      buttonText: "Explore Now",
+    },
+  ];
+
+  // Load reviews from storage
   useEffect(() => {
     const initializeReviews = async () => {
       try {
         console.log("Attempting to load reviews from shared storage...");
 
-        // Check if window.storage exists (Claude artifacts environment)
         if (typeof window !== "undefined" && window.storage) {
-          // Use shared storage API (visible to all users)
           const result = await window.storage.get("customer-reviews", true);
 
           if (result && result.value) {
@@ -150,17 +171,15 @@ export const HomeSection = () => {
             console.log("Loaded reviews from shared storage:", loadedReviews);
             setReviews(loadedReviews);
           } else {
-            // No reviews found, initialize with defaults
             console.log("No reviews in storage, initializing with defaults");
             await window.storage.set(
               "customer-reviews",
               JSON.stringify(defaultReviews),
-              true, // shared = true means visible to all users
+              true,
             );
             setReviews(defaultReviews);
           }
         } else {
-          // Fallback to localStorage for regular React app
           const storedReviews = localStorage.getItem("customer-reviews");
           if (storedReviews) {
             const loadedReviews = JSON.parse(storedReviews);
@@ -182,7 +201,6 @@ export const HomeSection = () => {
 
     initializeReviews();
 
-    // Check for new reviews every 5 seconds (in case other users add reviews)
     const interval = setInterval(async () => {
       try {
         if (typeof window !== "undefined" && window.storage) {
@@ -206,7 +224,6 @@ export const HomeSection = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // UPDATED handleReviewSubmit to use shared storage
   const handleReviewSubmit = async () => {
     if (
       !reviewFormData.customerName ||
@@ -227,11 +244,9 @@ export const HomeSection = () => {
 
       console.log("New review to add:", newReview);
 
-      // Get current reviews
       let currentReviews = reviews;
 
       if (typeof window !== "undefined" && window.storage) {
-        // Use shared storage API
         try {
           const result = await window.storage.get("customer-reviews", true);
           if (result && result.value) {
@@ -244,16 +259,14 @@ export const HomeSection = () => {
 
         const updatedReviews = [newReview, ...currentReviews];
 
-        // Save to shared storage (visible to ALL users)
         await window.storage.set(
           "customer-reviews",
           JSON.stringify(updatedReviews),
-          true, // IMPORTANT: shared = true means ALL users can see this
+          true,
         );
 
         console.log("Review saved to shared storage successfully!");
       } else {
-        // Fallback to localStorage
         try {
           const storedReviews = localStorage.getItem("customer-reviews");
           if (storedReviews) {
@@ -272,11 +285,8 @@ export const HomeSection = () => {
       }
 
       const updatedReviews = [newReview, ...currentReviews];
-
-      // Update local state
       setReviews(updatedReviews);
 
-      // Reset form
       setReviewFormData({
         customerName: "",
         email: "",
@@ -294,18 +304,17 @@ export const HomeSection = () => {
     }
   };
 
-  // Get first letter of email
   const getEmailInitial = (email) => {
     return email ? email.charAt(0).toUpperCase() : "U";
   };
 
-  // Preload carousel images before showing content
+  // Preload carousel images
   useEffect(() => {
     const preloadImages = async () => {
-      const imagePromises = carouselImages.map((src) => {
+      const imagePromises = heroSlides.map((slide) => {
         return new Promise((resolve, reject) => {
           const img = new Image();
-          img.src = src;
+          img.src = slide.image;
           img.onload = resolve;
           img.onerror = reject;
         });
@@ -316,18 +325,20 @@ export const HomeSection = () => {
         setImagesLoaded(true);
       } catch (error) {
         console.error("Error preloading images:", error);
-        setTimeout(() => setImagesLoaded(true), 3000);
+        setTimeout(() => {
+          setImagesLoaded(true);
+        }, 3000);
       }
     };
 
     preloadImages();
   }, []);
 
-  // Auto-scroll carousel every 4s
+  // Auto-scroll carousel
   useEffect(() => {
-    if (!carouselImages || carouselImages.length === 0) return;
+    if (!heroSlides || heroSlides.length === 0) return;
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
     }, 4000);
     return () => clearInterval(interval);
   }, []);
@@ -352,7 +363,7 @@ export const HomeSection = () => {
 
   return (
     <section className="relative w-full">
-      {/* UPDATED Loading State - 3 bouncing dots with lighter background */}
+      {/* Loading State */}
       {!imagesLoaded && (
         <div className="fixed inset-0 bg-white/50 dark:bg-gray-900/30 z-50 flex items-center justify-center">
           <div className="flex gap-3">
@@ -372,66 +383,99 @@ export const HomeSection = () => {
         </div>
       )}
 
-      {/* Full Width Auto-Scrolling Carousel */}
-      <div className="relative w-full h-[80vh] sm:h-[75vh] md:h-[75vh] lg:h-[90vh] overflow-hidden md:mb-8">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000 ease-in-out"
-          style={{
-            backgroundImage: `url(${carouselImages[currentSlide]})`,
-            backgroundPosition: "center center",
-          }}
-        >
-          <link
-            rel="preload"
-            as="image"
-            href={carouselImages[(currentSlide + 1) % carouselImages.length]}
-          />
-        </div>
-
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70" />
-
-        <div
-          className={cn(
-            "relative h-full flex items-center justify-center px-4 sm:px-6 md:px-8 transition-opacity duration-500",
-            imagesLoaded ? "opacity-100" : "opacity-0",
-          )}
-        >
-          <div className="text-center text-white drop-shadow-2xl max-w-5xl w-full">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-4 md:mb-6">
-              Manage, Organize and Enhance Your Digital Content!
-            </h1>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 leading-relaxed mb-6 md:mb-8 px-2">
-              Built to save time, boost accuracy, and make working with content
-              smoother than ever.
-            </p>
-            {/* UPDATED Connect button - scrolls to contact section */}
-            <button
-              onClick={() => {
-                const contactSection =
-                  document.getElementById("contact-section");
-                if (contactSection) {
-                  contactSection.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start",
-                  });
-                }
+      {/* Full Width Carousel with Dynamic Text */}
+      <div className="relative w-full h-[85vh] sm:h-[75vh] md:h-[90vh] lg:h-[90vh] overflow-hidden md:mb-8">
+        {heroSlides.map((slide, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+              index === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
+            }`}
+          >
+            {/* Background Image */}
+            <div
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{
+                backgroundImage: `url(${slide.image})`,
+                backgroundPosition: "center center",
               }}
-              className="inline-block bg-green-600 hover:bg-green-700 text-white px-4 py-2 sm:px-5 sm:py-2 md:px-4 md:py-3 text-sm sm:text-base md:text-lg rounded-lg font-semibold transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 cursor-pointer"
-            >
-              Connect with me
-            </button>
+            />
+
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70" />
+
+            {/* Text Content */}
+            <div className="relative h-full flex items-center justify-center px-4 sm:px-6 md:px-8">
+              <div className="text-center text-white drop-shadow-2xl max-w-5xl w-full">
+                {/* Title - slides from LEFT */}
+                <h1
+                  className={cn(
+                    "text-4xl sm:text-3xl md:text-5xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-4 md:mb-6 transition-all duration-1000 ease-out",
+                    index === currentSlide
+                      ? "opacity-100 translate-x-0"
+                      : "opacity-0 -translate-x-full",
+                  )}
+                  style={{
+                    transitionDelay: index === currentSlide ? "0.3s" : "0s",
+                  }}
+                >
+                  {slide.title}
+                </h1>
+
+                {/* Subtitle - slides from RIGHT */}
+                <p
+                  className={cn(
+                    "text-sm sm:text-base md:text-lg lg:text-xl text-white/90 leading-relaxed mb-6 md:mb-8 px-2 transition-all duration-1000 ease-out",
+                    index === currentSlide
+                      ? "opacity-100 translate-x-0"
+                      : "opacity-0 translate-x-full",
+                  )}
+                  style={{
+                    transitionDelay: index === currentSlide ? "0.6s" : "0s",
+                  }}
+                >
+                  {slide.subtitle}
+                </p>
+
+                {/* Button - appears with fade and scale */}
+                <button
+                  onClick={() => {
+                    const contactSection =
+                      document.getElementById("contact-section");
+                    if (contactSection) {
+                      contactSection.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                    }
+                  }}
+                  className={cn(
+                    "liquid-button relative inline-block px-4 py-2 sm:px-5 sm:py-2 md:px-4 md:py-3 text-sm sm:text-base md:text-lg rounded-lg font-semibold shadow-xl cursor-pointer overflow-hidden transition-all duration-1000 ease-out",
+                    index === currentSlide
+                      ? "opacity-100 scale-100"
+                      : "opacity-0 scale-50",
+                  )}
+                  style={{
+                    transitionDelay: index === currentSlide ? "0.9s" : "0s",
+                  }}
+                >
+                  <span className="relative z-10 text-white">
+                    {slide.buttonText}
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        ))}
 
         {/* Navigation Arrows */}
         <button
           onClick={() =>
             setCurrentSlide(
-              (currentSlide - 1 + carouselImages.length) %
-                carouselImages.length,
+              (currentSlide - 1 + heroSlides.length) % heroSlides.length,
             )
           }
-          className="hidden sm:block absolute left-2 sm:left-4 md:left-1 lg:left-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 transition-all duration-300 z-10"
+          className="hidden sm:block absolute left-2 sm:left-4 md:left-1 lg:left-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 transition-all duration-300 z-20"
           aria-label="Previous slide"
         >
           <svg
@@ -449,9 +493,9 @@ export const HomeSection = () => {
 
         <button
           onClick={() =>
-            setCurrentSlide((currentSlide + 1) % carouselImages.length)
+            setCurrentSlide((currentSlide + 1) % heroSlides.length)
           }
-          className="hidden sm:block absolute right-2 sm:right-4 md:right-1 lg:right-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 transition-all duration-300 z-10"
+          className="hidden sm:block absolute right-2 sm:right-4 md:right-1 lg:right-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 transition-all duration-300 z-20"
           aria-label="Next slide"
         >
           <svg
@@ -468,12 +512,11 @@ export const HomeSection = () => {
         </button>
 
         {/* Mobile Navigation */}
-        <div className="sm:hidden absolute bottom-16 left-1/2 -translate-x-1/2 flex gap-20 z-10">
+        <div className="sm:hidden absolute bottom-16 left-1/2 -translate-x-1/2 flex gap-20 z-20">
           <button
             onClick={() =>
               setCurrentSlide(
-                (currentSlide - 1 + carouselImages.length) %
-                  carouselImages.length,
+                (currentSlide - 1 + heroSlides.length) % heroSlides.length,
               )
             }
             className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 transition-all duration-300"
@@ -493,7 +536,7 @@ export const HomeSection = () => {
 
           <button
             onClick={() =>
-              setCurrentSlide((currentSlide + 1) % carouselImages.length)
+              setCurrentSlide((currentSlide + 1) % heroSlides.length)
             }
             className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 transition-all duration-300"
             aria-label="Next slide mobile"
@@ -512,8 +555,8 @@ export const HomeSection = () => {
         </div>
 
         {/* Dot Indicators */}
-        <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-          {carouselImages.map((_, index) => (
+        <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+          {heroSlides.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
@@ -590,9 +633,11 @@ export const HomeSection = () => {
                       </span>
                     </div>
 
-                    <button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2 text-xs md:text-sm rounded-lg transition-colors duration-300 flex items-center justify-center gap-2">
-                      <ShoppingCart size={14} />
-                      Add to Cart
+                    <button className="liquid-button-product w-full font-semibold py-2 text-xs md:text-sm rounded-lg transition-colors duration-300 flex items-center justify-center gap-2 relative overflow-hidden">
+                      <span className="relative z-10 text-white flex items-center gap-2">
+                        <ShoppingCart size={14} />
+                        Add to Cart
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -626,14 +671,12 @@ export const HomeSection = () => {
             <ArrowBigLeft size={20} />
           </button>
 
-          {/* Email Initial Avatar */}
           <div className="flex justify-center -mt-16 mb-8">
             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl sm:text-4xl font-bold shadow-lg border-4 border-white">
               {getEmailInitial(reviews[currentReview].email)}
             </div>
           </div>
 
-          {/* Star Rating Display */}
           <div className="flex items-center gap-1 mb-3">
             {[...Array(5)].map((_, i) => (
               <Star
@@ -803,9 +846,11 @@ export const HomeSection = () => {
 
                 <button
                   onClick={handleReviewSubmit}
-                  className="w-full bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md"
+                  className="liquid-button-modal w-full px-6 py-3 rounded-lg font-semibold shadow-md relative overflow-hidden"
                 >
-                  Submit Review
+                  <span className="relative z-10 text-white">
+                    Submit Review
+                  </span>
                 </button>
               </div>
             </div>
@@ -813,7 +858,7 @@ export const HomeSection = () => {
         </div>
       )}
 
-      {/* UPDATED Contact Form Section - Added ID for scroll navigation */}
+      {/* Contact Form Section */}
       <div
         id="contact-section"
         className="flex flex-col lg:flex-row justify-center items-center gap-8 bg-white py-16 px-4 md:px-0 lg:px-12 dark:bg-background"
@@ -888,16 +933,80 @@ export const HomeSection = () => {
             <button
               onClick={handleSubmit}
               disabled={isSending}
-              className={cn(
-                "w-full bg-primary text-white font-semibold py-3 rounded-lg transition-all duration-300 hover:bg-primary/90 flex items-center justify-center gap-2 disabled:opacity-70",
-              )}
+              className="liquid-button-send w-full font-semibold py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70 relative overflow-hidden"
             >
-              {isSending ? "Sending..." : "Send Message"}
-              {!isSending && <Send size={16} />}
+              <span className="relative z-10 text-white flex items-center gap-2">
+                {isSending ? "Sending..." : "Send Message"}
+                {!isSending && <Send size={16} />}
+              </span>
             </button>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes liquidFill {
+          0% {
+            transform: translateY(100%) scale(1.5);
+            opacity: 0;
+          }
+          50% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+          }
+        }
+
+        /* Liquid Button Styles */
+        .liquid-button::before,
+        .liquid-button-product::before,
+        .liquid-button-modal::before,
+        .liquid-button-send::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+          border-radius: inherit;
+          transform: translateY(100%) scale(1.5);
+          transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+          z-index: 0;
+        }
+
+        .liquid-button::after,
+        .liquid-button-product::after,
+        .liquid-button-modal::after,
+        .liquid-button-send::after {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: #16a34a;
+          border-radius: inherit;
+          z-index: 0;
+        }
+
+        .liquid-button:hover::before,
+        .liquid-button-product:hover::before,
+        .liquid-button-modal:hover::before,
+        .liquid-button-send:hover::before {
+          transform: translateY(0) scale(1);
+          animation: liquidFill 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .liquid-button:active,
+        .liquid-button-product:active,
+        .liquid-button-modal:active,
+        .liquid-button-send:active {
+          transform: scale(0.95);
+        }
+      `}</style>
     </section>
   );
 };
