@@ -68,6 +68,58 @@ const STATES = [
   "FCT – Abuja",
 ];
 
+// ✅ PURCHASE TRACKING FUNCTION - Added for review eligibility
+const trackPurchase = async (items, userEmail) => {
+  try {
+    let purchases = [];
+
+    if (typeof window !== "undefined" && window.storage) {
+      const result = await window.storage.get("user-purchases", false);
+      if (result?.value) {
+        purchases = JSON.parse(result.value);
+      }
+    } else {
+      const stored = localStorage.getItem("user-purchases");
+      if (stored) {
+        purchases = JSON.parse(stored);
+      }
+    }
+
+    // Add all purchased items
+    items.forEach((item) => {
+      purchases.push({
+        productId: item.id,
+        productName: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        date: new Date().toISOString(),
+        email: userEmail,
+      });
+    });
+
+    // Save purchases
+    if (typeof window !== "undefined" && window.storage) {
+      await window.storage.set(
+        "user-purchases",
+        JSON.stringify(purchases),
+        false, // private to this user
+      );
+    } else {
+      localStorage.setItem("user-purchases", JSON.stringify(purchases));
+    }
+
+    console.log(
+      "✅ Purchases tracked successfully:",
+      purchases.length,
+      "items",
+    );
+    return true;
+  } catch (error) {
+    console.error("❌ Error tracking purchases:", error);
+    throw error;
+  }
+};
+
 // Toast Notification Component
 const Toast = ({ message, type, onClose }) => {
   useEffect(() => {
@@ -726,7 +778,20 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
         callback: function (response) {
           setIsProcessing(false);
           console.log("Payment successful:", response);
-          showToast("Payment successful! Order confirmed.", "success");
+
+          // ✅ TRACK PURCHASE FOR REVIEW ELIGIBILITY
+          trackPurchase(cartItems, shippingInfo.email)
+            .then(() => {
+              showToast(
+                "Payment successful! You can now leave reviews.",
+                "success",
+              );
+              console.log("✅ Purchase tracked! User can now leave reviews.");
+            })
+            .catch((err) => {
+              console.error("Error tracking purchase:", err);
+              showToast("Payment successful! Order confirmed.", "success");
+            });
 
           // IMPORTANT: Verify payment on your backend before fulfilling order
           // Example API call:
@@ -743,9 +808,9 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
 
           setTimeout(() => {
             clearCart();
-            // Redirect to success page
-            // window.location.href = "/order-success";
-          }, 1500);
+            // Redirect to home page where user can leave reviews
+            window.location.href = "/";
+          }, 2000);
         },
         onClose: function () {
           setIsProcessing(false);

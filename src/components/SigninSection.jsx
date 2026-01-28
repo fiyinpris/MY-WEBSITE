@@ -127,7 +127,8 @@ export const SigninSection = () => {
       // Trigger navbar update
       window.dispatchEvent(new Event("userUpdated"));
 
-      // Show success - scroll will happen automatically via useEffect
+      // ✅ FIX: Go directly to home for both new and existing users
+      // Show success screen briefly then redirect
       setStep(5);
 
       setTimeout(() => {

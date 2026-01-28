@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Send,
   ShoppingCart,
@@ -117,6 +117,11 @@ export const HomeSection = () => {
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [reviews, setReviews] = useState(defaultReviews);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [showSignInPrompt, setShowSignInPrompt] = useState(false);
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [showPurchaseWarning, setShowPurchaseWarning] = useState(false);
   const [reviewFormData, setReviewFormData] = useState({
     customerName: "",
     email: "",
@@ -124,6 +129,16 @@ export const HomeSection = () => {
     rating: 5,
     comment: "",
   });
+
+  // Update review form email when user signs in
+  useEffect(() => {
+    if (isSignedIn && userEmail) {
+      setReviewFormData((prev) => ({
+        ...prev,
+        email: userEmail,
+      }));
+    }
+  }, [isSignedIn, userEmail]);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -131,6 +146,8 @@ export const HomeSection = () => {
     message: "",
   });
   const [isSending, setIsSending] = useState(false);
+  const [dragStart, setDragStart] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Hero slides with dynamic text
   const heroSlides = [
@@ -140,6 +157,7 @@ export const HomeSection = () => {
       subtitle:
         "Built to save time, boost accuracy, and make working with content smoother than ever.",
       buttonText: "Connect with me",
+      action: "contact",
     },
     {
       image: myImage2,
@@ -147,6 +165,7 @@ export const HomeSection = () => {
       subtitle:
         "Streamline your content creation and management like never before.",
       buttonText: "Get Started",
+      action: "products",
     },
     {
       image: myImage3,
@@ -154,8 +173,83 @@ export const HomeSection = () => {
       subtitle:
         "Everything you need to create, organize, and optimize your digital content.",
       buttonText: "Explore Now",
+      action: "products",
     },
   ];
+
+  // Check if user is signed in and has purchased
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        // Check your existing localStorage 'user' from SigninSection
+        const userStr = localStorage.getItem("user");
+
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          const userEmail = user.email || user.phone || "";
+
+          if (userEmail) {
+            setIsSignedIn(true);
+            setUserEmail(userEmail);
+            console.log("✅ User signed in:", userEmail);
+
+            // Check if user has made purchases
+            if (typeof window !== "undefined" && window.storage) {
+              try {
+                const purchaseResult = await window.storage.get(
+                  "user-purchases",
+                  false,
+                );
+                if (purchaseResult && purchaseResult.value) {
+                  const purchases = JSON.parse(purchaseResult.value);
+                  // Filter purchases for this user's email
+                  const userPurchases = purchases.filter(
+                    (p) => p.email === userEmail,
+                  );
+                  setHasPurchased(userPurchases.length > 0);
+                  console.log("✅ User has purchases:", userPurchases.length);
+                }
+              } catch (e) {
+                console.log("Checking localStorage for purchases...");
+                const purchases = localStorage.getItem("user-purchases");
+                if (purchases) {
+                  const parsedPurchases = JSON.parse(purchases);
+                  const userPurchases = parsedPurchases.filter(
+                    (p) => p.email === userEmail,
+                  );
+                  setHasPurchased(userPurchases.length > 0);
+                }
+              }
+            } else {
+              const purchases = localStorage.getItem("user-purchases");
+              if (purchases) {
+                const parsedPurchases = JSON.parse(purchases);
+                const userPurchases = parsedPurchases.filter(
+                  (p) => p.email === userEmail,
+                );
+                setHasPurchased(userPurchases.length > 0);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error checking auth:", error);
+      }
+    };
+
+    checkAuth();
+
+    // Listen for user updates from SigninSection
+    const handleUserUpdate = () => {
+      checkAuth();
+    };
+
+    window.addEventListener("userUpdated", handleUserUpdate);
+
+    return () => {
+      window.removeEventListener("userUpdated", handleUserUpdate);
+    };
+  }, []);
 
   // Load reviews from storage
   useEffect(() => {
@@ -219,12 +313,22 @@ export const HomeSection = () => {
       } catch (error) {
         console.error("Error refreshing reviews:", error);
       }
-    }, 5000);
+    }, 3000);
 
     return () => clearInterval(interval);
   }, []);
 
   const handleReviewSubmit = async () => {
+    if (!isSignedIn) {
+      setShowSignInPrompt(true);
+      return;
+    }
+
+    if (!hasPurchased) {
+      setShowPurchaseWarning(true);
+      return;
+    }
+
     if (
       !reviewFormData.customerName ||
       !reviewFormData.email ||
@@ -240,6 +344,7 @@ export const HomeSection = () => {
         id: Date.now(),
         ...reviewFormData,
         date: new Date().toISOString().split("T")[0],
+        verified: true, // Mark as verified purchase
       };
 
       console.log("New review to add:", newReview);
@@ -251,10 +356,9 @@ export const HomeSection = () => {
           const result = await window.storage.get("customer-reviews", true);
           if (result && result.value) {
             currentReviews = JSON.parse(result.value);
-            console.log("Fetched current reviews from shared storage");
           }
         } catch (e) {
-          console.log("Could not fetch current reviews, using local state:", e);
+          console.log("Could not fetch current reviews:", e);
         }
 
         const updatedReviews = [newReview, ...currentReviews];
@@ -262,10 +366,11 @@ export const HomeSection = () => {
         await window.storage.set(
           "customer-reviews",
           JSON.stringify(updatedReviews),
-          true,
+          true, // shared = true means ALL users can see
         );
 
         console.log("Review saved to shared storage successfully!");
+        setReviews(updatedReviews);
       } else {
         try {
           const storedReviews = localStorage.getItem("customer-reviews");
@@ -281,26 +386,87 @@ export const HomeSection = () => {
           "customer-reviews",
           JSON.stringify(updatedReviews),
         );
-        console.log("Review saved to localStorage");
+        setReviews(updatedReviews);
       }
-
-      const updatedReviews = [newReview, ...currentReviews];
-      setReviews(updatedReviews);
 
       setReviewFormData({
         customerName: "",
-        email: "",
+        email: userEmail,
         productName: "",
         rating: 5,
         comment: "",
       });
       setShowReviewModal(false);
       alert(
-        "Thank you for your review! It has been saved and is now visible to all users.",
+        "Thank you for your review! Your verified purchase review has been posted.",
       );
     } catch (error) {
-      console.error("Detailed error submitting review:", error);
-      alert(`Error saving review: ${error.message}. Please try again.`);
+      console.error("Error submitting review:", error);
+      alert(`Error saving review: ${error.message}`);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId, reviewEmail) => {
+    // Only allow users to delete their own reviews
+    if (reviewEmail !== userEmail) {
+      alert("You can only delete your own reviews");
+      return;
+    }
+
+    if (!confirm("Are you sure you want to delete this review?")) {
+      return;
+    }
+
+    try {
+      let currentReviews = reviews;
+
+      if (typeof window !== "undefined" && window.storage) {
+        try {
+          const result = await window.storage.get("customer-reviews", true);
+          if (result && result.value) {
+            currentReviews = JSON.parse(result.value);
+          }
+        } catch (e) {
+          console.log("Could not fetch current reviews:", e);
+        }
+
+        const updatedReviews = currentReviews.filter(
+          (review) => review.id !== reviewId,
+        );
+
+        await window.storage.set(
+          "customer-reviews",
+          JSON.stringify(updatedReviews),
+          true,
+        );
+
+        console.log("Review deleted from shared storage successfully!");
+        setReviews(updatedReviews);
+
+        // Reset to first review if current was deleted
+        if (currentReview >= updatedReviews.length) {
+          setCurrentReview(0);
+        }
+      } else {
+        const updatedReviews = currentReviews.filter(
+          (review) => review.id !== reviewId,
+        );
+        localStorage.setItem(
+          "customer-reviews",
+          JSON.stringify(updatedReviews),
+        );
+        setReviews(updatedReviews);
+
+        // Reset to first review if current was deleted
+        if (currentReview >= updatedReviews.length) {
+          setCurrentReview(0);
+        }
+      }
+
+      alert("Review deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting review:", error);
+      alert(`Error deleting review: ${error.message}`);
     }
   };
 
@@ -334,14 +500,16 @@ export const HomeSection = () => {
     preloadImages();
   }, []);
 
-  // Auto-scroll carousel
+  // Auto-scroll carousel every 4 seconds
   useEffect(() => {
     if (!heroSlides || heroSlides.length === 0) return;
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+      if (!isDragging) {
+        setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+      }
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isDragging]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -359,6 +527,60 @@ export const HomeSection = () => {
 
   const handlePrevReview = () => {
     setCurrentReview((prev) => (prev - 1 + reviews.length) % reviews.length);
+  };
+
+  // Hero carousel drag handlers
+  const handleHeroDragStart = (e) => {
+    setDragStart(e.type === "mousedown" ? e.clientX : e.touches[0].clientX);
+    setIsDragging(true);
+  };
+
+  const handleHeroDragEnd = (e) => {
+    if (!isDragging) return;
+    const dragEnd =
+      e.type === "mouseup" ? e.clientX : e.changedTouches[0].clientX;
+    const diff = dragStart - dragEnd;
+
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+      } else {
+        setCurrentSlide(
+          (prev) => (prev - 1 + heroSlides.length) % heroSlides.length,
+        );
+      }
+    }
+    setIsDragging(false);
+  };
+
+  // Hero carousel wheel handler
+  const handleHeroWheel = (e) => {
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      e.preventDefault();
+      if (e.deltaX > 30) {
+        setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+      } else if (e.deltaX < -30) {
+        setCurrentSlide(
+          (prev) => (prev - 1 + heroSlides.length) % heroSlides.length,
+        );
+      }
+    }
+  };
+
+  // Handle button click
+  const handleButtonClick = (action) => {
+    if (action === "contact") {
+      const contactSection = document.getElementById("contact-section");
+      if (contactSection) {
+        contactSection.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    } else if (action === "products") {
+      // Scroll to products section or navigate
+      window.location.href = "#products";
+    }
   };
 
   return (
@@ -384,79 +606,81 @@ export const HomeSection = () => {
       )}
 
       {/* Full Width Carousel with Dynamic Text */}
-      <div className="relative w-full h-[85vh] sm:h-[75vh] md:h-[90vh] lg:h-[90vh] overflow-hidden md:mb-8">
+      <div
+        className="relative w-full h-[80vh] sm:h-[75vh] md:h-[75vh] lg:h-[90vh] overflow-hidden md:mb-8 cursor-grab active:cursor-grabbing"
+        onMouseDown={handleHeroDragStart}
+        onMouseUp={handleHeroDragEnd}
+        onMouseLeave={() => setIsDragging(false)}
+        onTouchStart={handleHeroDragStart}
+        onTouchEnd={handleHeroDragEnd}
+        onWheel={handleHeroWheel}
+      >
         {heroSlides.map((slide, index) => (
           <div
             key={index}
-            className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
-              index === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
+            className={`absolute inset-0 transition-all duration-[1500ms] ease-in-out ${
+              index === currentSlide
+                ? "opacity-100 scale-100 z-10"
+                : "opacity-0 scale-105 z-0"
             }`}
           >
-            {/* Background Image */}
+            {/* Background Image with smooth zoom */}
             <div
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-[1500ms] ease-out"
               style={{
                 backgroundImage: `url(${slide.image})`,
                 backgroundPosition: "center center",
+                transform: index === currentSlide ? "scale(1)" : "scale(1.1)",
               }}
             />
 
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70" />
+            {/* Gradient Overlay - Dark left, Bright right */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
 
-            {/* Text Content */}
-            <div className="relative h-full flex items-center justify-center px-4 sm:px-6 md:px-8">
+            {/* Text Content with different animations */}
+            <div className="relative h-full flex items-center justify-center px-4 sm:px-6 md:px-8 pointer-events-none">
               <div className="text-center text-white drop-shadow-2xl max-w-5xl w-full">
-                {/* Title - slides from LEFT */}
+                {/* Title - ZOOM IN effect */}
                 <h1
                   className={cn(
-                    "text-4xl sm:text-3xl md:text-5xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-4 md:mb-6 transition-all duration-1000 ease-out",
+                    "text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-4 md:mb-6 transition-all duration-1000 ease-out",
                     index === currentSlide
-                      ? "opacity-100 translate-x-0"
-                      : "opacity-0 -translate-x-full",
+                      ? "opacity-100 scale-100"
+                      : "opacity-0 scale-150",
                   )}
                   style={{
-                    transitionDelay: index === currentSlide ? "0.3s" : "0s",
+                    transitionDelay: index === currentSlide ? "0.2s" : "0s",
                   }}
                 >
                   {slide.title}
                 </h1>
 
-                {/* Subtitle - slides from RIGHT */}
+                {/* Subtitle - SLIDE UP effect */}
                 <p
                   className={cn(
                     "text-sm sm:text-base md:text-lg lg:text-xl text-white/90 leading-relaxed mb-6 md:mb-8 px-2 transition-all duration-1000 ease-out",
                     index === currentSlide
-                      ? "opacity-100 translate-x-0"
-                      : "opacity-0 translate-x-full",
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 translate-y-20",
                   )}
                   style={{
-                    transitionDelay: index === currentSlide ? "0.6s" : "0s",
+                    transitionDelay: index === currentSlide ? "0.5s" : "0s",
                   }}
                 >
                   {slide.subtitle}
                 </p>
 
-                {/* Button - appears with fade and scale */}
+                {/* Button - FADE + BOUNCE effect */}
                 <button
-                  onClick={() => {
-                    const contactSection =
-                      document.getElementById("contact-section");
-                    if (contactSection) {
-                      contactSection.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start",
-                      });
-                    }
-                  }}
+                  onClick={() => handleButtonClick(slide.action)}
                   className={cn(
-                    "liquid-button relative inline-block px-4 py-2 sm:px-5 sm:py-2 md:px-4 md:py-3 text-sm sm:text-base md:text-lg rounded-lg font-semibold shadow-xl cursor-pointer overflow-hidden transition-all duration-1000 ease-out",
+                    "liquid-button relative inline-block px-4 py-2 sm:px-5 sm:py-2 md:px-4 md:py-3 text-sm sm:text-base md:text-lg rounded-lg font-semibold shadow-xl cursor-pointer overflow-hidden transition-all duration-1000 ease-out pointer-events-auto",
                     index === currentSlide
-                      ? "opacity-100 scale-100"
-                      : "opacity-0 scale-50",
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 -translate-y-10",
                   )}
                   style={{
-                    transitionDelay: index === currentSlide ? "0.9s" : "0s",
+                    transitionDelay: index === currentSlide ? "0.8s" : "0s",
                   }}
                 >
                   <span className="relative z-10 text-white">
@@ -475,7 +699,7 @@ export const HomeSection = () => {
               (currentSlide - 1 + heroSlides.length) % heroSlides.length,
             )
           }
-          className="hidden sm:block absolute left-2 sm:left-4 md:left-1 lg:left-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 transition-all duration-300 z-20"
+          className="hidden sm:block absolute left-2 sm:left-4 md:left-1 lg:left-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 transition-all duration-300 z-20 pointer-events-auto"
           aria-label="Previous slide"
         >
           <svg
@@ -495,7 +719,7 @@ export const HomeSection = () => {
           onClick={() =>
             setCurrentSlide((currentSlide + 1) % heroSlides.length)
           }
-          className="hidden sm:block absolute right-2 sm:right-4 md:right-1 lg:right-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 transition-all duration-300 z-20"
+          className="hidden sm:block absolute right-2 sm:right-4 md:right-1 lg:right-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 transition-all duration-300 z-20 pointer-events-auto"
           aria-label="Next slide"
         >
           <svg
@@ -512,7 +736,7 @@ export const HomeSection = () => {
         </button>
 
         {/* Mobile Navigation */}
-        <div className="sm:hidden absolute bottom-16 left-1/2 -translate-x-1/2 flex gap-20 z-20">
+        <div className="sm:hidden absolute bottom-16 left-1/2 -translate-x-1/2 flex gap-20 z-20 pointer-events-auto">
           <button
             onClick={() =>
               setCurrentSlide(
@@ -555,7 +779,7 @@ export const HomeSection = () => {
         </div>
 
         {/* Dot Indicators */}
-        <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+        <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20 pointer-events-auto">
           {heroSlides.map((_, index) => (
             <button
               key={index}
@@ -571,8 +795,8 @@ export const HomeSection = () => {
         </div>
       </div>
 
-      {/* Best Selling Carousel */}
-      <div className="mt-12 p-4 overflow-hidden">
+      {/* ✅ UPDATED: Best Selling Carousel - Now with manual drag + auto-scroll */}
+      <div className="mt-12 p-4 overflow-hidden" id="products">
         <div className="max-w-6xl mx-auto text-center">
           <h4 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">
             Best <span className="text-primary">Selling</span>
@@ -583,7 +807,7 @@ export const HomeSection = () => {
           </p>
 
           <div className="relative">
-            <div className="flex gap-4 md:gap-6 animate-scroll-mobile md:animate-scroll hover:pause-scroll">
+            <div className="flex gap-4 md:gap-6 animate-scroll-fast hover:pause-scroll">
               {products.concat(products).map((product, index) => (
                 <div
                   key={`${product.id}-${index}`}
@@ -654,7 +878,15 @@ export const HomeSection = () => {
             What Our Customer says
           </p>
           <button
-            onClick={() => setShowReviewModal(true)}
+            onClick={() => {
+              if (!isSignedIn) {
+                setShowSignInPrompt(true);
+              } else if (!hasPurchased) {
+                setShowPurchaseWarning(true);
+              } else {
+                setShowReviewModal(true);
+              }
+            }}
             className="bg-primary hover:bg-primary/90 text-white rounded-full p-2 sm:p-3 transition shadow-lg"
             title="Leave a review"
           >
@@ -701,6 +933,39 @@ export const HomeSection = () => {
             Product: {reviews[currentReview].productName}
           </p>
 
+          {/* Delete button - only shown for user's own reviews */}
+          {isSignedIn && reviews[currentReview].email === userEmail && (
+            <button
+              onClick={() =>
+                handleDeleteReview(
+                  reviews[currentReview].id,
+                  reviews[currentReview].email,
+                )
+              }
+              className="mt-4 p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors mx-auto"
+              title="Delete my review"
+              aria-label="Delete my review"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 6h18" />
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                <line x1="10" y1="11" x2="10" y2="17" />
+                <line x1="14" y1="11" x2="14" y2="17" />
+              </svg>
+            </button>
+          )}
+
           <button
             onClick={handleNextReview}
             className="hidden sm:flex absolute right-[-4rem] top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full p-2 sm:p-3 hover:bg-primary/90 transition"
@@ -727,6 +992,59 @@ export const HomeSection = () => {
           </div>
         </div>
       </div>
+
+      {/* Sign In Prompt Modal */}
+      {showSignInPrompt && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-gray-800">
+                Sign In Required
+              </h3>
+              <button
+                onClick={() => setShowSignInPrompt(false)}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg
+                  className="w-8 h-8 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+              </div>
+              <p className="text-gray-600 mb-4">
+                Please sign in to leave a review.
+              </p>
+              <p className="text-sm text-gray-500">
+                You'll need an account to submit reviews.
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                setShowSignInPrompt(false);
+                window.location.href = "/signin";
+              }}
+              className="liquid-button-modal w-full px-6 py-3 rounded-lg font-semibold shadow-md relative overflow-hidden"
+            >
+              <span className="relative z-10 text-white">Go to Sign In</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Review Modal */}
       {showReviewModal && (
@@ -766,20 +1084,18 @@ export const HomeSection = () => {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Your Email
+                    Your Email (Auto-filled)
                   </label>
                   <input
                     type="email"
                     value={reviewFormData.email}
-                    onChange={(e) =>
-                      setReviewFormData({
-                        ...reviewFormData,
-                        email: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-900"
+                    readOnly
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
                     placeholder="your.email@example.com"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Your email is automatically filled from your account
+                  </p>
                 </div>
 
                 <div>
@@ -854,6 +1170,48 @@ export const HomeSection = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Purchase Warning Modal */}
+      {showPurchaseWarning && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-gray-800">
+                Purchase Required
+              </h3>
+              <button
+                onClick={() => setShowPurchaseWarning(false)}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ShoppingCart className="text-yellow-600" size={32} />
+              </div>
+              <p className="text-gray-600 mb-4">
+                You need to purchase a product before you can leave a review.
+              </p>
+              <p className="text-sm text-gray-500">
+                This helps us ensure all reviews come from verified customers.
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                setShowPurchaseWarning(false);
+                // Scroll to products
+                window.location.href = "#products";
+              }}
+              className="liquid-button-modal w-full px-6 py-3 rounded-lg font-semibold shadow-md relative overflow-hidden"
+            >
+              <span className="relative z-10 text-white">Shop Products</span>
+            </button>
           </div>
         </div>
       )}
@@ -957,6 +1315,23 @@ export const HomeSection = () => {
             transform: translateY(0) scale(1);
             opacity: 1;
           }
+        }
+
+        @keyframes scroll-fast {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+
+        .animate-scroll-fast {
+          animation: scroll-fast 20s linear infinite;
+        }
+
+        .animate-scroll-fast:hover {
+          animation-play-state: paused;
         }
 
         /* Liquid Button Styles */

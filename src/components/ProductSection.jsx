@@ -40,15 +40,17 @@ export const ProductSection = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
   const [isTabsFixed, setIsTabsFixed] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState(0);
 
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
 
   const tabs = [
-    { name: "sale", label: "SALE" },
-    { name: "hot", label: "HOT" },
-    { name: "newarrivals", label: "NEW ARRIVALS" },
-    { name: "all", label: "ALL" },
+    { name: "sale", label: "🔥 SALE" },
+    { name: "hot", label: "⚡ HOT" },
+    { name: "newarrivals", label: "✨ NEW ARRIVALS" },
+    { name: "all", label: "📦 ALL" },
   ];
 
   const categories = [
@@ -89,10 +91,12 @@ export const ProductSection = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 5000);
+      if (!isDragging) {
+        setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length);
+      }
+    }, 4000); // Faster: 4 seconds instead of 5
     return () => clearInterval(interval);
-  }, []);
+  }, [isDragging]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -116,6 +120,44 @@ export const ProductSection = () => {
     setCurrentHeroSlide(
       (prev) => (prev - 1 + heroSlides.length) % heroSlides.length,
     );
+
+  // Hero carousel drag handlers
+  const handleHeroDragStart = (e) => {
+    setDragStart(e.type === "mousedown" ? e.clientX : e.touches[0].clientX);
+    setIsDragging(true);
+  };
+
+  const handleHeroDragEnd = (e) => {
+    if (!isDragging) return;
+    const dragEnd =
+      e.type === "mouseup" ? e.clientX : e.changedTouches[0].clientX;
+    const diff = dragStart - dragEnd;
+
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length);
+      } else {
+        setCurrentHeroSlide(
+          (prev) => (prev - 1 + heroSlides.length) % heroSlides.length,
+        );
+      }
+    }
+    setIsDragging(false);
+  };
+
+  // Hero carousel wheel handler
+  const handleHeroWheel = (e) => {
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      e.preventDefault();
+      if (e.deltaX > 30) {
+        setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length);
+      } else if (e.deltaX < -30) {
+        setCurrentHeroSlide(
+          (prev) => (prev - 1 + heroSlides.length) % heroSlides.length,
+        );
+      }
+    }
+  };
 
   /* ================= PRODUCTS ================= */
   const products = [
@@ -337,7 +379,15 @@ export const ProductSection = () => {
     <section className="relative w-full overflow-hidden">
       {/* ================= HERO SLIDER ================= */}
       <div className="hero-section relative w-full overflow-hidden py-3">
-        <div className="relative w-full mt-10.5 lg:h-[75vh] md:h-[75vh] h-[75vh] py-3">
+        <div
+          className="relative w-full mt-10.5 lg:h-[75vh] md:h-[75vh] h-[75vh] py-3 cursor-grab active:cursor-grabbing"
+          onMouseDown={handleHeroDragStart}
+          onMouseUp={handleHeroDragEnd}
+          onMouseLeave={() => setIsDragging(false)}
+          onTouchStart={handleHeroDragStart}
+          onTouchEnd={handleHeroDragEnd}
+          onWheel={handleHeroWheel}
+        >
           {heroSlides.map((slide, index) => (
             <div
               key={index}
@@ -351,17 +401,21 @@ export const ProductSection = () => {
                 <img
                   src={slide.image}
                   alt={slide.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out"
+                  style={{
+                    transform:
+                      index === currentHeroSlide ? "scale(1)" : "scale(1.1)",
+                  }}
                 />
 
-                {/* Blur Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/60" />
+                {/* Gradient Overlay - Dark left, Bright right */}
+                <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
 
                 {/* Animated Text Layer */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white space-y-3 px-4">
-                  {/* Title - slides from LEFT */}
+                  {/* Title - slides from LEFT with bouncy period */}
                   <h1
-                    className={`relative text-5xl md:text-7xl lg:text-8xl mb-6 font-extrabold transition-all duration-[1.2s] ease-out ${
+                    className={`relative text-5xl md:text-7xl lg:text-8xl font-extrabold transition-all duration-[1.2s] ease-out ${
                       index === currentHeroSlide
                         ? "opacity-100 translate-x-0"
                         : "opacity-0 -translate-x-full"
@@ -372,11 +426,20 @@ export const ProductSection = () => {
                     }}
                   >
                     {slide.title}
+                    <span
+                      className={`inline-block ${index === currentHeroSlide ? "bouncy-period" : ""}`}
+                      style={{
+                        animationDelay:
+                          index === currentHeroSlide ? "1.5s" : "0s",
+                      }}
+                    >
+                      .
+                    </span>
                   </h1>
 
-                  {/* Subtitle - slides from RIGHT */}
+                  {/* Subtitle - slides from RIGHT with bouncy period */}
                   <p
-                    className={`text-2xl md:text-4xl font-bold mb-8 text-yellow-300 transition-all duration-[1.2s] ease-out ${
+                    className={`text-2xl md:text-4xl font-bold text-yellow-300 transition-all duration-[1.2s] ease-out ${
                       index === currentHeroSlide
                         ? "opacity-100 translate-x-0"
                         : "opacity-0 translate-x-full"
@@ -387,9 +450,18 @@ export const ProductSection = () => {
                     }}
                   >
                     {slide.subtitle}
+                    <span
+                      className={`inline-block ${index === currentHeroSlide ? "bouncy-period" : ""}`}
+                      style={{
+                        animationDelay:
+                          index === currentHeroSlide ? "1.8s" : "0s",
+                      }}
+                    >
+                      .
+                    </span>
                   </p>
 
-                  {/* Description - slides from LEFT */}
+                  {/* Description - slides from LEFT with bouncy period */}
                   <p
                     className={`max-w-2xl text-white/90 text-sm md:text-base transition-all duration-[1.2s] ease-out ${
                       index === currentHeroSlide
@@ -402,6 +474,15 @@ export const ProductSection = () => {
                     }}
                   >
                     {slide.description}
+                    <span
+                      className={`inline-block ${index === currentHeroSlide ? "bouncy-period" : ""}`}
+                      style={{
+                        animationDelay:
+                          index === currentHeroSlide ? "2.1s" : "0s",
+                      }}
+                    >
+                      .
+                    </span>
                   </p>
 
                   {/* Button - appears with fade and scale */}
@@ -738,6 +819,25 @@ export const ProductSection = () => {
           }
         }
 
+        @keyframes bouncyPeriod {
+          0%,
+          100% {
+            transform: translateY(0) scale(1);
+          }
+          25% {
+            transform: translateY(-15px) scale(1.2);
+          }
+          50% {
+            transform: translateY(0) scale(1);
+          }
+          65% {
+            transform: translateY(-8px) scale(1.1);
+          }
+          80% {
+            transform: translateY(0) scale(1);
+          }
+        }
+
         @keyframes liquidFill {
           0% {
             transform: translateY(100%) scale(1.5);
@@ -758,6 +858,14 @@ export const ProductSection = () => {
 
         .animate-slideInRight {
           animation: slideInRight 0.4s ease-out;
+        }
+
+        .bouncy-period {
+          animation: bouncyPeriod 1s ease-out;
+          transform-origin: center center;
+          display: inline-block;
+          vertical-align: baseline;
+          will-change: transform;
         }
 
         /* Liquid Button Styles */
