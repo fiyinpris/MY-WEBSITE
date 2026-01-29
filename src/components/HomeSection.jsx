@@ -607,7 +607,7 @@ export const HomeSection = () => {
 
       {/* Full Width Carousel with Dynamic Text */}
       <div
-        className="relative w-full h-[80vh] sm:h-[75vh] md:h-[75vh] lg:h-[90vh] overflow-hidden md:mb-8 cursor-grab active:cursor-grabbing"
+        className="relative w-full h-[80vh] sm:h-[75vh] md:h-[90vh] lg:h-[90vh] overflow-hidden md:mb-8 cursor-grab active:cursor-grabbing"
         onMouseDown={handleHeroDragStart}
         onMouseUp={handleHeroDragEnd}
         onMouseLeave={() => setIsDragging(false)}
@@ -643,7 +643,7 @@ export const HomeSection = () => {
                 {/* Title - ZOOM IN effect */}
                 <h1
                   className={cn(
-                    "text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-4 md:mb-6 transition-all duration-1000 ease-out",
+                    "text-4xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-6xl font-bold leading-tight mb-4 md:mb-6 transition-all duration-1000 ease-out",
                     index === currentSlide
                       ? "opacity-100 scale-100"
                       : "opacity-0 scale-150",

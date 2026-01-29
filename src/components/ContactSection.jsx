@@ -40,7 +40,7 @@ export const ContactSection = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 py-20 lg:px-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 py-28 lg:py-20 lg:px-4">
       <div className="w-full max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
           {/* Left Side - Contact Info */}

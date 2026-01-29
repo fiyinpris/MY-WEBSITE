@@ -1,98 +1,52 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useCart } from "./CartSection";
 import { useWishlist } from "./WishlistSection";
 import { Heart } from "lucide-react";
 import headerBg from "../Images/image 9.jpg";
 
-// Additional product images - UPDATE THESE PATHS TO MATCH YOUR ACTUAL FILES
-import microphone1 from "../Images/image M.jpeg";
-import ringlight1 from "../Images/image R.jpeg";
-import softbox1 from "../Images/image S.jpeg";
-import ringlight2 from "../Images/image R4.jpeg";
-import tripodStand1 from "../Images/image T1.jpeg";
-import ledLight1 from "../Images/image L.jpeg";
-import ringlight3 from "../Images/image R3.jpeg";
-import tripodStand2 from "../Images/image T.jpeg";
-import ledLight2 from "../Images/image L1.jpeg";
-import tripodStand3 from "../Images/image T4.jpeg";
-import tripodStand4 from "../Images/image T1.jpeg";
-
 export const ShopSection = () => {
+  const navigate = useNavigate();
   const { addToCart } = useCart();
   const { wishlistItems, addToWishlist, isInWishlist } = useWishlist();
   const [sortOption, setSortOption] = useState("Default");
-  const [wishlist, setWishlist] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("ALL");
-  const [priceRange, setPriceRange] = useState(200000);
+  const [priceRange, setPriceRange] = useState(500000);
   const [showFilters, setShowFilters] = useState(false);
   const [headerImageLoaded, setHeaderImageLoaded] = useState(false);
 
-  const products = [
-    { id: 1, name: "RINGLIGHT", price: 35000, image: ringlight1 },
-    { id: 2, name: "TRIPOD STAND", price: 12000, image: tripodStand1 },
-    { id: 3, name: "LEDLIGHT", price: 35000, image: ledLight1 },
-    { id: 4, name: "SOFTBOX", price: 10000, image: softbox1 },
-    { id: 5, name: "MICROPHONE", price: 30000, image: microphone1 },
-    { id: 6, name: "RINGLIGHT", price: 35000, image: ringlight2 },
-    { id: 7, name: "SOFTBOX", price: 100000, image: softbox1 },
-    { id: 8, name: "MICROPHONE", price: 30000, image: microphone1 },
-    { id: 9, name: "RINGLIGHT", price: 35000, image: ringlight3 },
-    { id: 10, name: "TRIPOD STAND", price: 12000, image: tripodStand2 },
-    { id: 11, name: "LEDLIGHT", price: 35000, image: ledLight2 },
-    { id: 12, name: "SOFTBOX", price: 10000, image: softbox1 },
-    { id: 13, name: "MICROPHONE", price: 30000, image: microphone1 },
-    { id: 14, name: "RINGLIGHT", price: 35000, image: ringlight1 },
-    { id: 15, name: "SOFTBOX", price: 10000, image: softbox1 },
-    { id: 16, name: "MICROPHONE", price: 30000, image: microphone1 },
-    { id: 17, name: "RINGLIGHT", price: 35000, image: ringlight2 },
-    { id: 18, name: "TRIPOD STAND", price: 12000, image: tripodStand3 },
-    { id: 19, name: "LEDLIGHT", price: 35000, image: ledLight1 },
-    { id: 20, name: "SOFTBOX", price: 10000, image: softbox1 },
-    { id: 21, name: "MICROPHONE", price: 30000, image: microphone1 },
-    { id: 22, name: "RINGLIGHT", price: 35000, image: ringlight3 },
-    { id: 23, name: "TRIPOD STAND", price: 12000, image: tripodStand1 },
-    { id: 24, name: "LEDLIGHT", price: 35000, image: ledLight2 },
-    { id: 25, name: "SOFTBOX", price: 10000, image: softbox1 },
-    { id: 26, name: "MICROPHONE", price: 30000, image: microphone1 },
-    { id: 27, name: "RINGLIGHT", price: 35000, image: ringlight1 },
-    { id: 28, name: "TRIPOD STAND", price: 12000, image: tripodStand2 },
-    { id: 29, name: "LEDLIGHT", price: 35000, image: ledLight1 },
-    { id: 30, name: "SOFTBOX", price: 10000, image: softbox1 },
-    { id: 31, name: "MICROPHONE", price: 30000, image: microphone1 },
-    { id: 32, name: "RINGLIGHT", price: 35000, image: ringlight2 },
-    { id: 33, name: "SOFTBOX", price: 10000, image: softbox1 },
-    { id: 34, name: "MICROPHONE", price: 30000, image: microphone1 },
-    { id: 35, name: "RINGLIGHT", price: 35000, image: ringlight3 },
-    { id: 36, name: "TRIPOD STAND", price: 12000, image: tripodStand3 },
-    { id: 37, name: "LEDLIGHT", price: 35000, image: ledLight2 },
-    { id: 38, name: "SOFTBOX", price: 10000, image: softbox1 },
-    { id: 39, name: "MICROPHONE", price: 30000, image: microphone1 },
-    { id: 40, name: "RINGLIGHT", price: 35000, image: ringlight1 },
-    { id: 41, name: "SOFTBOX", price: 10000, image: softbox1 },
-    { id: 42, name: "MICROPHONE", price: 30000, image: microphone1 },
-    { id: 43, name: "RINGLIGHT", price: 35000, image: ringlight2 },
-    { id: 44, name: "TRIPOD STAND", price: 12000, image: tripodStand1 },
-    { id: 45, name: "LEDLIGHT", price: 35000, image: ledLight1 },
-    { id: 46, name: "SOFTBOX", price: 10000, image: softbox1 },
-    { id: 47, name: "MICROPHONE", price: 30000, image: microphone1 },
-    { id: 48, name: "RINGLIGHT", price: 35000, image: ringlight3 },
-    { id: 49, name: "TRIPOD STAND", price: 12000, image: tripodStand2 },
-    { id: 50, name: "LEDLIGHT", price: 35000, image: ledLight2 },
-    { id: 51, name: "SOFTBOX", price: 10000, image: softbox1 },
-    { id: 52, name: "MICROPHONE", price: 30000, image: microphone1 },
-    { id: 53, name: "RINGLIGHT", price: 35000, image: ringlight1 },
-    { id: 54, name: "SOFTBOX", price: 10000, image: softbox1 },
-    { id: 55, name: "MICROPHONE", price: 30000, image: microphone1 },
-    { id: 56, name: "RINGLIGHT", price: 35000, image: ringlight2 },
-    { id: 57, name: "TRIPOD STAND", price: 12000, image: tripodStand3 },
-    { id: 58, name: "LEDLIGHT", price: 35000, image: ledLight1 },
-    { id: 59, name: "SOFTBOX", price: 10000, image: softbox1 },
-    { id: 60, name: "MICROPHONE", price: 30000, image: microphone1 },
-    { id: 61, name: "RINGLIGHT", price: 35000, image: ringlight3 },
-    { id: 62, name: "TRIPOD STAND", price: 12000, image: tripodStand4 },
-    { id: 63, name: "LEDLIGHT", price: 35000, image: ledLight2 },
-  ];
+  const [products, setProducts] = useState([]);
+
+  // ✅ Load products WITHOUT shuffling - keep them in original order
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        if (typeof window !== "undefined" && window.storage) {
+          const result = await window.storage.get("products-database", true);
+          if (result && result.value) {
+            const loadedProducts = JSON.parse(result.value);
+            // ✅ Set products without shuffling to keep positions fixed
+            setProducts(loadedProducts);
+          }
+        } else {
+          const stored = localStorage.getItem("products-database");
+          if (stored) {
+            const loadedProducts = JSON.parse(stored);
+            // ✅ Set products without shuffling to keep positions fixed
+            setProducts(loadedProducts);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading products:", error);
+      }
+    };
+
+    loadProducts();
+    // Reload products periodically to get new additions
+    const interval = setInterval(loadProducts, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const PRODUCTS_PER_PAGE = 12;
 
@@ -103,26 +57,19 @@ export const ShopSection = () => {
     img.onload = () => setHeaderImageLoaded(true);
   }, []);
 
-  const handleAddToWishlist = (product) => {
-    if (wishlist.find((item) => item.id === product.id)) {
-      setWishlist(wishlist.filter((item) => item.id !== product.id));
-    } else {
-      setWishlist([...wishlist, product]);
-    }
-  };
-
-  const filteredProducts = products.filter((product) => {
+  // ✅ Filter products by category and price
+  let filteredProducts = products.filter((product) => {
     const categoryMatch =
-      selectedCategory === "ALL" || product.name.includes(selectedCategory);
+      selectedCategory === "ALL" || product.category === selectedCategory;
     const priceMatch = product.price <= priceRange;
     return categoryMatch && priceMatch;
   });
 
-  // Apply sorting before pagination
+  // Apply sorting
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     if (sortOption === "Price: Low to High") return a.price - b.price;
     if (sortOption === "Price: High to Low") return b.price - a.price;
-    return 0; // Default, no sorting
+    return 0;
   });
 
   // Pagination
@@ -130,20 +77,29 @@ export const ShopSection = () => {
   const startIdx = (currentPage - 1) * PRODUCTS_PER_PAGE;
   const currentProducts = sortedProducts.slice(
     startIdx,
-    startIdx + PRODUCTS_PER_PAGE
+    startIdx + PRODUCTS_PER_PAGE,
   );
 
+  // ✅ IMPROVED PAGINATION - Show actual page numbers, not dots
   const getPageNumbers = () => {
-    let pages = [];
-    for (let i = currentPage; i < currentPage + 3 && i <= totalPages; i++) {
+    const pages = [];
+    const maxVisible = 5;
+
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+    if (endPage - startPage < maxVisible - 1) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
+
     return pages;
   };
 
   const pageNumbers = getPageNumbers();
-  const showLeftDots = currentPage > 1;
-  const showRightDots = pageNumbers[pageNumbers.length - 1] < totalPages;
 
   const goPrev = () => {
     setCurrentPage((p) => Math.max(1, p - 1));
@@ -162,6 +118,10 @@ export const ShopSection = () => {
 
   const handleAddToCart = (product) => {
     addToCart(product);
+  };
+
+  const handleProductClick = (productId) => {
+    navigate(`/product/${productId}`);
   };
 
   useEffect(() => {
@@ -197,11 +157,23 @@ export const ShopSection = () => {
     };
   }, []);
 
+  // ✅ ALL CATEGORIES NOW ENABLED
+  const categories = [
+    "ALL",
+    "RINGLIGHT",
+    "LED LIGHT",
+    "INFLUENCER LIGHT",
+    "TRIPOD STAND",
+    "MICROPHONE",
+    "SOFTBOX",
+    "ACCESSORIES",
+    "BACKDROP",
+  ];
+
   return (
     <div className="mt-12">
-      {/* Hero Banner with Loading State */}
+      {/* Hero Banner */}
       <div className="relative w-full h-100 md:h-90 lg:h-90 mb-6 md:mb-8 overflow-hidden">
-        {/* Background Image */}
         <div
           className={`absolute inset-0 bg-cover bg-center transition-opacity duration-500 ${
             headerImageLoaded ? "opacity-100" : "opacity-0"
@@ -209,19 +181,16 @@ export const ShopSection = () => {
           style={{ backgroundImage: `url(${headerBg})` }}
         ></div>
 
-        {/* Loading placeholder - shown while image loads */}
         {!headerImageLoaded && (
           <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 animate-pulse"></div>
         )}
 
-        {/* Dark overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70"></div>
 
-        {/* Text content */}
         <div className="relative h-full flex items-center justify-center px-4">
-          <div className="split-text-container text-white drop-shadow-2xl">
-            <span className="text-part left">WELCOME TO&nbsp;</span>
-            <span className="text-part right">my.LIGHTSTORE</span>
+          <div className=" split-text-container text-white drop-shadow-2xl">
+            <span className="text-3xl lg:text-7xl md:text-5xl text-part left">WELCOME TO&nbsp;</span>
+            <span className="text-3xl lg:text-7xl md:text-5xl text-part right">my.LIGHTSTORE</span>
           </div>
         </div>
       </div>
@@ -295,17 +264,10 @@ export const ShopSection = () => {
                 <div className="space-y-4">
                   <div>
                     <ul className="space-y-2">
-                      {[
-                        "ALL",
-                        "RINGLIGHT",
-                        "LEDLIGHT",
-                        "TRIPOD STAND",
-                        "MICROPHONE",
-                        "SOFTBOX",
-                      ].map((category) => (
+                      {categories.map((category) => (
                         <li
                           key={category}
-                          className={`cursor-pointer hover:text-green-400 ${
+                          className={`cursor-pointer hover:text-green-400 transition-colors ${
                             selectedCategory === category
                               ? "text-green-400 font-semibold"
                               : ""
@@ -319,14 +281,10 @@ export const ShopSection = () => {
                           {category === "MICROPHONE" ? "MICROPHONES" : category}
                         </li>
                       ))}
-                      <li className="cursor-pointer hover:text-green-400">
-                        ACCESSORIES
-                      </li>
-                      <li className="cursor-pointer hover:text-green-400">
-                        BACKDROP
-                      </li>
                     </ul>
                   </div>
+
+                  {/* ✅ FIXED PRICE FILTER */}
                   <div>
                     <h6 className="font-medium mb-2">Price</h6>
                     <div className="flex items-center gap-2 mb-2">
@@ -334,28 +292,35 @@ export const ShopSection = () => {
                       <input
                         type="range"
                         min="10000"
-                        max="200000"
-                        step="1000"
+                        max="500000"
+                        step="5000"
                         value={priceRange}
                         onChange={(e) => {
                           setPriceRange(Number(e.target.value));
                           setCurrentPage(1);
                         }}
-                        className="w-full"
+                        className="w-full accent-green-400"
+                        style={{
+                          background: `linear-gradient(to right, #4ade80 0%, #4ade80 ${
+                            ((priceRange - 10000) / (500000 - 10000)) * 100
+                          }%, #e5e7eb ${
+                            ((priceRange - 10000) / (500000 - 10000)) * 100
+                          }%, #e5e7eb 100%)`,
+                        }}
                       />
-                      <span className="text-sm">₦200K</span>
+                      <span className="text-sm">₦500K</span>
                     </div>
-                    <div className="text-sm text-gray-400 mb-2">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 font-semibold">
                       Max: ₦{priceRange.toLocaleString()}
                     </div>
                     <button
-                      className="px-3 py-1 border rounded text-sm hover:bg-gray-400"
+                      className="px-3 py-1 border rounded text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                       onClick={() => {
-                        setPriceRange(1000);
+                        setPriceRange(500000);
                         setCurrentPage(1);
                       }}
                     >
-                      Clear
+                      Reset Filter
                     </button>
                   </div>
                 </div>
@@ -386,15 +351,17 @@ export const ShopSection = () => {
               </select>
             </div>
 
-            {/* Product Grid - 3 columns x 4 rows = 12 products */}
+            {/* Product Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {currentProducts.map((product) => (
                 <div
                   key={product.id}
                   className="border p-3 md:p-4 flex flex-col items-stretch space-y-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
                 >
-                  {/* Image container with loading */}
-                  <div className="w-full h-40 sm:h-48 flex items-center justify-center overflow-hidden rounded-md bg-gray-200 relative">
+                  <div
+                    className="w-full h-40 sm:h-48 flex items-center justify-center overflow-hidden rounded-md bg-gray-200 relative cursor-pointer"
+                    onClick={() => handleProductClick(product.id)}
+                  >
                     <img
                       src={product.image}
                       alt={product.name}
@@ -402,10 +369,12 @@ export const ShopSection = () => {
                       loading="lazy"
                     />
 
-                    {/* Wishlist button */}
                     <button
-                      className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white shadow hover:bg-gray-100 cursor-pointer"
-                      onClick={() => addToWishlist(product)}
+                      className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white shadow hover:bg-gray-100 cursor-pointer z-10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToWishlist(product);
+                      }}
                     >
                       <Heart
                         className={`w-5 h-5 ${
@@ -417,9 +386,11 @@ export const ShopSection = () => {
                     </button>
                   </div>
 
-                  {/* Product details */}
                   <div className="flex flex-col space-y-2">
-                    <h6 className="font-semibold text-sm md:text-base">
+                    <h6
+                      className="font-semibold text-sm md:text-base cursor-pointer hover:text-green-600"
+                      onClick={() => handleProductClick(product.id)}
+                    >
                       {product.name}
                     </h6>
                     <p className="font-bold text-base md:text-lg text-green-600">
@@ -436,62 +407,92 @@ export const ShopSection = () => {
               ))}
             </div>
 
-            {/* Pagination */}
-            <div className="flex justify-center items-center mt-6 mb-8 md:mt-8 space-x-2 md:space-x-3">
-              <button
-                className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm md:text-base cursor-pointer"
-                onClick={goPrev}
-                disabled={currentPage === 1}
-              >
-                ←
-              </button>
+            {/* Empty State */}
+            {currentProducts.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">📦</div>
+                <h3 className="text-2xl font-bold text-foreground mb-2">
+                  No Products Found
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  {products.length === 0
+                    ? "No products have been added yet. Check back soon!"
+                    : "Try adjusting your filters to see more products."}
+                </p>
+              </div>
+            )}
 
-              {showLeftDots && (
-                <span className="text-gray-500 px-1 text-sm md:text-base">
-                  ...
-                </span>
-              )}
+            {/* ✅ IMPROVED PAGINATION */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center mt-6 mb-8 md:mt-8 space-x-2 md:space-x-3">
+                {/* Previous Button */}
+                <button
+                  className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm md:text-base cursor-pointer"
+                  onClick={goPrev}
+                  disabled={currentPage === 1}
+                >
+                  ←
+                </button>
 
-              <div className="flex space-x-2 md:space-x-3 rounded-lg p-1">
+                {/* First page if not in range */}
+                {pageNumbers[0] > 1 && (
+                  <>
+                    <button
+                      className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer text-sm md:text-base"
+                      onClick={() => goToPage(1)}
+                    >
+                      1
+                    </button>
+                    {pageNumbers[0] > 2 && (
+                      <span className="text-gray-500 px-1 text-sm md:text-base">
+                        ...
+                      </span>
+                    )}
+                  </>
+                )}
+
+                {/* Page numbers */}
                 {pageNumbers.map((num) => (
                   <button
                     key={num}
-                    className={`w-8 h-8 md:w-10 cursor-pointer md:h-10 flex items-center justify-center rounded-lg transition-colors text-sm md:text-base ${
+                    className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg transition-colors cursor-pointer text-sm md:text-base ${
                       num === currentPage
                         ? "bg-green-600 text-white"
-                        : "hover:bg-gray-400"
+                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
                     }`}
                     onClick={() => goToPage(num)}
                   >
                     {num}
                   </button>
                 ))}
-              </div>
 
-              {showRightDots && (
-                <>
-                  <span className="text-gray-500 px-1 text-sm md:text-base">
-                    ...
-                  </span>
-                  <div className="rounded-lg p-1">
+                {/* Last page if not in range */}
+                {pageNumbers[pageNumbers.length - 1] < totalPages && (
+                  <>
+                    {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
+                      <span className="text-gray-500 px-1 text-sm md:text-base">
+                        ...
+                      </span>
+                    )}
                     <button
-                      className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg hover:bg-gray-50 text-sm md:text-base cursor-pointer"
+                      className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer text-sm md:text-base"
                       onClick={() => goToPage(totalPages)}
                     >
                       {totalPages}
                     </button>
-                  </div>
-                </>
-              )}
+                  </>
+                )}
 
-              <button
-                className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm md:text-base cursor-pointer"
-                onClick={goNext}
-                disabled={currentPage === totalPages}
-              >
-                →
-              </button>
-            </div>
+                {/* Next Button */}
+                <button
+                  className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm md:text-base cursor-pointer"
+                  onClick={goNext}
+                  disabled={currentPage === totalPages}
+                >
+                  →
+                </button>
+              </div>
+            )}
           </main>
         </div>
       </div>

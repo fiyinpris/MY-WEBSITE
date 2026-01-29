@@ -6,48 +6,40 @@ import { useCart } from "./CartSection";
 import { useWishlist } from "./WishlistSection";
 import { SearchContext } from "./SearchContext";
 
-// Import your actual images
-import ringlight from "../Images/image 6.webp";
-import tripodStand from "../Images/image 8.jpg";
-import ledLight from "../Images/image 10.jpg";
-import softbox from "../Images/image 6.webp";
-import podcastMic from "../Images/image 5.jpg";
-import miniRinglight from "../Images/image 1.jpg";
+// ✅ ADMIN EMAIL CONSTANT
+const ADMIN_EMAIL = "fiyinolaleke@gmail.com";
 
-// Additional images from ShopSection
-import microphone1 from "../Images/image M.jpeg";
-import ringlight1 from "../Images/image R.jpeg";
-import softbox1 from "../Images/image S.jpeg";
-import ringlight2 from "../Images/image R4.jpeg";
-import tripodStand1 from "../Images/image T1.jpeg";
-import ledLight1 from "../Images/image L.jpeg";
-import ringlight3 from "../Images/image R3.jpeg";
-import tripodStand2 from "../Images/image T.jpeg";
-import ledLight2 from "../Images/image L1.jpeg";
-import tripodStand3 from "../Images/image T4.jpeg";
+// ✅ Load products from database instead of hardcoded
+const useProductsFromDatabase = () => {
+  const [products, setProducts] = useState([]);
 
-// ✅ COMBINED PRODUCTS from both ShopSection and ProductSection
-const products = [
-  // Original NavBar products
-  { id: 1, name: "RINGLIGHT", price: 35000, image: miniRinglight },
-  { id: 2, name: "TRIPOD STAND", price: 120000, image: tripodStand },
-  { id: 3, name: "LEDLIGHT", price: 35000, image: ledLight },
-  { id: 4, name: "SOFTBOX", price: 100000, image: softbox },
-  { id: 5, name: "PODCAST MICROPHONE", price: 30000, image: podcastMic },
-  { id: 6, name: "RINGLIGHT", price: 35000, image: ringlight },
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        if (typeof window !== "undefined" && window.storage) {
+          const result = await window.storage.get("products-database", true);
+          if (result && result.value) {
+            setProducts(JSON.parse(result.value));
+          }
+        } else {
+          const stored = localStorage.getItem("products-database");
+          if (stored) {
+            setProducts(JSON.parse(stored));
+          }
+        }
+      } catch (error) {
+        console.error("Error loading products:", error);
+      }
+    };
 
-  // From ShopSection (sample - key products)
-  { id: 101, name: "Ringlight", price: 25000, image: ringlight1 },
-  { id: 102, name: "Tripod Stand", price: 20000, image: tripodStand1 },
-  { id: 103, name: "Podcast Mic", price: 18000, image: microphone1 },
-  { id: 104, name: "LED Light", price: 30000, image: ledLight1 },
-  { id: 105, name: "Softbox", price: 40000, image: softbox1 },
-  { id: 106, name: "MICROPHONE", price: 30000, image: microphone1 },
-  { id: 107, name: "LED LIGHT", price: 35000, image: ledLight2 },
-  { id: 108, name: "TRIPOD", price: 12000, image: tripodStand2 },
-  { id: 109, name: "Professional Ringlight", price: 35000, image: ringlight2 },
-  { id: 110, name: "Studio Softbox", price: 10000, image: softbox1 },
-];
+    loadProducts();
+    // Refresh every 5 seconds to show newly added products
+    const interval = setInterval(loadProducts, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return products;
+};
 
 const navItems = [
   { name: "Home", href: "/" },
@@ -103,6 +95,9 @@ export const NavBar = () => {
   const { totalItems } = useCart();
   const { totalWishlistItems } = useWishlist();
   const { searchQuery, setSearchQuery } = useContext(SearchContext);
+
+  // ✅ Load products from database
+  const products = useProductsFromDatabase();
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -163,6 +158,9 @@ export const NavBar = () => {
   }, []);
 
   const isLoggedIn = userName && userEmail;
+  // ✅ Check if current user is admin
+  const isAdmin =
+    isLoggedIn && userEmail.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
   useEffect(() => {
     if (searchQuery.trim().length > 0) {
@@ -177,7 +175,7 @@ export const NavBar = () => {
       setSuggestions([]);
       setShowSuggestions(false);
     }
-  }, [searchQuery]);
+  }, [searchQuery, products]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -262,13 +260,8 @@ export const NavBar = () => {
       >
         {/* LARGE DESKTOP LAYOUT (lg and above) */}
         <div className="hidden lg:flex w-full items-center justify-between px-4 sm:px-6 md:px-8 lg:px-12 max-w-7xl mx-auto">
-          <Link
-            to="/"
-            className="text-xl sm:text-2xl font-bold text-primary flex items-center"
-          >
-            <span className="relative z-10">
-              <span className="text-glow text-foreground">my.</span>LIGHTSTORE
-            </span>
+          <Link to="/" className="text-xl sm:text-2xl font-bold text-primary">
+            <span className="text-glow text-foreground">my.</span>LIGHTSTORE
           </Link>
 
           <div className="flex items-center gap-6 lg:gap-8">
@@ -456,6 +449,20 @@ export const NavBar = () => {
                       </div>
                       <hr className="border-border my-2" />
 
+                      {/* ✅ Admin Link - ONLY for fiyinolaleke@gmail.com */}
+                      {isAdmin && (
+                        <Link
+                          to="/admin/products"
+                          onClick={() => {
+                            setIsAccountOpen(false);
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="block w-full text-left px-4 py-2 rounded-md border border-primary bg-primary/10 hover:bg-primary/20 transition-colors font-semibold text-primary"
+                        >
+                          🔧 Manage Products
+                        </Link>
+                      )}
+
                       {!isLoggedIn ? (
                         <Link
                           to="/signin"
@@ -497,13 +504,8 @@ export const NavBar = () => {
 
         {/* MEDIUM SCREEN LAYOUT (md to lg) */}
         <div className="hidden md:flex lg:hidden w-full items-center justify-between px-4 sm:px-6 md:px-8 max-w-7xl mx-auto">
-          <Link
-            to="/"
-            className="text-xl font-bold text-primary flex items-center"
-          >
-            <span className="relative z-10">
-              <span className="text-glow text-foreground">my.</span>LIGHTSTORE
-            </span>
+          <Link to="/" className="text-xl font-bold text-primary">
+            <span className="text-glow text-foreground">my.</span>LIGHTSTORE
           </Link>
 
           <div className="flex items-center space-x-3">
@@ -557,11 +559,9 @@ export const NavBar = () => {
           {!isSearchOpen && (
             <Link
               to="/"
-              className="text-xl sm:text-2xl font-bold text-primary flex items-center px-4"
+              className="text-xl sm:text-2xl font-bold text-primary px-4"
             >
-              <span className="relative z-10">
-                <span className="text-glow text-foreground">my.</span>LIGHTSTORE
-              </span>
+              <span className="text-glow text-foreground">my.</span>LIGHTSTORE
             </Link>
           )}
 
@@ -761,9 +761,7 @@ export const NavBar = () => {
           </div>
         )}
 
-        {/* REST OF YOUR EXISTING CODE: MOBILE OVERLAY, SLIDE MENU, ACCOUNT POPUP, LOGOUT POPUP */}
-        {/* Keeping all the existing code exactly as is... */}
-
+        {/* MOBILE OVERLAY */}
         {isMobileMenuOpen && (
           <div
             className="fixed inset-0 bg-black/50 z-30"
@@ -771,6 +769,7 @@ export const NavBar = () => {
           />
         )}
 
+        {/* MOBILE SLIDE MENU */}
         <div
           className={cn(
             "fixed top-0 right-0 w-[280px] h-screen bg-card border-l border-border z-50 transition-transform duration-300 ease-in-out overflow-y-auto",
@@ -806,6 +805,18 @@ export const NavBar = () => {
             </div>
 
             <div className="flex flex-col space-y-4 pt-4 border-t border-border">
+              {/* ✅ Admin Link in Mobile Menu - ONLY for fiyinolaleke@gmail.com */}
+              {isAdmin && (
+                <Link
+                  to="/admin/products"
+                  onClick={handleNavClick}
+                  className="flex items-center space-x-3 text-primary font-semibold hover:text-primary/80 transition-colors duration-300 py-2"
+                >
+                  <span className="text-lg">🔧</span>
+                  <span className="text-lg">Manage Products</span>
+                </Link>
+              )}
+
               <button
                 onClick={() => {
                   navigate("/wishlist");
@@ -890,6 +901,7 @@ export const NavBar = () => {
           </div>
         </div>
 
+        {/* ACCOUNT POPUP (MOBILE) */}
         {isAccountOpen && (
           <div
             className="lg:hidden fixed inset-0 flex items-center justify-center z-[999] bg-black/50 backdrop-blur-sm"
@@ -921,6 +933,20 @@ export const NavBar = () => {
               <hr className="border-border my-4" />
 
               <div className="space-y-3">
+                {/* ✅ Admin Link in Mobile Account Popup - ONLY for fiyinolaleke@gmail.com */}
+                {isAdmin && (
+                  <Link
+                    to="/admin/products"
+                    onClick={() => {
+                      setIsAccountOpen(false);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="block w-full text-left px-4 py-2 rounded-md border border-primary bg-primary/10 hover:bg-primary/20 transition-colors font-semibold text-primary mb-4"
+                  >
+                    🔧 Manage Products
+                  </Link>
+                )}
+
                 <Link
                   to="/cart"
                   onClick={() => {

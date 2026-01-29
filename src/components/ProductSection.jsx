@@ -47,10 +47,10 @@ export const ProductSection = () => {
   const { addToWishlist, isInWishlist } = useWishlist();
 
   const tabs = [
-    { name: "sale", label: "🔥 SALE" },
-    { name: "hot", label: "⚡ HOT" },
-    { name: "newarrivals", label: "✨ NEW ARRIVALS" },
-    { name: "all", label: "📦 ALL" },
+    { name: "sale", label: "SALE" },
+    { name: "hot", label: "HOT" },
+    { name: "newarrivals", label: "NEW ARRIVALS" },
+    { name: "all", label: "ALL" },
   ];
 
   const categories = [
@@ -168,7 +168,6 @@ export const ProductSection = () => {
       type: "hot",
       price: 25000,
       rating: 4.5,
-      reviews: 128,
       desc: "Professional ring light ideal for makeup, photography and streaming.",
       img: ringlight1,
     },
@@ -179,7 +178,6 @@ export const ProductSection = () => {
       type: "sale",
       price: 20000,
       rating: 4.8,
-      reviews: 95,
       desc: "Durable adjustable tripod stand perfect for cameras and ringlights.",
       discount: "SAVE 90%",
       img: tripodStand1,
@@ -191,7 +189,6 @@ export const ProductSection = () => {
       type: "newarrivals",
       price: 18000,
       rating: 4.7,
-      reviews: 203,
       desc: "Studio-quality microphone suitable for podcasts and content creation.",
       img: Microphone1,
     },
@@ -202,7 +199,6 @@ export const ProductSection = () => {
       type: "hot",
       price: 30000,
       rating: 4.6,
-      reviews: 156,
       desc: "LED light panel for professional photo and video shoots.",
       img: ledLight1,
     },
@@ -213,7 +209,6 @@ export const ProductSection = () => {
       type: "sale",
       price: 40000,
       rating: 4.9,
-      reviews: 87,
       desc: "Complete softbox kit for perfect lighting in photography studios.",
       discount: "SAVE 30%",
       img: softbox1,
@@ -225,7 +220,6 @@ export const ProductSection = () => {
       type: "hot",
       price: 25000,
       rating: 4.5,
-      reviews: 128,
       desc: "Professional ring light ideal for makeup, photography and streaming.",
       img: ringlight2,
     },
@@ -236,7 +230,6 @@ export const ProductSection = () => {
       type: "sale",
       price: 20000,
       rating: 4.8,
-      reviews: 95,
       desc: "Durable adjustable tripod stand perfect for cameras and ringlights.",
       discount: "SAVE 90%",
       img: tripodStand2,
@@ -248,7 +241,6 @@ export const ProductSection = () => {
       type: "newarrivals",
       price: 18000,
       rating: 4.7,
-      reviews: 203,
       desc: "Studio-quality microphone suitable for podcasts and content creation.",
       img: microphone2,
     },
@@ -259,7 +251,6 @@ export const ProductSection = () => {
       type: "hot",
       price: 30000,
       rating: 4.6,
-      reviews: 156,
       desc: "LED light panel for professional photo and video shoots.",
       img: ledLight2,
     },
@@ -270,7 +261,6 @@ export const ProductSection = () => {
       type: "sale",
       price: 40000,
       rating: 4.9,
-      reviews: 87,
       desc: "Complete softbox kit for perfect lighting in photography studios.",
       discount: "SAVE 30%",
       img: softbox2,
@@ -282,7 +272,6 @@ export const ProductSection = () => {
       type: "hot",
       price: 25000,
       rating: 4.5,
-      reviews: 128,
       desc: "Professional ring light ideal for makeup, photography and streaming.",
       img: ringlight3,
     },
@@ -293,7 +282,6 @@ export const ProductSection = () => {
       type: "sale",
       price: 20000,
       rating: 4.8,
-      reviews: 95,
       desc: "Durable adjustable tripod stand perfect for cameras and ringlights.",
       discount: "SAVE 90%",
       img: tripodStand3,
@@ -397,7 +385,7 @@ export const ProductSection = () => {
                   : "opacity-0 scale-110 z-0"
               }`}
             >
-              <div className="relative w-full h-full rounded-2xl overflow-hidden">
+              <div className="relative w-full h-full overflow-hidden">
                 <img
                   src={slide.image}
                   alt={slide.title}
@@ -532,7 +520,7 @@ export const ProductSection = () => {
           isTabsFixed ? "fixed top-[60px] left-0 right-0" : "relative"
         } z-40 border backdrop-blur-md shadow-lg transition-all duration-300`}
       >
-        <div className="flex justify-center flex-wrap gap-3 sm:gap-3 lg:gap-15 md:gap-8 py-3 sm:py-4 px-2 sm:px-3">
+        <div className="flex flex-wrap justify-between lg:justify-center gap-3 sm:gap-3 md:gap-8 lg:gap-15 py-3 px-15 sm:py-4">
           {tabs.map((tab) => (
             <button
               key={tab.name}
@@ -540,7 +528,7 @@ export const ProductSection = () => {
                 setActiveTab(tab.name);
                 setSelectedCategory("All");
               }}
-              className={`px-2 lg:px-6 md:px-7 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm md:text-base transition-all duration-300 border-2 ${
+              className={`px-4 lg:px-6 md:px-7 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm md:text-base transition-all duration-300 border-2 ${
                 activeTab === tab.name
                   ? "bg-green-600 text-white border-green-600"
                   : "bg-card text-foreground border-border hover:border-green-600"
@@ -634,9 +622,6 @@ export const ProductSection = () => {
               <div>
                 <div className="flex items-center gap-1 mb-2">
                   {renderStars(product.rating)}
-                  <span className="text-xs text-foreground/60 ml-1">
-                    ({product.reviews})
-                  </span>
                 </div>
                 <h3 className="text-sm sm:text-base font-semibold text-foreground mb-1 line-clamp-1">
                   {product.name}
