@@ -9,6 +9,7 @@ import {
   Filter,
   Lock,
 } from "lucide-react";
+import { productsAPI, adminAPI } from "../services/firebase";
 
 // ✅ ADMIN EMAIL - Only this email can access
 const ADMIN_EMAIL = "fiyinolaleke@gmail.com";
@@ -33,9 +34,9 @@ export const ProductManager = () => {
     price: "",
     image: "",
     imageFile: null,
-    thumbnail1: "", // First image thumbnail
-    thumbnail2: "", // Second image thumbnail
-    videoThumbnail: "", // Video thumbnail
+    thumbnail1: "",
+    thumbnail2: "",
+    videoThumbnail: "",
     description: "",
     badge: "",
     rating: 5,
@@ -74,45 +75,19 @@ export const ProductManager = () => {
     return btoa(JSON.stringify(deviceInfo));
   };
 
-  // ✅ Check admin session with EMAIL verification
+  // ✅ Check admin session with Firebase
   useEffect(() => {
     const checkAdminSession = async () => {
       try {
         const deviceId = generateDeviceId();
         setDeviceId(deviceId);
 
-        if (typeof window !== "undefined" && window.storage) {
-          const result = await window.storage.get("admin-session");
-          if (result && result.value) {
-            const session = JSON.parse(result.value);
-
-            // ✅ Verify device, expiry, AND admin email
-            if (
-              session.deviceId === deviceId &&
-              session.expiry > Date.now() &&
-              session.email === ADMIN_EMAIL
-            ) {
-              setIsAdmin(true);
-              setShowPasswordPrompt(false);
-              setSessionToken(session.token);
-              setAdminEmail(session.email);
-            }
-          }
-        } else {
-          const stored = localStorage.getItem("admin-session");
-          if (stored) {
-            const session = JSON.parse(stored);
-            if (
-              session.deviceId === deviceId &&
-              session.expiry > Date.now() &&
-              session.email === ADMIN_EMAIL
-            ) {
-              setIsAdmin(true);
-              setShowPasswordPrompt(false);
-              setSessionToken(session.token);
-              setAdminEmail(session.email);
-            }
-          }
+        const session = await adminAPI.getSession(deviceId);
+        if (session && session.email === ADMIN_EMAIL) {
+          setIsAdmin(true);
+          setShowPasswordPrompt(false);
+          setSessionToken(session.token);
+          setAdminEmail(session.email);
         }
       } catch (error) {
         console.error("Error checking admin session:", error);
@@ -122,7 +97,7 @@ export const ProductManager = () => {
     checkAdminSession();
   }, []);
 
-  // Load products from storage
+  // ✅ Load products from Firebase
   useEffect(() => {
     if (isAdmin) {
       loadProducts();
@@ -131,34 +106,12 @@ export const ProductManager = () => {
 
   const loadProducts = async () => {
     try {
-      if (typeof window !== "undefined" && window.storage) {
-        const result = await window.storage.get("products-database", true);
-        if (result && result.value) {
-          setProducts(JSON.parse(result.value));
-        }
-      } else {
-        const stored = localStorage.getItem("products-database");
-        if (stored) {
-          setProducts(JSON.parse(stored));
-        }
-      }
+      const loadedProducts = await productsAPI.getAll();
+      setProducts(loadedProducts);
     } catch (error) {
       console.error("Error loading products:", error);
     }
   };
-
-const saveProducts = (updatedProducts) => {
-  try {
-    localStorage.setItem(
-      "products-database",
-      JSON.stringify(updatedProducts)
-    );
-    setProducts(updatedProducts);
-  } catch (error) {
-    console.error("Error saving products:", error);
-    alert("Error saving products!");
-  }
-};
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -223,70 +176,95 @@ const saveProducts = (updatedProducts) => {
     }
   };
 
+  // ✅ Add product to Firebase
   const handleAddProduct = async () => {
     if (!formData.name || !formData.price || !formData.image) {
       alert("Please fill in all required fields and upload an image");
       return;
     }
 
-    const newProduct = {
-      id: Date.now(),
-      name: formData.name,
-      category: formData.category,
-      price: parseInt(formData.price),
-      image: formData.image,
-      thumbnail1: formData.thumbnail1,
-      thumbnail2: formData.thumbnail2,
-      videoThumbnail: formData.videoThumbnail,
-      description: formData.description,
-      badge: formData.badge,
-      rating: formData.rating,
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      const newProduct = {
+        name: formData.name,
+        category: formData.category,
+        price: parseInt(formData.price),
+        image: formData.image,
+        thumbnail1: formData.thumbnail1 || "",
+        thumbnail2: formData.thumbnail2 || "",
+        videoThumbnail: formData.videoThumbnail || "",
+        description: formData.description || "",
+        badge: formData.badge || "",
+        rating: formData.rating || 5,
+      };
 
-    await saveProducts([...products, newProduct]);
-    setShowAddModal(false);
-    resetForm();
-    alert("Product added successfully!");
+      await productsAPI.create(newProduct);
+      await loadProducts(); // Reload from Firebase
+      setShowAddModal(false);
+      resetForm();
+      alert("Product added successfully!");
+    } catch (error) {
+      console.error("Error adding product:", error);
+      alert(`Error adding product: ${error.message}`);
+    }
   };
 
+  // ✅ Update product in Firebase - FIXED VERSION
   const handleEditProduct = async () => {
     if (!formData.name || !formData.price) {
       alert("Please fill in all required fields");
       return;
     }
 
-    const updatedProduct = {
-      ...editingProduct,
-      name: formData.name,
-      category: formData.category,
-      price: parseInt(formData.price),
-      image: formData.image || editingProduct.image,
-      thumbnail1: formData.thumbnail1,
-      thumbnail2: formData.thumbnail2,
-      videoThumbnail: formData.videoThumbnail,
-      description: formData.description,
-      badge: formData.badge,
-      rating: formData.rating,
-      updatedAt: new Date().toISOString(),
-    };
+    try {
+      // Create updated product object, preserving existing values if not changed
+      const updatedProduct = {
+        name: formData.name,
+        category: formData.category,
+        price: parseInt(formData.price),
+        // Keep existing image if no new one uploaded
+        image: formData.image || editingProduct.image,
+        // Preserve existing thumbnails if not changed
+        thumbnail1: formData.thumbnail1 || editingProduct.thumbnail1 || "",
+        thumbnail2: formData.thumbnail2 || editingProduct.thumbnail2 || "",
+        videoThumbnail:
+          formData.videoThumbnail || editingProduct.videoThumbnail || "",
+        description: formData.description || "",
+        badge: formData.badge || "",
+        rating: formData.rating || 5,
+      };
 
-    const updated = products.map((p) =>
-      p.id === editingProduct.id ? updatedProduct : p,
-    );
-    await saveProducts(updated);
-    setShowEditModal(false);
-    setEditingProduct(null);
-    resetForm();
-    alert("Product updated successfully!");
+      console.log("Updating product ID:", editingProduct.id);
+      console.log("Update data:", updatedProduct);
+
+      const result = await productsAPI.update(
+        editingProduct.id,
+        updatedProduct,
+      );
+      console.log("Update result:", result);
+
+      await loadProducts();
+      setShowEditModal(false);
+      setEditingProduct(null);
+      resetForm();
+      alert("Product updated successfully!");
+    } catch (error) {
+      console.error("Error updating product:", error);
+      alert(`Error updating product: ${error.message || "Unknown error"}`);
+    }
   };
 
+  // ✅ Delete product from Firebase
   const handleDeleteProduct = async (productId) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
 
-    const updated = products.filter((p) => p.id !== productId);
-    await saveProducts(updated);
-    alert("Product deleted successfully!");
+    try {
+      await productsAPI.delete(productId);
+      await loadProducts();
+      alert("Product deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      alert(`Error deleting product: ${error.message}`);
+    }
   };
 
   const openEditModal = (product) => {
@@ -332,21 +310,18 @@ const saveProducts = (updatedProducts) => {
     return matchesSearch && matchesCategory;
   });
 
-  // ✅ ADMIN LOGIN - Verify both email and password
+  // ✅ Admin login with Firebase
   const handleAdminLogin = async () => {
-    // Check email first
     if (adminEmail.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
       alert("Access denied. You do not have admin privileges.");
       return;
     }
 
-    // Simple password check (you should use a proper password in production)
     if (!adminPassword || adminPassword.length < 6) {
       alert("Please enter a valid password!");
       return;
     }
 
-    // Both email and password correct
     const token = btoa(Date.now() + Math.random().toString());
     const session = {
       deviceId: deviceId,
@@ -356,37 +331,29 @@ const saveProducts = (updatedProducts) => {
     };
 
     try {
-      if (typeof window !== "undefined" && window.storage) {
-        await window.storage.set("admin-session", JSON.stringify(session));
-      } else {
-        localStorage.setItem("admin-session", JSON.stringify(session));
-      }
+      await adminAPI.saveSession(session);
+      setSessionToken(token);
+      setIsAdmin(true);
+      setShowPasswordPrompt(false);
     } catch (error) {
-      console.error("Error saving admin session:", error);
+      console.error("Error saving session:", error);
+      alert(`Error logging in: ${error.message}`);
     }
-
-    setSessionToken(token);
-    setIsAdmin(true);
-    setShowPasswordPrompt(false);
   };
 
+  // ✅ Logout from Firebase
   const handleLogout = async () => {
     if (confirm("Are you sure you want to logout?")) {
       try {
-        if (typeof window !== "undefined" && window.storage) {
-          await window.storage.delete("admin-session");
-        } else {
-          localStorage.removeItem("admin-session");
-        }
+        await adminAPI.deleteSession(deviceId);
+        setIsAdmin(false);
+        setShowPasswordPrompt(true);
+        setAdminPassword("");
+        setAdminEmail("");
+        setSessionToken("");
       } catch (error) {
-        console.error("Error removing admin session:", error);
+        console.error("Error logging out:", error);
       }
-
-      setIsAdmin(false);
-      setShowPasswordPrompt(true);
-      setAdminPassword("");
-      setAdminEmail("");
-      setSessionToken("");
     }
   };
 
@@ -645,7 +612,7 @@ const saveProducts = (updatedProducts) => {
           </div>
         </div>
 
-        {/* ✅ RESPONSIVE Products Grid - 2 columns on mobile */}
+        {/* Products Grid */}
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {filteredProducts.map((product) => (
             <div

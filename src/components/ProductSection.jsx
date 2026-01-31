@@ -518,25 +518,27 @@ export const ProductSection = () => {
       <div
         className={`${
           isTabsFixed ? "fixed top-[60px] left-0 right-0" : "relative"
-        } z-40 border backdrop-blur-md shadow-lg transition-all duration-300`}
+        } z-30 border backdrop-blur-md shadow-lg transition-all duration-300`}
       >
-        <div className="flex flex-wrap justify-between lg:justify-center gap-3 sm:gap-3 md:gap-8 lg:gap-15 py-3 px-15 sm:py-4">
-          {tabs.map((tab) => (
-            <button
-              key={tab.name}
-              onClick={() => {
-                setActiveTab(tab.name);
-                setSelectedCategory("All");
-              }}
-              className={`px-4 lg:px-6 md:px-7 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm md:text-base transition-all duration-300 border-2 ${
-                activeTab === tab.name
-                  ? "bg-green-600 text-white border-green-600"
-                  : "bg-card text-foreground border-border hover:border-green-600"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="w-full overflow-x-auto scrollbar-hide">
+          <div className="flex justify-start lg:justify-center gap-2 sm:gap-3 md:gap-6 lg:gap-12 py-3 sm:py-4 px-3 sm:px-4 min-w-max lg:min-w-0">
+            {tabs.map((tab) => (
+              <button
+                key={tab.name}
+                onClick={() => {
+                  setActiveTab(tab.name);
+                  setSelectedCategory("All");
+                }}
+                className={`px-4 sm:px-5 lg:px-6 py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap transition-all duration-300 border-2 ${
+                  activeTab === tab.name
+                    ? "bg-green-600 text-white border-green-600"
+                    : "bg-card text-foreground border-border hover:border-green-600"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -570,14 +572,14 @@ export const ProductSection = () => {
                       e.stopPropagation();
                       addToWishlist(product);
                     }}
-                    className="bg-white p-1 sm:p-1.5 md:p-2 rounded-full shadow-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="bg-card p-1.5 sm:p-2 rounded-full shadow-lg cursor-pointer hover:bg-red-50 hover:scale-110 transition-all duration-200"
                   >
                     <Heart
-                      size={14}
+                      size={16}
                       className={
                         isInWishlist(product.id)
                           ? "text-red-500 fill-red-500"
-                          : "text-gray-600"
+                          : "text-gray-600 hover:text-red-500"
                       }
                     />
                   </button>
@@ -587,9 +589,12 @@ export const ProductSection = () => {
                       e.stopPropagation();
                       openModal(product);
                     }}
-                    className="bg-white p-1 sm:p-1.5 md:p-2 rounded-full shadow-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="bg-card p-1.5 sm:p-2 rounded-full shadow-lg cursor-pointer hover:bg-green-50 hover:scale-110 transition-all duration-200"
                   >
-                    <Eye size={14} />
+                    <Eye
+                      size={16}
+                      className="text-gray-600 hover:text-green-600"
+                    />
                   </button>
                 </div>
 
@@ -784,6 +789,15 @@ export const ProductSection = () => {
       )}
 
       <style jsx>{`
+        /* Hide scrollbar for tab container */
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+
         @keyframes fadeIn {
           from {
             opacity: 0;

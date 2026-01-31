@@ -2,43 +2,88 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { Trash2, ShoppingCart, Heart } from "lucide-react";
 import { useCart } from "./CartSection";
 import { Link } from "react-router-dom";
+import { productsAPI } from "../services/firebase";
 
 const WishlistContext = createContext();
 
 export const WishlistSection = ({ children }) => {
-  // ✅ Load saved wishlist items from localStorage
-  const [wishlistItems, setWishlistItems] = useState(() => {
-    const savedWishlist = localStorage.getItem("wishlistItems");
-    return savedWishlist ? JSON.parse(savedWishlist) : [];
+  // ✅ Only store product IDs, not full products with base64 images
+  const [wishlistIds, setWishlistIds] = useState(() => {
+    try {
+      const savedWishlist = localStorage.getItem("wishlistIds");
+      return savedWishlist ? JSON.parse(savedWishlist) : [];
+    } catch (error) {
+      console.error("Error loading wishlist:", error);
+      return [];
+    }
   });
 
-  // ✅ Save to localStorage whenever wishlist changes
+  const [wishlistItems, setWishlistItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // ✅ Save only IDs to localStorage
   useEffect(() => {
-    localStorage.setItem("wishlistItems", JSON.stringify(wishlistItems));
-  }, [wishlistItems]);
+    try {
+      localStorage.setItem("wishlistIds", JSON.stringify(wishlistIds));
+    } catch (error) {
+      console.error("Error saving wishlist:", error);
+      // If storage is full, clear it and try again
+      if (error.name === "QuotaExceededError") {
+        localStorage.removeItem("wishlistIds");
+        alert(
+          "Wishlist storage was full and has been cleared. Please add items again.",
+        );
+      }
+    }
+  }, [wishlistIds]);
+
+  // ✅ Load full product details from Firebase based on IDs
+  useEffect(() => {
+    const loadWishlistProducts = async () => {
+      if (wishlistIds.length === 0) {
+        setWishlistItems([]);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const allProducts = await productsAPI.getAll();
+        const wishlistProducts = allProducts.filter((product) =>
+          wishlistIds.includes(product.id),
+        );
+        setWishlistItems(wishlistProducts);
+      } catch (error) {
+        console.error("Error loading wishlist products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadWishlistProducts();
+  }, [wishlistIds]);
 
   const addToWishlist = (product) => {
-    setWishlistItems((prev) => {
-      const existingItem = prev.find((item) => item.id === product.id);
-      if (existingItem) {
+    setWishlistIds((prev) => {
+      if (prev.includes(product.id)) {
         // If already in wishlist, remove it (toggle behavior)
-        return prev.filter((item) => item.id !== product.id);
+        return prev.filter((id) => id !== product.id);
       }
-      return [...prev, product];
+      return [...prev, product.id];
     });
   };
 
   const removeFromWishlist = (id) => {
-    setWishlistItems((prev) => prev.filter((item) => item.id !== id));
+    setWishlistIds((prev) => prev.filter((itemId) => itemId !== id));
   };
 
   const isInWishlist = (id) => {
-    return wishlistItems.some((item) => item.id === id);
+    return wishlistIds.includes(id);
   };
 
-  const clearWishlist = () => setWishlistItems([]);
+  const clearWishlist = () => setWishlistIds([]);
 
-  const totalWishlistItems = wishlistItems.length;
+  const totalWishlistItems = wishlistIds.length;
 
   return (
     <WishlistContext.Provider
@@ -49,6 +94,7 @@ export const WishlistSection = ({ children }) => {
         isInWishlist,
         clearWishlist,
         totalWishlistItems,
+        loading,
       }}
     >
       {children}
@@ -65,7 +111,7 @@ export const useWishlist = () => {
 };
 
 export const WishlistPage = () => {
-  const { wishlistItems, removeFromWishlist } = useWishlist();
+  const { wishlistItems, removeFromWishlist, loading } = useWishlist();
   const { addToCart } = useCart();
   const [showNotification, setShowNotification] = useState(false);
   const [notificationText, setNotificationText] = useState("");
@@ -76,6 +122,17 @@ export const WishlistPage = () => {
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 3000);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 pt-16 bg-gradient-to-br from-primary/20 via-background to-primary/10">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-foreground/60">Loading wishlist...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (wishlistItems.length === 0) {
     return (
@@ -141,7 +198,7 @@ export const WishlistPage = () => {
                   {item.name}
                 </h3>
                 <p className="text-xs sm:text-sm text-foreground/60 line-clamp-2">
-                  {item.desc}
+                  {item.description || item.desc || "No description available"}
                 </p>
                 <p className="text-sm sm:text-base font-bold text-primary">
                   ₦{(item.price || 0).toLocaleString()}

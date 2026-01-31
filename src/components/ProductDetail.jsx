@@ -1,19 +1,14 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "./CartSection";
 import { useWishlist } from "./WishlistSection";
-import {
-  Heart,
-  ArrowLeft,
-  Minus,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Heart, ArrowLeft, Minus, Plus } from "lucide-react";
+import { productsAPI } from "../services/firebase";
 
 export const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
 
@@ -23,23 +18,28 @@ export const ProductDetail = () => {
   const [selectedMedia, setSelectedMedia] = useState(0);
   const carouselRef = useRef(null);
 
+  const [isDragging, setIsDragging] = useState(false);
+  const [startPos, setStartPos] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   }, []);
 
+  // ✅ Load product from Firebase
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("products-database");
-      if (stored) {
-        const products = JSON.parse(stored);
-        const foundProduct = products.find((p) => p.id === Number(id));
+    const loadProduct = async () => {
+      try {
+        const foundProduct = await productsAPI.getById(id);
         setProduct(foundProduct);
+      } catch (error) {
+        console.error("Error loading product:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error loading product:", error);
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    loadProduct();
   }, [id]);
 
   const handleAddToCart = () => {
@@ -52,7 +52,14 @@ export const ProductDetail = () => {
   const decreaseQuantity = () =>
     setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
 
-  // Carousel navigation functions
+  const handleBackClick = () => {
+    if (location.state?.from === "/shop") {
+      navigate("/shop");
+    } else {
+      navigate(-1);
+    }
+  };
+
   const scrollToMedia = (index) => {
     if (carouselRef.current) {
       const scrollAmount = carouselRef.current.offsetWidth * index;
@@ -64,19 +71,26 @@ export const ProductDetail = () => {
     setSelectedMedia(index);
   };
 
-  const handlePrevMedia = () => {
-    const newIndex =
-      selectedMedia > 0 ? selectedMedia - 1 : allMedia.length - 1;
-    scrollToMedia(newIndex);
+  const handleDragStart = (e) => {
+    setIsDragging(true);
+    const pos = e.type === "mousedown" ? e.pageX : e.touches[0].pageX;
+    setStartPos(pos - carouselRef.current.offsetLeft);
+    setScrollLeft(carouselRef.current.scrollLeft);
   };
 
-  const handleNextMedia = () => {
-    const newIndex =
-      selectedMedia < allMedia.length - 1 ? selectedMedia + 1 : 0;
-    scrollToMedia(newIndex);
+  const handleDragMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const pos = e.type === "mousemove" ? e.pageX : e.touches[0].pageX;
+    const x = pos - carouselRef.current.offsetLeft;
+    const walk = (x - startPos) * 2;
+    carouselRef.current.scrollLeft = scrollLeft - walk;
   };
 
-  // Track scroll position to update selected media
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
   useEffect(() => {
     const carousel = carouselRef.current;
     if (!carousel) return;
@@ -120,7 +134,6 @@ export const ProductDetail = () => {
     );
   }
 
-  // Build all media array - main image + 2 thumbnails + video (always show slots even if empty)
   const allMedia = [
     { type: "image", src: product.image, label: "Main Image" },
     { type: "image", src: product.thumbnail1 || null, label: "Image 1" },
@@ -148,9 +161,8 @@ export const ProductDetail = () => {
       `}</style>
 
       <div className="max-w-7xl mx-auto">
-        {/* Back Button */}
         <button
-          onClick={() => navigate("/shop")}
+          onClick={handleBackClick}
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
         >
           <ArrowLeft size={20} />
@@ -160,9 +172,8 @@ export const ProductDetail = () => {
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
           {/* Images Section */}
           <div className="flex flex-col md:flex-row gap-4">
-            {/* Desktop/Large screen: Vertical Thumbnails + Main Display */}
+            {/* Desktop: Vertical Thumbnails + Main Display */}
             <div className="hidden lg:flex lg:flex-row gap-4 w-full">
-              {/* Thumbnails */}
               <div className="flex flex-col gap-2 w-20">
                 {allMedia.map((media, index) => (
                   <div
@@ -207,7 +218,6 @@ export const ProductDetail = () => {
                 ))}
               </div>
 
-              {/* Main Display */}
               <div className="flex-1">
                 <div className="w-full h-[500px] rounded-2xl overflow-hidden bg-gray-100">
                   {allMedia[selectedMedia].src ? (
@@ -236,16 +246,22 @@ export const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Mobile/Tablet: Draggable Carousel for ALL media (2 images + 1 video) */}
+            {/* Mobile: Draggable Carousel */}
             <div className="lg:hidden w-full">
               <div className="relative">
-                {/* Carousel Container */}
                 <div
                   ref={carouselRef}
-                  className="flex overflow-x-auto scrollbar-hide carousel-snap gap-4"
+                  className="flex overflow-x-auto scrollbar-hide carousel-snap gap-4 cursor-grab active:cursor-grabbing"
                   style={{
                     WebkitOverflowScrolling: "touch",
                   }}
+                  onMouseDown={handleDragStart}
+                  onMouseMove={handleDragMove}
+                  onMouseUp={handleDragEnd}
+                  onMouseLeave={handleDragEnd}
+                  onTouchStart={handleDragStart}
+                  onTouchMove={handleDragMove}
+                  onTouchEnd={handleDragEnd}
                 >
                   {allMedia.map((media, index) => (
                     <div
@@ -257,14 +273,14 @@ export const ProductDetail = () => {
                           <video
                             src={media.src}
                             controls
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover pointer-events-none"
                             draggable="false"
                           />
                         ) : (
                           <img
                             src={media.src}
                             alt={`${product.name} - ${media.label}`}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover pointer-events-none"
                             draggable="false"
                           />
                         )
@@ -285,23 +301,6 @@ export const ProductDetail = () => {
                   ))}
                 </div>
 
-                {/* Navigation Arrows */}
-                <button
-                  onClick={handlePrevMedia}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-all z-10"
-                  aria-label="Previous media"
-                >
-                  <ChevronLeft size={24} className="text-gray-800" />
-                </button>
-                <button
-                  onClick={handleNextMedia}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-all z-10"
-                  aria-label="Next media"
-                >
-                  <ChevronRight size={24} className="text-gray-800" />
-                </button>
-
-                {/* Dots Indicator */}
                 <div className="flex justify-center gap-2 mt-4">
                   {allMedia.map((media, index) => (
                     <button
@@ -336,7 +335,6 @@ export const ProductDetail = () => {
               ₦{product.price.toLocaleString()}
             </p>
 
-            {/* Product Description */}
             {product.description && (
               <div className="mb-6">
                 <h2 className="text-xl font-semibold text-foreground mb-2">
@@ -348,7 +346,6 @@ export const ProductDetail = () => {
               </div>
             )}
 
-            {/* Quantity */}
             <div className="mb-6">
               <label className="block text-sm font-semibold mb-3">
                 Quantity
@@ -375,7 +372,6 @@ export const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Actions */}
             <div className="flex gap-4">
               <button
                 onClick={handleAddToCart}

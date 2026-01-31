@@ -16,75 +16,6 @@ import GoogleCallback from "./components/GoogleCallback";
 import { ProductManager } from "./components/ProductManager";
 import { ProductDetail } from "./components/ProductDetail";
 
-// ✅ ADMIN EMAIL - Only this email can access admin panel
-const ADMIN_EMAIL = "fiyinolaleke@gmail.com";
-
-/**
- * Protected Admin Route Component
- * Only allows access to fiyinolaleke@gmail.com
- */
-const ProtectedAdminRoute = ({ children }) => {
-  const [isAdmin, setIsAdmin] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    const checkAdminAccess = async () => {
-      try {
-        // Check for admin session
-        let adminSession = null;
-
-        if (typeof window !== "undefined" && window.storage) {
-          const result = await window.storage.get("admin-session");
-          if (result && result.value) {
-            adminSession = JSON.parse(result.value);
-          }
-        } else {
-          const stored = localStorage.getItem("admin-session");
-          if (stored) {
-            adminSession = JSON.parse(stored);
-          }
-        }
-
-        // Verify admin session
-        if (
-          adminSession &&
-          adminSession.email === ADMIN_EMAIL &&
-          adminSession.expiry > Date.now()
-        ) {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
-        }
-      } catch (error) {
-        console.error("Error checking admin access:", error);
-        setIsAdmin(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAdminAccess();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Verifying access...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // ✅ Redirect non-admin users to home
-  if (!isAdmin) {
-    return <Navigate to="/" replace />;
-  }
-
-  return children;
-};
-
 function App() {
   const [formData, setFormData] = React.useState({ email: "" });
 
@@ -110,15 +41,8 @@ function App() {
                   <Route path="/search" element={<SearchSection />} />
                   <Route path="/auth/callback" element={<GoogleCallback />} />
 
-                  {/* ✅ PROTECTED ADMIN ROUTE */}
-                  <Route
-                    path="/admin/products"
-                    element={
-                      <ProtectedAdminRoute>
-                        <ProductManager />
-                      </ProtectedAdminRoute>
-                    }
-                  />
+                  {/* ✅ ADMIN ROUTE - ProductManager handles its own authentication */}
+                  <Route path="/admin/products" element={<ProductManager />} />
 
                   {/* Catch-all redirect */}
                   <Route path="*" element={<Navigate to="/" replace />} />

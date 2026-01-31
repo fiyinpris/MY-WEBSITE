@@ -4,6 +4,7 @@ import { useCart } from "./CartSection";
 import { useWishlist } from "./WishlistSection";
 import { Heart } from "lucide-react";
 import headerBg from "../Images/image 9.jpg";
+import { productsAPI } from "../services/firebase";
 
 export const ShopSection = () => {
   const navigate = useNavigate();
@@ -18,33 +19,31 @@ export const ShopSection = () => {
 
   const [products, setProducts] = useState([]);
 
-  // ✅ Load products WITHOUT shuffling - keep them in original order
+  // ✅ FIXED: Create a stable "shuffle" based on product ID that never changes
+  const createFixedMixedOrder = (productList) => {
+    return [...productList].sort((a, b) => {
+      const hashA = (a.id.charCodeAt(0) * 9301 + 49297) % 233280;
+      const hashB = (b.id.charCodeAt(0) * 9301 + 49297) % 233280;
+      return hashA - hashB;
+    });
+  };
+
+  // ✅ Load products from Firebase
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        if (typeof window !== "undefined" && window.storage) {
-          const result = await window.storage.get("products-database", true);
-          if (result && result.value) {
-            const loadedProducts = JSON.parse(result.value);
-            // ✅ Set products without shuffling to keep positions fixed
-            setProducts(loadedProducts);
-          }
-        } else {
-          const stored = localStorage.getItem("products-database");
-          if (stored) {
-            const loadedProducts = JSON.parse(stored);
-            // ✅ Set products without shuffling to keep positions fixed
-            setProducts(loadedProducts);
-          }
-        }
+        const loadedProducts = await productsAPI.getAll();
+        const mixedProducts = createFixedMixedOrder(loadedProducts);
+        setProducts(mixedProducts);
       } catch (error) {
         console.error("Error loading products:", error);
       }
     };
 
     loadProducts();
+
     // Reload products periodically to get new additions
-    const interval = setInterval(loadProducts, 5000);
+    const interval = setInterval(loadProducts, 30000); // Every 30 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -65,7 +64,7 @@ export const ShopSection = () => {
     return categoryMatch && priceMatch;
   });
 
-  // Apply sorting
+  // ✅ Apply sorting - maintains mixed order by default
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     if (sortOption === "Price: Low to High") return a.price - b.price;
     if (sortOption === "Price: High to Low") return b.price - a.price;
@@ -80,7 +79,6 @@ export const ShopSection = () => {
     startIdx + PRODUCTS_PER_PAGE,
   );
 
-  // ✅ IMPROVED PAGINATION - Show actual page numbers, not dots
   const getPageNumbers = () => {
     const pages = [];
     const maxVisible = 5;
@@ -121,8 +119,22 @@ export const ShopSection = () => {
   };
 
   const handleProductClick = (productId) => {
-    navigate(`/product/${productId}`);
+    sessionStorage.setItem("shopScrollPosition", window.scrollY.toString());
+    navigate(`/product/${productId}`, { state: { from: "/shop" } });
   };
+
+  useEffect(() => {
+    const savedPosition = sessionStorage.getItem("shopScrollPosition");
+    if (savedPosition) {
+      setTimeout(() => {
+        window.scrollTo({
+          top: parseInt(savedPosition),
+          behavior: "instant",
+        });
+        sessionStorage.removeItem("shopScrollPosition");
+      }, 0);
+    }
+  }, []);
 
   useEffect(() => {
     const divider = document.getElementById("divider");
@@ -157,7 +169,6 @@ export const ShopSection = () => {
     };
   }, []);
 
-  // ✅ ALL CATEGORIES NOW ENABLED
   const categories = [
     "ALL",
     "RINGLIGHT",
@@ -189,8 +200,12 @@ export const ShopSection = () => {
 
         <div className="relative h-full flex items-center justify-center px-4">
           <div className=" split-text-container text-white drop-shadow-2xl">
-            <span className="text-3xl lg:text-7xl md:text-5xl text-part left">WELCOME TO&nbsp;</span>
-            <span className="text-3xl lg:text-7xl md:text-5xl text-part right">my.LIGHTSTORE</span>
+            <span className="text-2xl lg:text-7xl md:text-5xl text-part left">
+              WELCOME TO&nbsp;
+            </span>
+            <span className="text-2xl lg:text-7xl md:text-5xl text-part right">
+              my.LIGHTSTORE
+            </span>
           </div>
         </div>
       </div>
@@ -284,7 +299,6 @@ export const ShopSection = () => {
                     </ul>
                   </div>
 
-                  {/* ✅ FIXED PRICE FILTER */}
                   <div>
                     <h6 className="font-medium mb-2">Price</h6>
                     <div className="flex items-center gap-2 mb-2">
@@ -407,25 +421,11 @@ export const ShopSection = () => {
               ))}
             </div>
 
-            {/* Empty State */}
-            {currentProducts.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">📦</div>
-                <h3 className="text-2xl font-bold text-foreground mb-2">
-                  No Products Found
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  {products.length === 0
-                    ? "No products have been added yet. Check back soon!"
-                    : "Try adjusting your filters to see more products."}
-                </p>
-              </div>
-            )}
 
-            {/* ✅ IMPROVED PAGINATION */}
+
+            {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex justify-center items-center mt-6 mb-8 md:mt-8 space-x-2 md:space-x-3">
-                {/* Previous Button */}
                 <button
                   className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm md:text-base cursor-pointer"
                   onClick={goPrev}
@@ -434,7 +434,6 @@ export const ShopSection = () => {
                   ←
                 </button>
 
-                {/* First page if not in range */}
                 {pageNumbers[0] > 1 && (
                   <>
                     <button
@@ -451,7 +450,6 @@ export const ShopSection = () => {
                   </>
                 )}
 
-                {/* Page numbers */}
                 {pageNumbers.map((num) => (
                   <button
                     key={num}
@@ -466,7 +464,6 @@ export const ShopSection = () => {
                   </button>
                 ))}
 
-                {/* Last page if not in range */}
                 {pageNumbers[pageNumbers.length - 1] < totalPages && (
                   <>
                     {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
@@ -483,7 +480,6 @@ export const ShopSection = () => {
                   </>
                 )}
 
-                {/* Next Button */}
                 <button
                   className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm md:text-base cursor-pointer"
                   onClick={goNext}

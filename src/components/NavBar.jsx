@@ -5,40 +5,39 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "./CartSection";
 import { useWishlist } from "./WishlistSection";
 import { SearchContext } from "./SearchContext";
+import { productsAPI } from "../services/firebase"; // ✅ Import Firebase API
 
 // ✅ ADMIN EMAIL CONSTANT
 const ADMIN_EMAIL = "fiyinolaleke@gmail.com";
 
-// ✅ Load products from database instead of hardcoded
+// ✅ Load products from Firebase instead of localStorage
 const useProductsFromDatabase = () => {
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        if (typeof window !== "undefined" && window.storage) {
-          const result = await window.storage.get("products-database", true);
-          if (result && result.value) {
-            setProducts(JSON.parse(result.value));
-          }
-        } else {
-          const stored = localStorage.getItem("products-database");
-          if (stored) {
-            setProducts(JSON.parse(stored));
-          }
-        }
+        const loadedProducts = await productsAPI.getAll();
+        setProducts(loadedProducts);
+        console.log(
+          `✅ Loaded ${loadedProducts.length} products from Firebase`,
+        );
       } catch (error) {
-        console.error("Error loading products:", error);
+        console.error("❌ Error loading products:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     loadProducts();
-    // Refresh every 5 seconds to show newly added products
-    const interval = setInterval(loadProducts, 5000);
+
+    // Refresh every 10 seconds to show newly added products
+    const interval = setInterval(loadProducts, 10000);
     return () => clearInterval(interval);
   }, []);
 
-  return products;
+  return { products, loading };
 };
 
 const navItems = [
@@ -96,8 +95,8 @@ export const NavBar = () => {
   const { totalWishlistItems } = useWishlist();
   const { searchQuery, setSearchQuery } = useContext(SearchContext);
 
-  // ✅ Load products from database
-  const products = useProductsFromDatabase();
+  // ✅ Load products from Firebase
+  const { products, loading: productsLoading } = useProductsFromDatabase();
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -243,6 +242,19 @@ export const NavBar = () => {
         setIsNavigating(false);
       }, 600);
     }
+  };
+
+  // ✅ Handle admin link click
+  const handleAdminClick = (e) => {
+    e.preventDefault();
+    setIsAccountOpen(false);
+    setIsMobileMenuOpen(false);
+    setIsNavigating(true);
+
+    setTimeout(() => {
+      navigate("/admin/products");
+      setIsNavigating(false);
+    }, 300);
   };
 
   return (
@@ -451,16 +463,12 @@ export const NavBar = () => {
 
                       {/* ✅ Admin Link - ONLY for fiyinolaleke@gmail.com */}
                       {isAdmin && (
-                        <Link
-                          to="/admin/products"
-                          onClick={() => {
-                            setIsAccountOpen(false);
-                            setIsMobileMenuOpen(false);
-                          }}
-                          className="block w-full text-left px-4 py-2 rounded-md border border-primary bg-primary/10 hover:bg-primary/20 transition-colors font-semibold text-primary"
+                        <button
+                          onClick={handleAdminClick}
+                          className="block w-full text-left px-4 py-2 rounded-md border border-primary bg-primary/10 hover:bg-primary/20 transition-colors font-semibold text-primary cursor-pointer"
                         >
                           🔧 Manage Products
-                        </Link>
+                        </button>
                       )}
 
                       {!isLoggedIn ? (
@@ -807,14 +815,13 @@ export const NavBar = () => {
             <div className="flex flex-col space-y-4 pt-4 border-t border-border">
               {/* ✅ Admin Link in Mobile Menu - ONLY for fiyinolaleke@gmail.com */}
               {isAdmin && (
-                <Link
-                  to="/admin/products"
-                  onClick={handleNavClick}
-                  className="flex items-center space-x-3 text-primary font-semibold hover:text-primary/80 transition-colors duration-300 py-2"
+                <button
+                  onClick={handleAdminClick}
+                  className="flex items-center space-x-3 text-primary font-semibold hover:text-primary/80 transition-colors duration-300 py-2 text-left cursor-pointer"
                 >
                   <span className="text-lg">🔧</span>
                   <span className="text-lg">Manage Products</span>
-                </Link>
+                </button>
               )}
 
               <button
@@ -935,16 +942,12 @@ export const NavBar = () => {
               <div className="space-y-3">
                 {/* ✅ Admin Link in Mobile Account Popup - ONLY for fiyinolaleke@gmail.com */}
                 {isAdmin && (
-                  <Link
-                    to="/admin/products"
-                    onClick={() => {
-                      setIsAccountOpen(false);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="block w-full text-left px-4 py-2 rounded-md border border-primary bg-primary/10 hover:bg-primary/20 transition-colors font-semibold text-primary mb-4"
+                  <button
+                    onClick={handleAdminClick}
+                    className="block w-full text-left px-4 py-2 rounded-md border border-primary bg-primary/10 hover:bg-primary/20 transition-colors font-semibold text-primary mb-4 cursor-pointer"
                   >
                     🔧 Manage Products
-                  </Link>
+                  </button>
                 )}
 
                 <Link

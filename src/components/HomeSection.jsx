@@ -7,6 +7,7 @@ import {
   ArrowBigRight,
   Plus,
   X,
+  ArrowRight, // ✅ ADDED for hover arrow
 } from "lucide-react";
 
 // Carousel images
@@ -139,6 +140,7 @@ export const HomeSection = () => {
       }));
     }
   }, [isSignedIn, userEmail]);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -149,7 +151,7 @@ export const HomeSection = () => {
   const [dragStart, setDragStart] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Hero slides with dynamic text
+  // ✅ FIXED: Hero slides with correct actions
   const heroSlides = [
     {
       image: myImage1,
@@ -157,7 +159,7 @@ export const HomeSection = () => {
       subtitle:
         "Built to save time, boost accuracy, and make working with content smoother than ever.",
       buttonText: "Connect with me",
-      action: "contact",
+      action: "contact", // Goes to contact section
     },
     {
       image: myImage2,
@@ -165,7 +167,7 @@ export const HomeSection = () => {
       subtitle:
         "Streamline your content creation and management like never before.",
       buttonText: "Get Started",
-      action: "products",
+      action: "signin", // ✅ FIXED: Goes to signin
     },
     {
       image: myImage3,
@@ -173,7 +175,7 @@ export const HomeSection = () => {
       subtitle:
         "Everything you need to create, organize, and optimize your digital content.",
       buttonText: "Explore Now",
-      action: "products",
+      action: "shop", // ✅ FIXED: Goes to shop
     },
   ];
 
@@ -181,7 +183,6 @@ export const HomeSection = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Check your existing localStorage 'user' from SigninSection
         const userStr = localStorage.getItem("user");
 
         if (userStr) {
@@ -193,7 +194,6 @@ export const HomeSection = () => {
             setUserEmail(userEmail);
             console.log("✅ User signed in:", userEmail);
 
-            // Check if user has made purchases
             if (typeof window !== "undefined" && window.storage) {
               try {
                 const purchaseResult = await window.storage.get(
@@ -202,7 +202,6 @@ export const HomeSection = () => {
                 );
                 if (purchaseResult && purchaseResult.value) {
                   const purchases = JSON.parse(purchaseResult.value);
-                  // Filter purchases for this user's email
                   const userPurchases = purchases.filter(
                     (p) => p.email === userEmail,
                   );
@@ -239,7 +238,6 @@ export const HomeSection = () => {
 
     checkAuth();
 
-    // Listen for user updates from SigninSection
     const handleUserUpdate = () => {
       checkAuth();
     };
@@ -251,14 +249,14 @@ export const HomeSection = () => {
     };
   }, []);
 
-  // Load reviews from storage
+  // ✅ FIXED: Load reviews with shared storage
   useEffect(() => {
     const initializeReviews = async () => {
       try {
         console.log("Attempting to load reviews from shared storage...");
 
         if (typeof window !== "undefined" && window.storage) {
-          const result = await window.storage.get("customer-reviews", true);
+          const result = await window.storage.get("customer-reviews", true); // ✅ shared
 
           if (result && result.value) {
             const loadedReviews = JSON.parse(result.value);
@@ -269,7 +267,7 @@ export const HomeSection = () => {
             await window.storage.set(
               "customer-reviews",
               JSON.stringify(defaultReviews),
-              true,
+              true, // ✅ CRITICAL: shared=true
             );
             setReviews(defaultReviews);
           }
@@ -298,7 +296,7 @@ export const HomeSection = () => {
     const interval = setInterval(async () => {
       try {
         if (typeof window !== "undefined" && window.storage) {
-          const result = await window.storage.get("customer-reviews", true);
+          const result = await window.storage.get("customer-reviews", true); // ✅ shared
           if (result && result.value) {
             const loadedReviews = JSON.parse(result.value);
             setReviews(loadedReviews);
@@ -318,6 +316,7 @@ export const HomeSection = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // ✅ FIXED: Submit review with shared storage
   const handleReviewSubmit = async () => {
     if (!isSignedIn) {
       setShowSignInPrompt(true);
@@ -344,7 +343,7 @@ export const HomeSection = () => {
         id: Date.now(),
         ...reviewFormData,
         date: new Date().toISOString().split("T")[0],
-        verified: true, // Mark as verified purchase
+        verified: true,
       };
 
       console.log("New review to add:", newReview);
@@ -353,7 +352,7 @@ export const HomeSection = () => {
 
       if (typeof window !== "undefined" && window.storage) {
         try {
-          const result = await window.storage.get("customer-reviews", true);
+          const result = await window.storage.get("customer-reviews", true); // ✅ shared
           if (result && result.value) {
             currentReviews = JSON.parse(result.value);
           }
@@ -366,7 +365,7 @@ export const HomeSection = () => {
         await window.storage.set(
           "customer-reviews",
           JSON.stringify(updatedReviews),
-          true, // shared = true means ALL users can see
+          true, // ✅ CRITICAL: shared=true
         );
 
         console.log("Review saved to shared storage successfully!");
@@ -398,7 +397,7 @@ export const HomeSection = () => {
       });
       setShowReviewModal(false);
       alert(
-        "Thank you for your review! Your verified purchase review has been posted.",
+        "Thank you for your review!",
       );
     } catch (error) {
       console.error("Error submitting review:", error);
@@ -406,8 +405,8 @@ export const HomeSection = () => {
     }
   };
 
+  // ✅ FIXED: Delete review with shared storage
   const handleDeleteReview = async (reviewId, reviewEmail) => {
-    // Only allow users to delete their own reviews
     if (reviewEmail !== userEmail) {
       alert("You can only delete your own reviews");
       return;
@@ -422,7 +421,7 @@ export const HomeSection = () => {
 
       if (typeof window !== "undefined" && window.storage) {
         try {
-          const result = await window.storage.get("customer-reviews", true);
+          const result = await window.storage.get("customer-reviews", true); // ✅ shared
           if (result && result.value) {
             currentReviews = JSON.parse(result.value);
           }
@@ -437,13 +436,12 @@ export const HomeSection = () => {
         await window.storage.set(
           "customer-reviews",
           JSON.stringify(updatedReviews),
-          true,
+          true, // ✅ CRITICAL: shared=true
         );
 
         console.log("Review deleted from shared storage successfully!");
         setReviews(updatedReviews);
 
-        // Reset to first review if current was deleted
         if (currentReview >= updatedReviews.length) {
           setCurrentReview(0);
         }
@@ -457,7 +455,6 @@ export const HomeSection = () => {
         );
         setReviews(updatedReviews);
 
-        // Reset to first review if current was deleted
         if (currentReview >= updatedReviews.length) {
           setCurrentReview(0);
         }
@@ -567,9 +564,10 @@ export const HomeSection = () => {
     }
   };
 
-  // Handle button click
+  // ✅ FIXED: Handle button clicks with correct navigation
   const handleButtonClick = (action) => {
     if (action === "contact") {
+      // Connect with me -> Scroll to contact section
       const contactSection = document.getElementById("contact-section");
       if (contactSection) {
         contactSection.scrollIntoView({
@@ -577,9 +575,12 @@ export const HomeSection = () => {
           block: "start",
         });
       }
-    } else if (action === "products") {
-      // Scroll to products section or navigate
-      window.location.href = "#products";
+    } else if (action === "signin") {
+      // Get Started -> Go to signin page
+      window.location.href = "/signin";
+    } else if (action === "shop") {
+      // Explore Now -> Go to shop page
+      window.location.href = "/shop";
     }
   };
 
@@ -670,11 +671,11 @@ export const HomeSection = () => {
                   {slide.subtitle}
                 </p>
 
-                {/* Button - FADE + BOUNCE effect */}
+                {/* ✅ FIXED: Button with arrow on hover */}
                 <button
                   onClick={() => handleButtonClick(slide.action)}
                   className={cn(
-                    "liquid-button relative inline-block px-4 py-2 sm:px-5 sm:py-2 md:px-4 md:py-3 text-sm sm:text-base md:text-lg rounded-lg font-semibold shadow-xl cursor-pointer overflow-hidden transition-all duration-1000 ease-out pointer-events-auto",
+                    "liquid-button relative inline-block px-4 py-2 sm:px-5 sm:py-2 md:px-4 md:py-3 text-sm sm:text-base md:text-lg rounded-lg font-semibold shadow-xl cursor-pointer overflow-hidden transition-all duration-1000 ease-out pointer-events-auto group",
                     index === currentSlide
                       ? "opacity-100 translate-y-0"
                       : "opacity-0 -translate-y-10",
@@ -683,8 +684,12 @@ export const HomeSection = () => {
                     transitionDelay: index === currentSlide ? "0.8s" : "0s",
                   }}
                 >
-                  <span className="relative z-10 text-white">
+                  <span className="relative z-10 text-white flex items-center gap-2">
                     {slide.buttonText}
+                    <ArrowRight
+                      size={20}
+                      className="transform transition-all duration-300 group-hover:translate-x-1"
+                    />
                   </span>
                 </button>
               </div>
@@ -795,7 +800,7 @@ export const HomeSection = () => {
         </div>
       </div>
 
-      {/* ✅ UPDATED: Best Selling Carousel - Now with manual drag + auto-scroll */}
+      {/* Best Selling Carousel */}
       <div className="mt-12 p-4 overflow-hidden" id="products">
         <div className="max-w-6xl mx-auto text-center">
           <h4 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">
@@ -1077,7 +1082,7 @@ export const HomeSection = () => {
                         customerName: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-900 outline-none focus:outline-none"
                     placeholder="Your full name"
                   />
                 </div>
@@ -1090,7 +1095,7 @@ export const HomeSection = () => {
                     type="email"
                     value={reviewFormData.email}
                     readOnly
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed outline-none focus:outline-none"
                     placeholder="your.email@example.com"
                   />
                   <p className="text-xs text-gray-500 mt-1">
@@ -1111,7 +1116,7 @@ export const HomeSection = () => {
                         productName: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-900 outline-none focus:outline-none"
                     placeholder="Product you purchased"
                   />
                 </div>
@@ -1155,7 +1160,7 @@ export const HomeSection = () => {
                       })
                     }
                     rows="4"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none bg-white text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none bg-white text-gray-900 outline-none focus:outline-none"
                     placeholder="Tell us about your experience..."
                   />
                 </div>
@@ -1205,8 +1210,7 @@ export const HomeSection = () => {
             <button
               onClick={() => {
                 setShowPurchaseWarning(false);
-                // Scroll to products
-                window.location.href = "#products";
+                window.location.href = "/shop";
               }}
               className="liquid-button-modal w-full px-6 py-3 rounded-lg font-semibold shadow-md relative overflow-hidden"
             >
