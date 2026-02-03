@@ -32,6 +32,37 @@ import Slider1 from "../Images/image 20.jpg";
 import Slider2 from "../Images/image 21.jpg";
 import Slider3 from "../Images/image 23.jpg";
 
+// ✅ GREEN LOADING SPINNER COMPONENT
+const LoadingSpinner = () => {
+  return (
+    <div className="fixed inset-0 bg-white/80 dark:bg-gray-900/80 z-[9999] flex items-center justify-center backdrop-blur-sm">
+      <div className="relative w-20 h-20">
+        {[...Array(12)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-6 bg-green-600 rounded-full"
+            style={{
+              left: "50%",
+              top: "50%",
+              transformOrigin: "1px -24px",
+              transform: `rotate(${i * 30}deg)`,
+              opacity: 1 - i * 0.08,
+              animation: `spin-fade 1.2s linear infinite`,
+              animationDelay: `${-1.2 + i * 0.1}s`,
+            }}
+          />
+        ))}
+      </div>
+      <style>{`
+        @keyframes spin-fade {
+          0% { opacity: 1; }
+          100% { opacity: 0.1; }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 export const ProductSection = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -42,6 +73,10 @@ export const ProductSection = () => {
   const [isTabsFixed, setIsTabsFixed] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState(0);
+
+  // ✅ LOADING STATE
+  const [isLoading, setIsLoading] = useState(true);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
@@ -88,6 +123,40 @@ export const ProductSection = () => {
       tabName: "newarrivals",
     },
   ];
+
+  // ✅ Preload hero images
+  useEffect(() => {
+    const preloadImages = async () => {
+      const imagePromises = heroSlides.map((slide) => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.src = slide.image;
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+      });
+
+      try {
+        await Promise.all(imagePromises);
+        setImagesLoaded(true);
+      } catch (error) {
+        console.error("Error preloading images:", error);
+        setImagesLoaded(true);
+      }
+    };
+
+    preloadImages();
+  }, []);
+
+  // ✅ Hide loading spinner after images load
+  useEffect(() => {
+    if (imagesLoaded) {
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [imagesLoaded]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -365,6 +434,9 @@ export const ProductSection = () => {
 
   return (
     <section className="relative w-full overflow-hidden">
+      {/* ✅ LOADING SPINNER */}
+      {isLoading && <LoadingSpinner />}
+
       {/* ================= HERO SLIDER ================= */}
       <div className="hero-section relative w-full overflow-hidden py-3">
         <div

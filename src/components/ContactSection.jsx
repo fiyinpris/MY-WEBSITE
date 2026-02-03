@@ -1,5 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
+
+// ✅ GREEN LOADING SPINNER COMPONENT
+const LoadingSpinner = () => {
+  return (
+    <div className="fixed inset-0 bg-white/80 dark:bg-gray-900/80 z-[9999] flex items-center justify-center backdrop-blur-sm">
+      <div className="relative w-20 h-20">
+        {[...Array(12)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-6 bg-green-600 rounded-full"
+            style={{
+              left: "50%",
+              top: "50%",
+              transformOrigin: "1px -24px",
+              transform: `rotate(${i * 30}deg)`,
+              opacity: 1 - i * 0.08,
+              animation: `spin-fade 1.2s linear infinite`,
+              animationDelay: `${-1.2 + i * 0.1}s`,
+            }}
+          />
+        ))}
+      </div>
+      <style>{`
+        @keyframes spin-fade {
+          0% { opacity: 1; }
+          100% { opacity: 0.1; }
+        }
+      `}</style>
+    </div>
+  );
+};
 
 export const ContactSection = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +42,18 @@ export const ContactSection = () => {
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // ✅ LOADING STATE FOR PAGE
+  const [isLoading, setIsLoading] = useState(true);
+
+  // ✅ Hide loading spinner after component mounts
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -40,6 +83,9 @@ export const ContactSection = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 py-28 lg:py-20 lg:px-4">
+      {/* ✅ LOADING SPINNER */}
+      {isLoading && <LoadingSpinner />}
+
       <div className="w-full max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
           {/* Left Side - Contact Info */}
@@ -133,8 +179,6 @@ export const ContactSection = () => {
               </svg>
             </div>
           </div>
-
-
 
           {/* Right Side - Contact Form */}
           <div className="w-full max-w-3xl bg-card rounded-2xl shadow-2xl p-6 sm:p-8 lg:p-10 border border-border relative overflow-hidden mx-auto">

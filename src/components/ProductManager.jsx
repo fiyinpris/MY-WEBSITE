@@ -8,6 +8,7 @@ import {
   Search,
   Filter,
   Lock,
+  Loader2,
 } from "lucide-react";
 import { productsAPI, adminAPI } from "../services/firebase";
 
@@ -27,6 +28,12 @@ export const ProductManager = () => {
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(true);
   const [deviceId, setDeviceId] = useState("");
   const [sessionToken, setSessionToken] = useState("");
+
+  // ✅ NEW: Loading states
+  const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const [isUpdatingProduct, setIsUpdatingProduct] = useState(false);
+  const [isDeletingProduct, setIsDeletingProduct] = useState(null); // Store product ID being deleted
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -106,10 +113,14 @@ export const ProductManager = () => {
 
   const loadProducts = async () => {
     try {
+      setIsLoadingProducts(true);
       const loadedProducts = await productsAPI.getAll();
       setProducts(loadedProducts);
     } catch (error) {
       console.error("Error loading products:", error);
+      alert("Error loading products. Please refresh the page.");
+    } finally {
+      setIsLoadingProducts(false);
     }
   };
 
@@ -176,7 +187,7 @@ export const ProductManager = () => {
     }
   };
 
-  // ✅ Add product to Firebase
+  // ✅ Add product to Firebase WITH LOADING STATE
   const handleAddProduct = async () => {
     if (!formData.name || !formData.price || !formData.image) {
       alert("Please fill in all required fields and upload an image");
@@ -184,10 +195,14 @@ export const ProductManager = () => {
     }
 
     try {
+      setIsAddingProduct(true);
+
+      const cleanPrice = Math.round(Number(formData.price));
+
       const newProduct = {
         name: formData.name,
         category: formData.category,
-        price: parseInt(formData.price),
+        price: cleanPrice,
         image: formData.image,
         thumbnail1: formData.thumbnail1 || "",
         thumbnail2: formData.thumbnail2 || "",
@@ -198,17 +213,19 @@ export const ProductManager = () => {
       };
 
       await productsAPI.create(newProduct);
-      await loadProducts(); // Reload from Firebase
+      await loadProducts();
       setShowAddModal(false);
       resetForm();
       alert("Product added successfully!");
     } catch (error) {
       console.error("Error adding product:", error);
       alert(`Error adding product: ${error.message}`);
+    } finally {
+      setIsAddingProduct(false);
     }
   };
 
-  // ✅ Update product in Firebase - FIXED VERSION
+  // ✅ Update product in Firebase WITH LOADING STATE
   const handleEditProduct = async () => {
     if (!formData.name || !formData.price) {
       alert("Please fill in all required fields");
@@ -216,14 +233,15 @@ export const ProductManager = () => {
     }
 
     try {
-      // Create updated product object, preserving existing values if not changed
+      setIsUpdatingProduct(true);
+
+      const cleanPrice = Math.round(Number(formData.price));
+
       const updatedProduct = {
         name: formData.name,
         category: formData.category,
-        price: parseInt(formData.price),
-        // Keep existing image if no new one uploaded
+        price: cleanPrice,
         image: formData.image || editingProduct.image,
-        // Preserve existing thumbnails if not changed
         thumbnail1: formData.thumbnail1 || editingProduct.thumbnail1 || "",
         thumbnail2: formData.thumbnail2 || editingProduct.thumbnail2 || "",
         videoThumbnail:
@@ -233,15 +251,7 @@ export const ProductManager = () => {
         rating: formData.rating || 5,
       };
 
-      console.log("Updating product ID:", editingProduct.id);
-      console.log("Update data:", updatedProduct);
-
-      const result = await productsAPI.update(
-        editingProduct.id,
-        updatedProduct,
-      );
-      console.log("Update result:", result);
-
+      await productsAPI.update(editingProduct.id, updatedProduct);
       await loadProducts();
       setShowEditModal(false);
       setEditingProduct(null);
@@ -250,20 +260,25 @@ export const ProductManager = () => {
     } catch (error) {
       console.error("Error updating product:", error);
       alert(`Error updating product: ${error.message || "Unknown error"}`);
+    } finally {
+      setIsUpdatingProduct(false);
     }
   };
 
-  // ✅ Delete product from Firebase
+  // ✅ Delete product from Firebase WITH LOADING STATE
   const handleDeleteProduct = async (productId) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
 
     try {
+      setIsDeletingProduct(productId);
       await productsAPI.delete(productId);
       await loadProducts();
       alert("Product deleted successfully!");
     } catch (error) {
       console.error("Error deleting product:", error);
       alert(`Error deleting product: ${error.message}`);
+    } finally {
+      setIsDeletingProduct(null);
     }
   };
 
@@ -503,7 +518,6 @@ export const ProductManager = () => {
             </div>
           </div>
 
-          {/* ✅ EMAIL INPUT */}
           <input
             type="email"
             value={adminEmail}
@@ -513,7 +527,6 @@ export const ProductManager = () => {
             autoFocus
           />
 
-          {/* PASSWORD INPUT */}
           <input
             type="password"
             value={adminPassword}
@@ -612,82 +625,105 @@ export const ProductManager = () => {
           </div>
         </div>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-          {filteredProducts.map((product) => (
-            <div
-              key={product.id}
-              className="bg-card rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300"
-            >
-              <div className="relative h-40 sm:h-48 md:h-56 bg-muted">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-                {product.badge && (
-                  <span className="absolute top-2 sm:top-3 left-2 sm:left-3 bg-red-500 text-white px-2 py-1 rounded-md text-xs font-semibold">
-                    {product.badge}
-                  </span>
+        {/* ✅ Loading State */}
+        {isLoadingProducts ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-12 h-12 animate-spin text-primary" />
+          </div>
+        ) : (
+          <>
+            {/* Products Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+              {filteredProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="bg-card rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300"
+                >
+                  <div className="relative h-40 sm:h-48 md:h-56 bg-muted">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                    {product.badge && (
+                      <span className="absolute top-2 sm:top-3 left-2 sm:left-3 bg-red-500 text-white px-2 py-1 rounded-md text-xs font-semibold">
+                        {product.badge}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="p-3 sm:p-5">
+                    <div className="mb-2">
+                      <span className="inline-block text-xs bg-primary/10 text-primary px-2 py-1 rounded-md">
+                        {product.category}
+                      </span>
+                    </div>
+                    <h3 className="text-sm sm:text-lg font-bold text-foreground mb-2 line-clamp-2">
+                      {product.name}
+                    </h3>
+                    <p className="text-base sm:text-xl font-bold text-primary mb-3 sm:mb-4">
+                      ₦{product.price.toLocaleString()}
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <button
+                        onClick={() => openEditModal(product)}
+                        disabled={isDeletingProduct === product.id}
+                        className="flex-1 border-2 border-blue-300 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 font-semibold py-2 sm:py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Edit size={14} className="sm:w-4 sm:h-4" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProduct(product.id)}
+                        disabled={isDeletingProduct === product.id}
+                        className="flex-1 border-2 border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 font-semibold py-2 sm:py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isDeletingProduct === product.id ? (
+                          <>
+                            <Loader2
+                              size={14}
+                              className="animate-spin sm:w-4 sm:h-4"
+                            />
+                            Deleting...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 size={14} className="sm:w-4 sm:h-4" />
+                            Delete
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Empty State */}
+            {filteredProducts.length === 0 && (
+              <div className="bg-card rounded-2xl shadow-lg p-12 text-center">
+                <div className="text-6xl mb-4">📦</div>
+                <h3 className="text-2xl font-bold text-foreground mb-2">
+                  No Products Found
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  {searchQuery || filterCategory !== "ALL"
+                    ? "Try adjusting your search or filters"
+                    : "Get started by adding your first product"}
+                </p>
+                {!searchQuery && filterCategory === "ALL" && (
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    className="bg-primary hover:bg-primary/90 text-white font-semibold px-6 py-3 rounded-lg transition-colors inline-flex items-center gap-2"
+                  >
+                    <Plus size={20} />
+                    Add First Product
+                  </button>
                 )}
               </div>
-
-              <div className="p-3 sm:p-5">
-                <div className="mb-2">
-                  <span className="inline-block text-xs bg-primary/10 text-primary px-2 py-1 rounded-md">
-                    {product.category}
-                  </span>
-                </div>
-                <h3 className="text-sm sm:text-lg font-bold text-foreground mb-2 line-clamp-2">
-                  {product.name}
-                </h3>
-                <p className="text-base sm:text-xl font-bold text-primary mb-3 sm:mb-4">
-                  ₦{product.price.toLocaleString()}
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <button
-                    onClick={() => openEditModal(product)}
-                    className="flex-1 border-2 border-blue-300 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 font-semibold py-2 sm:py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm"
-                  >
-                    <Edit size={14} className="sm:w-4 sm:h-4" />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteProduct(product.id)}
-                    className="flex-1 border-2 border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 font-semibold py-2 sm:py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm"
-                  >
-                    <Trash2 size={14} className="sm:w-4 sm:h-4" />
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Empty State */}
-        {filteredProducts.length === 0 && (
-          <div className="bg-card rounded-2xl shadow-lg p-12 text-center">
-            <div className="text-6xl mb-4">📦</div>
-            <h3 className="text-2xl font-bold text-foreground mb-2">
-              No Products Found
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              {searchQuery || filterCategory !== "ALL"
-                ? "Try adjusting your search or filters"
-                : "Get started by adding your first product"}
-            </p>
-            {!searchQuery && filterCategory === "ALL" && (
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="bg-primary hover:bg-primary/90 text-white font-semibold px-6 py-3 rounded-lg transition-colors inline-flex items-center gap-2"
-              >
-                <Plus size={20} />
-                Add First Product
-              </button>
             )}
-          </div>
+          </>
         )}
 
         {/* Add Product Modal */}
@@ -704,7 +740,8 @@ export const ProductManager = () => {
                       setShowAddModal(false);
                       resetForm();
                     }}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    disabled={isAddingProduct}
+                    className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
                   >
                     <X size={24} />
                   </button>
@@ -720,7 +757,8 @@ export const ProductManager = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, category: e.target.value })
                       }
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      disabled={isAddingProduct}
+                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                     >
                       {PRODUCT_CATEGORIES.map((cat) => (
                         <option key={cat} value={cat}>
@@ -740,8 +778,9 @@ export const ProductManager = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
+                      disabled={isAddingProduct}
                       placeholder="Enter product name"
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                     />
                   </div>
 
@@ -755,8 +794,9 @@ export const ProductManager = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, price: e.target.value })
                       }
+                      disabled={isAddingProduct}
                       placeholder="25000"
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                     />
                   </div>
 
@@ -780,7 +820,8 @@ export const ProductManager = () => {
                                 imageFile: null,
                               })
                             }
-                            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+                            disabled={isAddingProduct}
+                            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors disabled:opacity-50"
                           >
                             <X size={16} />
                           </button>
@@ -801,6 +842,7 @@ export const ProductManager = () => {
                             type="file"
                             accept="image/*"
                             onChange={handleImageUpload}
+                            disabled={isAddingProduct}
                             className="hidden"
                           />
                         </label>
@@ -822,17 +864,27 @@ export const ProductManager = () => {
                           description: e.target.value,
                         })
                       }
+                      disabled={isAddingProduct}
                       placeholder="Product description..."
                       rows="3"
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none disabled:opacity-50"
                     />
                   </div>
 
+                  {/* ✅ LOADING BUTTON */}
                   <button
                     onClick={handleAddProduct}
-                    className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-lg transition-colors"
+                    disabled={isAddingProduct}
+                    className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    Add Product
+                    {isAddingProduct ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Adding Product...
+                      </>
+                    ) : (
+                      "Add Product"
+                    )}
                   </button>
                 </div>
               </div>
@@ -855,7 +907,8 @@ export const ProductManager = () => {
                       setEditingProduct(null);
                       resetForm();
                     }}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    disabled={isUpdatingProduct}
+                    className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
                   >
                     <X size={24} />
                   </button>
@@ -871,7 +924,8 @@ export const ProductManager = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, category: e.target.value })
                       }
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      disabled={isUpdatingProduct}
+                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                     >
                       {PRODUCT_CATEGORIES.map((cat) => (
                         <option key={cat} value={cat}>
@@ -891,8 +945,9 @@ export const ProductManager = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
+                      disabled={isUpdatingProduct}
                       placeholder="Enter product name"
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                     />
                   </div>
 
@@ -906,7 +961,8 @@ export const ProductManager = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, price: e.target.value })
                       }
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      disabled={isUpdatingProduct}
+                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                     />
                   </div>
 
@@ -930,7 +986,8 @@ export const ProductManager = () => {
                                 imageFile: null,
                               })
                             }
-                            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+                            disabled={isUpdatingProduct}
+                            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors disabled:opacity-50"
                           >
                             <X size={16} />
                           </button>
@@ -948,6 +1005,7 @@ export const ProductManager = () => {
                             type="file"
                             accept="image/*"
                             onChange={handleImageUpload}
+                            disabled={isUpdatingProduct}
                             className="hidden"
                           />
                         </label>
@@ -969,16 +1027,26 @@ export const ProductManager = () => {
                           description: e.target.value,
                         })
                       }
+                      disabled={isUpdatingProduct}
                       rows="3"
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none disabled:opacity-50"
                     />
                   </div>
 
+                  {/* ✅ LOADING BUTTON */}
                   <button
                     onClick={handleEditProduct}
-                    className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-lg transition-colors"
+                    disabled={isUpdatingProduct}
+                    className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    Update Product
+                    {isUpdatingProduct ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Updating Product...
+                      </>
+                    ) : (
+                      "Update Product"
+                    )}
                   </button>
                 </div>
               </div>

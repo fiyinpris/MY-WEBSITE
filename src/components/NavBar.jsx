@@ -512,7 +512,7 @@ export const NavBar = () => {
 
         {/* MEDIUM SCREEN LAYOUT (md to lg) */}
         <div className="hidden md:flex lg:hidden w-full items-center justify-between px-4 sm:px-6 md:px-8 max-w-7xl mx-auto">
-          <Link to="/" className="text-xl font-bold text-primary">
+          <Link to="/" className="text-2xl font-bold text-primary">
             <span className="text-glow text-foreground">my.</span>LIGHTSTORE
           </Link>
 

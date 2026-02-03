@@ -7,8 +7,10 @@ import {
   ArrowBigRight,
   Plus,
   X,
-  ArrowRight, // ✅ ADDED for hover arrow
+  ArrowRight,
+  Trash2,
 } from "lucide-react";
+import { reviewsAPI, productsAPI } from "../services/firebase";
 
 // Carousel images
 import myImage1 from "../Images/image 7.jpg";
@@ -27,11 +29,44 @@ function cn(...inputs) {
   return inputs.filter(Boolean).join(" ");
 }
 
-const products = [
+// ✅ GREEN LOADING SPINNER COMPONENT
+const LoadingSpinner = () => {
+  return (
+    <div className="fixed inset-0 bg-white/80 dark:bg-gray-900/80 z-[9999] flex items-center justify-center backdrop-blur-sm">
+      <div className="relative w-20 h-20">
+        {[...Array(12)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-6 bg-green-600 rounded-full"
+            style={{
+              left: "50%",
+              top: "50%",
+              transformOrigin: "1px -24px",
+              transform: `rotate(${i * 30}deg)`,
+              opacity: 1 - i * 0.08,
+              animation: `spin-fade 1.2s linear infinite`,
+              animationDelay: `${-1.2 + i * 0.1}s`,
+            }}
+          />
+        ))}
+      </div>
+      <style>{`
+        @keyframes spin-fade {
+          0% { opacity: 1; }
+          100% { opacity: 0.1; }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+// Default products (fallback if Firebase is empty)
+const defaultProducts = [
   {
     id: 1,
     name: "Ringlight",
-    price: "₦25,000",
+    category: "Ringlight",
+    price: 25000,
     rating: 4.5,
     image: Ringlight,
     badge: "Bestseller",
@@ -39,7 +74,8 @@ const products = [
   {
     id: 2,
     name: "LED Light",
-    price: "₦30,000",
+    category: "LED Light",
+    price: 30000,
     rating: 4.6,
     image: ledLight,
     badge: "Hot",
@@ -47,7 +83,8 @@ const products = [
   {
     id: 3,
     name: "Tripod Stand",
-    price: "₦20,000",
+    category: "Tripod Stand",
+    price: 20000,
     rating: 4.8,
     image: tripodStand,
     badge: "Bestseller",
@@ -55,7 +92,8 @@ const products = [
   {
     id: 4,
     name: "Softbox",
-    price: "₦40,000",
+    category: "Softbox",
+    price: 40000,
     rating: 4.9,
     image: softbox,
     badge: "Hot",
@@ -63,7 +101,8 @@ const products = [
   {
     id: 5,
     name: "Microphone",
-    price: "₦18,000",
+    category: "Microphone",
+    price: 18000,
     rating: 4.7,
     image: Microphone,
     badge: "New",
@@ -71,44 +110,11 @@ const products = [
   {
     id: 6,
     name: "Ringlight",
-    price: "₦35,000",
+    category: "Ringlight",
+    price: 35000,
     rating: 4.5,
     image: ringlight,
     badge: "Bestseller",
-  },
-];
-
-// Default reviews if none exist in storage
-const defaultReviews = [
-  {
-    id: 1,
-    customerName: "Olawale A.",
-    email: "olawale@example.com",
-    productName: "Ringlight",
-    rating: 5,
-    comment:
-      "These content tools have completely transformed how I manage and organize my work. They're easy to use, save me so much time, and keep everything neat and accessible. Highly recommended!",
-    date: "2025-01-10",
-  },
-  {
-    id: 2,
-    customerName: "Fiyinfoluwa P.",
-    email: "fiyinfoluwa@example.com",
-    productName: "LED Light",
-    rating: 5,
-    comment:
-      "Honestly, I didn't expect it to be this good! The tools are smooth, fast, and super helpful for keeping my content workflow organized. I love the user-friendly interface.",
-    date: "2025-01-08",
-  },
-  {
-    id: 3,
-    customerName: "Michael O.",
-    email: "michael@example.com",
-    productName: "Tripod Stand",
-    rating: 5,
-    comment:
-      "The best experience I've had with a content tool so far. I can easily manage multiple files and projects without stress. Great work from the developers!",
-    date: "2025-01-05",
   },
 ];
 
@@ -116,13 +122,19 @@ export const HomeSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentReview, setCurrentReview] = useState(0);
   const [imagesLoaded, setImagesLoaded] = useState(false);
-  const [reviews, setReviews] = useState(defaultReviews);
+  const [reviews, setReviews] = useState([]);
+  const [products, setProducts] = useState(defaultProducts);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
   const [showPurchaseWarning, setShowPurchaseWarning] = useState(false);
+
+  // ✅ FIXED: Only show loading on initial page load
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [reviewFormData, setReviewFormData] = useState({
     customerName: "",
     email: "",
@@ -130,16 +142,6 @@ export const HomeSection = () => {
     rating: 5,
     comment: "",
   });
-
-  // Update review form email when user signs in
-  useEffect(() => {
-    if (isSignedIn && userEmail) {
-      setReviewFormData((prev) => ({
-        ...prev,
-        email: userEmail,
-      }));
-    }
-  }, [isSignedIn, userEmail]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -151,7 +153,7 @@ export const HomeSection = () => {
   const [dragStart, setDragStart] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  // ✅ FIXED: Hero slides with correct actions
+  // ✅ Hero slides
   const heroSlides = [
     {
       image: myImage1,
@@ -159,7 +161,7 @@ export const HomeSection = () => {
       subtitle:
         "Built to save time, boost accuracy, and make working with content smoother than ever.",
       buttonText: "Connect with me",
-      action: "contact", // Goes to contact section
+      action: "contact",
     },
     {
       image: myImage2,
@@ -167,7 +169,7 @@ export const HomeSection = () => {
       subtitle:
         "Streamline your content creation and management like never before.",
       buttonText: "Get Started",
-      action: "signin", // ✅ FIXED: Goes to signin
+      action: "signin",
     },
     {
       image: myImage3,
@@ -175,9 +177,36 @@ export const HomeSection = () => {
       subtitle:
         "Everything you need to create, organize, and optimize your digital content.",
       buttonText: "Explore Now",
-      action: "shop", // ✅ FIXED: Goes to shop
+      action: "shop",
     },
   ];
+
+  // ✅ Load products from Firebase
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const firebaseProducts = await productsAPI.getAll();
+        if (firebaseProducts && firebaseProducts.length > 0) {
+          setProducts(firebaseProducts);
+        }
+      } catch (error) {
+        console.error("Error loading products:", error);
+        // Use default products as fallback
+      }
+    };
+
+    loadProducts();
+  }, []);
+
+  // Update review form email when user signs in
+  useEffect(() => {
+    if (isSignedIn && userEmail) {
+      setReviewFormData((prev) => ({
+        ...prev,
+        email: userEmail,
+      }));
+    }
+  }, [isSignedIn, userEmail]);
 
   // Check if user is signed in and has purchased
   useEffect(() => {
@@ -192,42 +221,15 @@ export const HomeSection = () => {
           if (userEmail) {
             setIsSignedIn(true);
             setUserEmail(userEmail);
-            console.log("✅ User signed in:", userEmail);
 
-            if (typeof window !== "undefined" && window.storage) {
-              try {
-                const purchaseResult = await window.storage.get(
-                  "user-purchases",
-                  false,
-                );
-                if (purchaseResult && purchaseResult.value) {
-                  const purchases = JSON.parse(purchaseResult.value);
-                  const userPurchases = purchases.filter(
-                    (p) => p.email === userEmail,
-                  );
-                  setHasPurchased(userPurchases.length > 0);
-                  console.log("✅ User has purchases:", userPurchases.length);
-                }
-              } catch (e) {
-                console.log("Checking localStorage for purchases...");
-                const purchases = localStorage.getItem("user-purchases");
-                if (purchases) {
-                  const parsedPurchases = JSON.parse(purchases);
-                  const userPurchases = parsedPurchases.filter(
-                    (p) => p.email === userEmail,
-                  );
-                  setHasPurchased(userPurchases.length > 0);
-                }
-              }
-            } else {
-              const purchases = localStorage.getItem("user-purchases");
-              if (purchases) {
-                const parsedPurchases = JSON.parse(purchases);
-                const userPurchases = parsedPurchases.filter(
-                  (p) => p.email === userEmail,
-                );
-                setHasPurchased(userPurchases.length > 0);
-              }
+            // Check purchases
+            const purchases = localStorage.getItem("user-purchases");
+            if (purchases) {
+              const parsedPurchases = JSON.parse(purchases);
+              const userPurchases = parsedPurchases.filter(
+                (p) => p.email === userEmail,
+              );
+              setHasPurchased(userPurchases.length > 0);
             }
           }
         }
@@ -249,74 +251,41 @@ export const HomeSection = () => {
     };
   }, []);
 
-  // ✅ FIXED: Load reviews with shared storage
+  // ✅ FIXED: Load reviews from Firebase - only shows loading on FIRST load
   useEffect(() => {
-    const initializeReviews = async () => {
+    let isFirstLoad = true;
+
+    const loadReviews = async () => {
       try {
-        console.log("Attempting to load reviews from shared storage...");
-
-        if (typeof window !== "undefined" && window.storage) {
-          const result = await window.storage.get("customer-reviews", true); // ✅ shared
-
-          if (result && result.value) {
-            const loadedReviews = JSON.parse(result.value);
-            console.log("Loaded reviews from shared storage:", loadedReviews);
-            setReviews(loadedReviews);
-          } else {
-            console.log("No reviews in storage, initializing with defaults");
-            await window.storage.set(
-              "customer-reviews",
-              JSON.stringify(defaultReviews),
-              true, // ✅ CRITICAL: shared=true
-            );
-            setReviews(defaultReviews);
-          }
+        const firebaseReviews = await reviewsAPI.getAll();
+        if (firebaseReviews && firebaseReviews.length > 0) {
+          setReviews(firebaseReviews);
         } else {
-          const storedReviews = localStorage.getItem("customer-reviews");
-          if (storedReviews) {
-            const loadedReviews = JSON.parse(storedReviews);
-            console.log("Loaded reviews from localStorage:", loadedReviews);
-            setReviews(loadedReviews);
-          } else {
-            localStorage.setItem(
-              "customer-reviews",
-              JSON.stringify(defaultReviews),
-            );
-            setReviews(defaultReviews);
-          }
+          setReviews([]);
         }
       } catch (error) {
-        console.error("Error in initializeReviews:", error);
-        setReviews(defaultReviews);
+        console.error("Error loading reviews:", error);
+        setReviews([]);
+      } finally {
+        if (isFirstLoad) {
+          setInitialLoading(false); // ✅ Hide spinner after first load
+          isFirstLoad = false;
+        }
       }
     };
 
-    initializeReviews();
+    loadReviews();
 
-    const interval = setInterval(async () => {
-      try {
-        if (typeof window !== "undefined" && window.storage) {
-          const result = await window.storage.get("customer-reviews", true); // ✅ shared
-          if (result && result.value) {
-            const loadedReviews = JSON.parse(result.value);
-            setReviews(loadedReviews);
-          }
-        } else {
-          const storedReviews = localStorage.getItem("customer-reviews");
-          if (storedReviews) {
-            const loadedReviews = JSON.parse(storedReviews);
-            setReviews(loadedReviews);
-          }
-        }
-      } catch (error) {
-        console.error("Error refreshing reviews:", error);
-      }
-    }, 3000);
+    // Silently refresh reviews every 10 seconds (no loading spinner)
+    const interval = setInterval(() => {
+      isFirstLoad = false;
+      loadReviews();
+    }, 10000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ FIXED: Submit review with shared storage
+  // ✅ FIXED: Submit review to Firebase - uses button state, not full-screen loading
   const handleReviewSubmit = async () => {
     if (!isSignedIn) {
       setShowSignInPrompt(true);
@@ -338,55 +307,23 @@ export const HomeSection = () => {
       return;
     }
 
+    setIsSubmitting(true); // ✅ Only for button feedback
     try {
       const newReview = {
-        id: Date.now(),
-        ...reviewFormData,
+        customerName: reviewFormData.customerName,
+        email: reviewFormData.email,
+        productName: reviewFormData.productName,
+        rating: reviewFormData.rating,
+        comment: reviewFormData.comment,
         date: new Date().toISOString().split("T")[0],
         verified: true,
       };
 
-      console.log("New review to add:", newReview);
+      await reviewsAPI.create(newReview);
 
-      let currentReviews = reviews;
-
-      if (typeof window !== "undefined" && window.storage) {
-        try {
-          const result = await window.storage.get("customer-reviews", true); // ✅ shared
-          if (result && result.value) {
-            currentReviews = JSON.parse(result.value);
-          }
-        } catch (e) {
-          console.log("Could not fetch current reviews:", e);
-        }
-
-        const updatedReviews = [newReview, ...currentReviews];
-
-        await window.storage.set(
-          "customer-reviews",
-          JSON.stringify(updatedReviews),
-          true, // ✅ CRITICAL: shared=true
-        );
-
-        console.log("Review saved to shared storage successfully!");
-        setReviews(updatedReviews);
-      } else {
-        try {
-          const storedReviews = localStorage.getItem("customer-reviews");
-          if (storedReviews) {
-            currentReviews = JSON.parse(storedReviews);
-          }
-        } catch (e) {
-          console.log("Could not fetch current reviews:", e);
-        }
-
-        const updatedReviews = [newReview, ...currentReviews];
-        localStorage.setItem(
-          "customer-reviews",
-          JSON.stringify(updatedReviews),
-        );
-        setReviews(updatedReviews);
-      }
+      // Reload reviews silently
+      const updatedReviews = await reviewsAPI.getAll();
+      setReviews(updatedReviews);
 
       setReviewFormData({
         customerName: "",
@@ -396,16 +333,16 @@ export const HomeSection = () => {
         comment: "",
       });
       setShowReviewModal(false);
-      alert(
-        "Thank you for your review!",
-      );
+      alert("Thank you for your review!");
     } catch (error) {
       console.error("Error submitting review:", error);
       alert(`Error saving review: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // ✅ FIXED: Delete review with shared storage
+  // ✅ FIXED: Delete review from Firebase - no full-screen loading
   const handleDeleteReview = async (reviewId, reviewEmail) => {
     if (reviewEmail !== userEmail) {
       alert("You can only delete your own reviews");
@@ -417,47 +354,14 @@ export const HomeSection = () => {
     }
 
     try {
-      let currentReviews = reviews;
+      await reviewsAPI.delete(reviewId);
 
-      if (typeof window !== "undefined" && window.storage) {
-        try {
-          const result = await window.storage.get("customer-reviews", true); // ✅ shared
-          if (result && result.value) {
-            currentReviews = JSON.parse(result.value);
-          }
-        } catch (e) {
-          console.log("Could not fetch current reviews:", e);
-        }
+      // Reload reviews silently
+      const updatedReviews = await reviewsAPI.getAll();
+      setReviews(updatedReviews);
 
-        const updatedReviews = currentReviews.filter(
-          (review) => review.id !== reviewId,
-        );
-
-        await window.storage.set(
-          "customer-reviews",
-          JSON.stringify(updatedReviews),
-          true, // ✅ CRITICAL: shared=true
-        );
-
-        console.log("Review deleted from shared storage successfully!");
-        setReviews(updatedReviews);
-
-        if (currentReview >= updatedReviews.length) {
-          setCurrentReview(0);
-        }
-      } else {
-        const updatedReviews = currentReviews.filter(
-          (review) => review.id !== reviewId,
-        );
-        localStorage.setItem(
-          "customer-reviews",
-          JSON.stringify(updatedReviews),
-        );
-        setReviews(updatedReviews);
-
-        if (currentReview >= updatedReviews.length) {
-          setCurrentReview(0);
-        }
+      if (currentReview >= updatedReviews.length) {
+        setCurrentReview(0);
       }
 
       alert("Review deleted successfully!");
@@ -485,12 +389,10 @@ export const HomeSection = () => {
 
       try {
         await Promise.all(imagePromises);
-        setImagesLoaded(true);
       } catch (error) {
         console.error("Error preloading images:", error);
-        setTimeout(() => {
-          setImagesLoaded(true);
-        }, 3000);
+      } finally {
+        setImagesLoaded(true);
       }
     };
 
@@ -519,11 +421,15 @@ export const HomeSection = () => {
   };
 
   const handleNextReview = () => {
-    setCurrentReview((prev) => (prev + 1) % reviews.length);
+    if (reviews.length > 0) {
+      setCurrentReview((prev) => (prev + 1) % reviews.length);
+    }
   };
 
   const handlePrevReview = () => {
-    setCurrentReview((prev) => (prev - 1 + reviews.length) % reviews.length);
+    if (reviews.length > 0) {
+      setCurrentReview((prev) => (prev - 1 + reviews.length) % reviews.length);
+    }
   };
 
   // Hero carousel drag handlers
@@ -564,10 +470,9 @@ export const HomeSection = () => {
     }
   };
 
-  // ✅ FIXED: Handle button clicks with correct navigation
+  // Handle button clicks
   const handleButtonClick = (action) => {
     if (action === "contact") {
-      // Connect with me -> Scroll to contact section
       const contactSection = document.getElementById("contact-section");
       if (contactSection) {
         contactSection.scrollIntoView({
@@ -576,35 +481,16 @@ export const HomeSection = () => {
         });
       }
     } else if (action === "signin") {
-      // Get Started -> Go to signin page
       window.location.href = "/signin";
     } else if (action === "shop") {
-      // Explore Now -> Go to shop page
       window.location.href = "/shop";
     }
   };
 
   return (
     <section className="relative w-full">
-      {/* Loading State */}
-      {!imagesLoaded && (
-        <div className="fixed inset-0 bg-white/50 dark:bg-gray-900/30 z-50 flex items-center justify-center">
-          <div className="flex gap-3">
-            <div
-              className="w-4 h-4 rounded-full bg-primary animate-bounce"
-              style={{ animationDelay: "0s" }}
-            ></div>
-            <div
-              className="w-4 h-4 rounded-full bg-primary animate-bounce"
-              style={{ animationDelay: "0.2s" }}
-            ></div>
-            <div
-              className="w-4 h-4 rounded-full bg-primary animate-bounce"
-              style={{ animationDelay: "0.4s" }}
-            ></div>
-          </div>
-        </div>
-      )}
+      {/* ✅ FIXED: Loading shows ONLY on initial page load */}
+      {(initialLoading || !imagesLoaded) && <LoadingSpinner />}
 
       {/* Full Width Carousel with Dynamic Text */}
       <div
@@ -635,13 +521,12 @@ export const HomeSection = () => {
               }}
             />
 
-            {/* Gradient Overlay - Dark left, Bright right */}
+            {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
 
-            {/* Text Content with different animations */}
+            {/* Text Content */}
             <div className="relative h-full flex items-center justify-center px-4 sm:px-6 md:px-8 pointer-events-none">
               <div className="text-center text-white drop-shadow-2xl max-w-5xl w-full">
-                {/* Title - ZOOM IN effect */}
                 <h1
                   className={cn(
                     "text-4xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-6xl font-bold leading-tight mb-4 md:mb-6 transition-all duration-1000 ease-out",
@@ -656,7 +541,6 @@ export const HomeSection = () => {
                   {slide.title}
                 </h1>
 
-                {/* Subtitle - SLIDE UP effect */}
                 <p
                   className={cn(
                     "text-sm sm:text-base md:text-lg lg:text-xl text-white/90 leading-relaxed mb-6 md:mb-8 px-2 transition-all duration-1000 ease-out",
@@ -671,7 +555,6 @@ export const HomeSection = () => {
                   {slide.subtitle}
                 </p>
 
-                {/* ✅ FIXED: Button with arrow on hover */}
                 <button
                   onClick={() => handleButtonClick(slide.action)}
                   className={cn(
@@ -816,19 +699,22 @@ export const HomeSection = () => {
               {products.concat(products).map((product, index) => (
                 <div
                   key={`${product.id}-${index}`}
-                  className="flex-shrink-0 w-[150px] lg:w-[200px] md:w-[200px] bg-card rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group"
+                  className="flex-shrink-0 w-[150px] lg:w-[200px] md:w-[200px] bg-card rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 group animate-fade-in-up"
+                  style={{ animationDelay: `${(index % 6) * 0.1}s` }}
                 >
                   <div className="relative overflow-hidden h-35 sm:h-44 md:h-48 bg-muted">
                     <img
                       src={product.image}
                       alt={product.name}
                       loading="lazy"
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-110 group-hover:rotate-2 transition-all duration-700"
                     />
-                    <div className="absolute top-3 left-3 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                      {product.badge}
-                    </div>
-                    <button className="absolute bottom-3 right-3 bg-card p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-primary hover:text-primary-foreground">
+                    {product.badge && (
+                      <div className="absolute top-3 left-3 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-semibold animate-bounce-slow">
+                        {product.badge}
+                      </div>
+                    )}
+                    <button className="absolute bottom-3 right-3 bg-card p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-primary-foreground transform group-hover:rotate-12">
                       <ShoppingCart size={18} />
                     </button>
                   </div>
@@ -858,7 +744,7 @@ export const HomeSection = () => {
                     </h3>
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-base md:text-lg font-bold text-primary">
-                        {product.price}
+                        ₦{product.price.toLocaleString()}
                       </span>
                     </div>
 
@@ -899,103 +785,111 @@ export const HomeSection = () => {
           </button>
         </div>
 
-        <div className="relative border bg-white p-6 sm:p-8 shadow-md w-full sm:w-4/5 md:w-[600px] mt-10 border-transparent flex flex-col items-center rounded-xl">
-          <button
-            onClick={handlePrevReview}
-            className="hidden sm:flex absolute left-[-4rem] top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full p-2 sm:p-3 hover:bg-primary/90 transition"
-            aria-label="Previous review"
-          >
-            <ArrowBigLeft size={20} />
-          </button>
-
-          <div className="flex justify-center -mt-16 mb-8">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl sm:text-4xl font-bold shadow-lg border-4 border-white">
-              {getEmailInitial(reviews[currentReview].email)}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1 mb-3">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                size={20}
-                className={
-                  i < reviews[currentReview].rating
-                    ? "fill-yellow-400 text-yellow-400"
-                    : "fill-gray-300 text-gray-300"
-                }
-              />
-            ))}
-          </div>
-
-          <p className="text-center text-sm sm:text-base mb-2 px-2">
-            {reviews[currentReview].comment}
-          </p>
-          <p className="font-semibold mt-2 text-primary text-sm sm:text-base">
-            - {reviews[currentReview].customerName}
-          </p>
-          <p className="text-xs text-gray-600 mt-1">
-            Product: {reviews[currentReview].productName}
-          </p>
-
-          {/* Delete button - only shown for user's own reviews */}
-          {isSignedIn && reviews[currentReview].email === userEmail && (
+        {reviews.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">💬</div>
+            <h3 className="text-2xl font-bold mb-2">No Reviews Yet</h3>
+            <p className="text-gray-600 mb-6">
+              Be the first to share your experience!
+            </p>
             <button
-              onClick={() =>
-                handleDeleteReview(
-                  reviews[currentReview].id,
-                  reviews[currentReview].email,
-                )
-              }
-              className="mt-4 p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors mx-auto"
-              title="Delete my review"
-              aria-label="Delete my review"
+              onClick={() => {
+                if (!isSignedIn) {
+                  setShowSignInPrompt(true);
+                } else if (!hasPurchased) {
+                  setShowPurchaseWarning(true);
+                } else {
+                  setShowReviewModal(true);
+                }
+              }}
+              className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 6h18" />
-                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                <line x1="10" y1="11" x2="10" y2="17" />
-                <line x1="14" y1="11" x2="14" y2="17" />
-              </svg>
+              Write a Review
             </button>
-          )}
-
-          <button
-            onClick={handleNextReview}
-            className="hidden sm:flex absolute right-[-4rem] top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full p-2 sm:p-3 hover:bg-primary/90 transition"
-            aria-label="Next review"
-          >
-            <ArrowBigRight size={20} />
-          </button>
-
-          <div className="flex sm:hidden justify-center gap-6 mt-6">
+          </div>
+        ) : (
+          <div className="relative border bg-white p-6 sm:p-8 shadow-md w-full sm:w-4/5 md:w-[600px] mt-10 border-transparent flex flex-col items-center rounded-xl">
             <button
               onClick={handlePrevReview}
-              className="bg-primary text-white rounded-full p-3 hover:bg-primary/90 transition"
-              aria-label="Previous review mobile"
+              className="hidden sm:flex absolute left-[-4rem] top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full p-2 sm:p-3 hover:bg-primary/90 transition"
+              aria-label="Previous review"
             >
               <ArrowBigLeft size={20} />
             </button>
+
+            <div className="flex justify-center -mt-16 mb-8">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl sm:text-4xl font-bold shadow-lg border-4 border-white">
+                {getEmailInitial(reviews[currentReview].email)}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1 mb-3">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  size={20}
+                  className={
+                    i < reviews[currentReview].rating
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "fill-gray-300 text-gray-300"
+                  }
+                />
+              ))}
+            </div>
+
+            <p className="text-center text-sm sm:text-base mb-2 px-2">
+              {reviews[currentReview].comment}
+            </p>
+            <p className="font-semibold mt-2 text-primary text-sm sm:text-base">
+              - {reviews[currentReview].customerName}
+            </p>
+            <p className="text-xs text-gray-600 mt-1">
+              Product: {reviews[currentReview].productName}
+            </p>
+
+            {/* Delete button */}
+            {isSignedIn && reviews[currentReview].email === userEmail && (
+              <button
+                onClick={() =>
+                  handleDeleteReview(
+                    reviews[currentReview].id,
+                    reviews[currentReview].email,
+                  )
+                }
+                className="mt-4 p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors mx-auto"
+                title="Delete my review"
+                aria-label="Delete my review"
+              >
+                <Trash2 size={18} />
+              </button>
+            )}
+
             <button
               onClick={handleNextReview}
-              className="bg-primary text-white rounded-full p-3 hover:bg-primary/90 transition"
-              aria-label="Next review mobile"
+              className="hidden sm:flex absolute right-[-4rem] top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full p-2 sm:p-3 hover:bg-primary/90 transition"
+              aria-label="Next review"
             >
               <ArrowBigRight size={20} />
             </button>
+
+            <div className="flex sm:hidden justify-center gap-6 mt-6">
+              <button
+                onClick={handlePrevReview}
+                className="bg-primary text-white rounded-full p-3 hover:bg-primary/90 transition"
+                aria-label="Previous review mobile"
+              >
+                <ArrowBigLeft size={20} />
+              </button>
+              <button
+                onClick={handleNextReview}
+                className="bg-primary text-white rounded-full p-3 hover:bg-primary/90 transition"
+                aria-label="Next review mobile"
+              >
+                <ArrowBigRight size={20} />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Sign In Prompt Modal */}
@@ -1167,10 +1061,11 @@ export const HomeSection = () => {
 
                 <button
                   onClick={handleReviewSubmit}
-                  className="liquid-button-modal w-full px-6 py-3 rounded-lg font-semibold shadow-md relative overflow-hidden"
+                  disabled={isSubmitting}
+                  className="liquid-button-modal w-full px-6 py-3 rounded-lg font-semibold shadow-md relative overflow-hidden disabled:opacity-50"
                 >
                   <span className="relative z-10 text-white">
-                    Submit Review
+                    {isSubmitting ? "Submitting..." : "Submit Review"}
                   </span>
                 </button>
               </div>
@@ -1220,7 +1115,7 @@ export const HomeSection = () => {
         </div>
       )}
 
-      {/* Contact Form Section */}
+      {/* Contact Form Section - ✅ RESTORED ORIGINAL LAYOUT */}
       <div
         id="contact-section"
         className="flex flex-col lg:flex-row justify-center items-center gap-8 bg-white py-16 px-4 md:px-0 lg:px-12 dark:bg-background"
@@ -1306,86 +1201,38 @@ export const HomeSection = () => {
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes liquidFill {
-          0% {
-            transform: translateY(100%) scale(1.5);
-            opacity: 0;
-          }
-          50% {
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(0) scale(1);
-            opacity: 1;
-          }
-        }
-
-        @keyframes scroll-fast {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-
-        .animate-scroll-fast {
-          animation: scroll-fast 20s linear infinite;
-        }
-
-        .animate-scroll-fast:hover {
-          animation-play-state: paused;
-        }
-
-        /* Liquid Button Styles */
-        .liquid-button::before,
-        .liquid-button-product::before,
-        .liquid-button-modal::before,
-        .liquid-button-send::before {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-          border-radius: inherit;
-          transform: translateY(100%) scale(1.5);
-          transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-          z-index: 0;
-        }
-
-        .liquid-button::after,
-        .liquid-button-product::after,
-        .liquid-button-modal::after,
-        .liquid-button-send::after {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: #16a34a;
-          border-radius: inherit;
-          z-index: 0;
-        }
-
-        .liquid-button:hover::before,
-        .liquid-button-product:hover::before,
-        .liquid-button-modal:hover::before,
-        .liquid-button-send:hover::before {
-          transform: translateY(0) scale(1);
-          animation: liquidFill 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .liquid-button:active,
-        .liquid-button-product:active,
-        .liquid-button-modal:active,
-        .liquid-button-send:active {
-          transform: scale(0.95);
-        }
-      `}</style>
+      {/* ✅ Professional CTA Section - NEW */}
+      <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-800 dark:to-gray-900 py-16 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <h3 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
+            Ready to Elevate Your Content?
+          </h3>
+          <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+            Join thousands of creators who trust us for professional lighting
+            equipment. Get exclusive deals, expert tips, and priority support.
+          </p>
+          <div className="flex flex-row lg:flex-row gap-4 justify-center items-center">
+            <button
+              onClick={() => (window.location.href = "/shop")}
+              className="lg:px-8 lg:py-4 px-4 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+            >
+              Browse Products
+            </button>
+            <button
+              onClick={() => {
+                const contactSection =
+                  document.getElementById("contact-section");
+                if (contactSection) {
+                  contactSection.scrollIntoView({ behavior: "smooth" });
+                }
+              }}
+              className="lg:px-8 lg:py-4 px-4 py-2 bg-white text-primary border-2 border-primary rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 shadow-lg"
+            >
+              Get in Touch
+            </button>
+          </div>
+        </div>
+      </div>
     </section>
   );
 };

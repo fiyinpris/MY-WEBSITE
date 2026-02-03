@@ -4,6 +4,37 @@ import { useCart } from "./CartSection";
 import { Link } from "react-router-dom";
 import { productsAPI } from "../services/firebase";
 
+// ✅ GREEN LOADING SPINNER COMPONENT
+const LoadingSpinner = () => {
+  return (
+    <div className="fixed inset-0 bg-white/80 dark:bg-gray-900/80 z-[9999] flex items-center justify-center backdrop-blur-sm">
+      <div className="relative w-20 h-20">
+        {[...Array(12)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-6 bg-green-600 rounded-full"
+            style={{
+              left: "50%",
+              top: "50%",
+              transformOrigin: "1px -24px",
+              transform: `rotate(${i * 30}deg)`,
+              opacity: 1 - i * 0.08,
+              animation: `spin-fade 1.2s linear infinite`,
+              animationDelay: `${-1.2 + i * 0.1}s`,
+            }}
+          />
+        ))}
+      </div>
+      <style>{`
+        @keyframes spin-fade {
+          0% { opacity: 1; }
+          100% { opacity: 0.1; }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 const WishlistContext = createContext();
 
 export const WishlistSection = ({ children }) => {
@@ -123,15 +154,9 @@ export const WishlistPage = () => {
     setTimeout(() => setShowNotification(false), 3000);
   };
 
+  // ✅ USE LOADING SPINNER INSTEAD OF CUSTOM LOADER
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4 pt-16 bg-gradient-to-br from-primary/20 via-background to-primary/10">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-foreground/60">Loading wishlist...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (wishlistItems.length === 0) {

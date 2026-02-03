@@ -10,16 +10,11 @@ import {
   deleteDoc,
   query,
   orderBy,
+  where,
+  serverTimestamp,
 } from "firebase/firestore";
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  deleteObject,
-} from "firebase/storage";
 
-// 🔥 YOUR FIREBASE CONFIG
+// 🔥 YOUR FIREBASE CONFIG (Database Only - No Storage)
 const firebaseConfig = {
   apiKey: "AIzaSyDe09lnanWgfxep2oxh8OdpYfd6uOka3XY",
   authDomain: "my-lightstore.firebaseapp.com",
@@ -32,82 +27,188 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
-// ==================== STORAGE HELPERS ====================
+// ==================== CLOUDINARY CONFIG ====================
+
+// ==================== CLOUDINARY CONFIG ====================
+
+const CLOUDINARY_CLOUD_NAME = "deefu274z"; // ✅ Changed from "my_LIGHTSTORE"
+const CLOUDINARY_UPLOAD_PRESET = "lightstore"; // ✅ This is correct
+const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+const CLOUDINARY_VIDEO_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`;
+// ==================== IMAGE COMPRESSION (Still useful!) ====================
 
 /**
- * Convert base64 to Blob for upload
+ * ✅ Compress images before uploading to Cloudinary
  */
-const base64ToBlob = (base64, contentType = "image/jpeg") => {
-  const byteCharacters = atob(base64.split(",")[1]);
-  const byteNumbers = new Array(byteCharacters.length);
-  for (let i = 0; i < byteCharacters.length; i++) {
-    byteNumbers[i] = byteCharacters.charCodeAt(i);
-  }
-  const byteArray = new Uint8Array(byteNumbers);
-  return new Blob([byteArray], { type: contentType });
+const compressImage = async (
+  base64Image,
+  maxWidth = 1200,
+  quality = 0.85,
+  format = "webp",
+) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const mimeType = format === "webp" ? "image/webp" : "image/jpeg";
+      const compressedBase64 = canvas.toDataURL(mimeType, quality);
+
+      const originalSize = (base64Image.length / 1024).toFixed(2);
+      const compressedSize = (compressedBase64.length / 1024).toFixed(2);
+      const reduction = ((1 - compressedSize / originalSize) * 100).toFixed(1);
+
+      console.log(
+        `✅ Compressed: ${originalSize}KB → ${compressedSize}KB (${reduction}% reduction)`,
+      );
+
+      resolve(compressedBase64);
+    };
+
+    img.onerror = (error) => {
+      console.error("❌ Error compressing image:", error);
+      resolve(base64Image);
+    };
+
+    img.src = base64Image;
+  });
 };
 
+// ==================== CLOUDINARY UPLOAD FUNCTIONS ====================
+
 /**
- * Upload image to Firebase Storage
+ * ✅ Upload image to Cloudinary
  * @param {string} base64Image - Base64 encoded image
- * @param {string} path - Storage path (e.g., 'products/abc123.jpg')
- * @returns {Promise<string>} - Download URL
+ * @param {string} folder - Folder name in Cloudinary (e.g., 'products')
+ * @param {object} compressionOptions - Compression settings
+ * @returns {Promise<string>} - Cloudinary URL
  */
-export const uploadImage = async (base64Image, path) => {
+export const uploadImageToCloudinary = async (
+  base64Image,
+  folder = "products",
+  compressionOptions = {},
+) => {
   try {
     if (!base64Image || !base64Image.startsWith("data:")) {
       // If it's already a URL, return it
       return base64Image;
     }
 
-    console.log(`📤 Uploading image to: ${path}`);
+    console.log(`📤 Uploading image to Cloudinary (${folder})`);
 
-    // Convert base64 to blob
-    const blob = base64ToBlob(base64Image);
+    // ✅ COMPRESS IMAGE FIRST
+    const {
+      maxWidth = 1200,
+      quality = 0.85,
+      format = "webp",
+    } = compressionOptions;
+    const compressedImage = await compressImage(
+      base64Image,
+      maxWidth,
+      quality,
+      format,
+    );
 
-    // Create storage reference
-    const storageRef = ref(storage, path);
+    // Create form data
+    const formData = new FormData();
+    formData.append("file", compressedImage);
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+    formData.append("folder", folder);
 
-    // Upload file
-    const snapshot = await uploadBytes(storageRef, blob);
-    console.log(`✅ Image uploaded successfully`);
+    // Upload to Cloudinary
+    const response = await fetch(CLOUDINARY_UPLOAD_URL, {
+      method: "POST",
+      body: formData,
+    });
 
-    // Get download URL
-    const downloadURL = await getDownloadURL(snapshot.ref);
-    console.log(`✅ Download URL: ${downloadURL}`);
+    if (!response.ok) {
+      throw new Error(`Cloudinary upload failed: ${response.statusText}`);
+    }
 
-    return downloadURL;
+    const data = await response.json();
+    console.log(`✅ Image uploaded to Cloudinary: ${data.secure_url}`);
+
+    return data.secure_url;
   } catch (error) {
-    console.error(`❌ Error uploading image:`, error);
+    console.error(`❌ Error uploading to Cloudinary:`, error);
     throw error;
   }
 };
 
 /**
- * Delete image from Firebase Storage
- * @param {string} imageUrl - Full download URL or storage path
+ * ✅ Upload video to Cloudinary
+ * @param {string} base64Video - Base64 encoded video
+ * @param {string} folder - Folder name in Cloudinary
+ * @returns {Promise<string>} - Cloudinary URL
  */
-export const deleteImage = async (imageUrl) => {
+export const uploadVideoToCloudinary = async (
+  base64Video,
+  folder = "products",
+) => {
   try {
-    if (!imageUrl || !imageUrl.includes("firebase")) {
-      return; // Not a Firebase Storage URL
+    if (!base64Video || !base64Video.startsWith("data:")) {
+      return base64Video;
     }
 
-    // Extract path from URL
-    const path = imageUrl.split("/o/")[1]?.split("?")[0];
-    if (!path) return;
+    console.log(`📤 Uploading video to Cloudinary (${folder})`);
 
-    const decodedPath = decodeURIComponent(path);
-    const storageRef = ref(storage, decodedPath);
+    const formData = new FormData();
+    formData.append("file", base64Video);
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+    formData.append("folder", folder);
 
-    await deleteObject(storageRef);
-    console.log(`✅ Image deleted: ${decodedPath}`);
+    const response = await fetch(CLOUDINARY_VIDEO_URL, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Cloudinary video upload failed: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log(`✅ Video uploaded to Cloudinary: ${data.secure_url}`);
+
+    return data.secure_url;
   } catch (error) {
-    console.error(`❌ Error deleting image:`, error);
-    // Don't throw - image might already be deleted
+    console.error(`❌ Error uploading video to Cloudinary:`, error);
+    throw error;
   }
+};
+
+// ==================== COMPRESSION SETTINGS ====================
+
+const COMPRESSION_SETTINGS = {
+  main: {
+    maxWidth: 1200,
+    quality: 0.85,
+    format: "webp",
+  },
+  thumbnail: {
+    maxWidth: 400,
+    quality: 0.65,
+    format: "webp",
+  },
+  additionalMedia: {
+    maxWidth: 800,
+    quality: 0.75,
+    format: "webp",
+  },
 };
 
 // ==================== PRODUCTS API ====================
@@ -158,59 +259,60 @@ export const productsAPI = {
     }
   },
 
-  // Create new product with image upload
+  // Create new product with Cloudinary upload
   create: async (productData) => {
     try {
       console.log("📝 Creating product:", productData.name);
 
-      // Generate unique ID for images
-      const tempId = Date.now().toString();
-
-      // Upload main image to Storage
+      // ✅ Upload main image to Cloudinary
       let imageUrl = productData.image;
       if (productData.image && productData.image.startsWith("data:")) {
-        imageUrl = await uploadImage(
+        imageUrl = await uploadImageToCloudinary(
           productData.image,
-          `products/${tempId}/main.jpg`,
+          "products/main",
+          COMPRESSION_SETTINGS.main,
         );
       }
 
-      // Upload thumbnails
+      // ✅ Upload thumbnail 1 to Cloudinary
       let thumbnail1Url = productData.thumbnail1;
       if (
         productData.thumbnail1 &&
         productData.thumbnail1.startsWith("data:")
       ) {
-        thumbnail1Url = await uploadImage(
+        thumbnail1Url = await uploadImageToCloudinary(
           productData.thumbnail1,
-          `products/${tempId}/thumb1.jpg`,
+          "products/thumbnails",
+          COMPRESSION_SETTINGS.thumbnail,
         );
       }
 
+      // ✅ Upload thumbnail 2 to Cloudinary
       let thumbnail2Url = productData.thumbnail2;
       if (
         productData.thumbnail2 &&
         productData.thumbnail2.startsWith("data:")
       ) {
-        thumbnail2Url = await uploadImage(
+        thumbnail2Url = await uploadImageToCloudinary(
           productData.thumbnail2,
-          `products/${tempId}/thumb2.jpg`,
+          "products/thumbnails",
+          COMPRESSION_SETTINGS.thumbnail,
         );
       }
 
-      // Upload video thumbnail
+      // ✅ Upload video to Cloudinary
       let videoThumbnailUrl = productData.videoThumbnail;
       if (
         productData.videoThumbnail &&
         productData.videoThumbnail.startsWith("data:")
       ) {
-        videoThumbnailUrl = await uploadImage(
+        videoThumbnailUrl = await uploadVideoToCloudinary(
           productData.videoThumbnail,
-          `products/${tempId}/video.mp4`,
+          "products/videos",
         );
       }
 
-      // Create product in Firestore with URLs
+      // Create product in Firestore with Cloudinary URLs
       const productsRef = collection(db, "products");
       const docRef = await addDoc(productsRef, {
         ...productData,
@@ -238,7 +340,7 @@ export const productsAPI = {
     }
   },
 
-  // Update product with image upload
+  // Update product with Cloudinary upload
   update: async (id, productData) => {
     try {
       console.log(`📝 Updating product ${id}:`, productData);
@@ -257,58 +359,51 @@ export const productsAPI = {
 
       const existingData = docSnap.data();
 
-      // Upload new images if they're base64
+      // ✅ Upload new main image if it's base64
       let imageUrl = productData.image;
       if (productData.image && productData.image.startsWith("data:")) {
-        // Delete old image if it exists
-        if (existingData.image) {
-          await deleteImage(existingData.image);
-        }
-        imageUrl = await uploadImage(
+        imageUrl = await uploadImageToCloudinary(
           productData.image,
-          `products/${id}/main.jpg`,
+          "products/main",
+          COMPRESSION_SETTINGS.main,
         );
       }
 
+      // ✅ Upload new thumbnail 1
       let thumbnail1Url = productData.thumbnail1;
       if (
         productData.thumbnail1 &&
         productData.thumbnail1.startsWith("data:")
       ) {
-        if (existingData.thumbnail1) {
-          await deleteImage(existingData.thumbnail1);
-        }
-        thumbnail1Url = await uploadImage(
+        thumbnail1Url = await uploadImageToCloudinary(
           productData.thumbnail1,
-          `products/${id}/thumb1.jpg`,
+          "products/thumbnails",
+          COMPRESSION_SETTINGS.thumbnail,
         );
       }
 
+      // ✅ Upload new thumbnail 2
       let thumbnail2Url = productData.thumbnail2;
       if (
         productData.thumbnail2 &&
         productData.thumbnail2.startsWith("data:")
       ) {
-        if (existingData.thumbnail2) {
-          await deleteImage(existingData.thumbnail2);
-        }
-        thumbnail2Url = await uploadImage(
+        thumbnail2Url = await uploadImageToCloudinary(
           productData.thumbnail2,
-          `products/${id}/thumb2.jpg`,
+          "products/thumbnails",
+          COMPRESSION_SETTINGS.thumbnail,
         );
       }
 
+      // ✅ Upload new video
       let videoThumbnailUrl = productData.videoThumbnail;
       if (
         productData.videoThumbnail &&
         productData.videoThumbnail.startsWith("data:")
       ) {
-        if (existingData.videoThumbnail) {
-          await deleteImage(existingData.videoThumbnail);
-        }
-        videoThumbnailUrl = await uploadImage(
+        videoThumbnailUrl = await uploadVideoToCloudinary(
           productData.videoThumbnail,
-          `products/${id}/video.mp4`,
+          "products/videos",
         );
       }
 
@@ -322,7 +417,7 @@ export const productsAPI = {
         updatedAt: new Date().toISOString(),
       };
 
-      // Remove undefined values to avoid Firebase errors
+      // Remove undefined values
       Object.keys(updateData).forEach((key) => {
         if (updateData[key] === undefined) {
           delete updateData[key];
@@ -342,12 +437,11 @@ export const productsAPI = {
       };
     } catch (error) {
       console.error(`❌ Error updating product ${id}:`, error);
-      console.error("Error details:", error.message);
       throw error;
     }
   },
 
-  // Delete product and its images
+  // Delete product (note: Cloudinary images won't be deleted automatically)
   delete: async (id) => {
     try {
       console.log(`🗑️ Deleting product: ${id}`);
@@ -364,21 +458,166 @@ export const productsAPI = {
         throw new Error(`Product with ID ${id} does not exist`);
       }
 
-      // Delete all associated images
-      const productData = docSnap.data();
-      if (productData.image) await deleteImage(productData.image);
-      if (productData.thumbnail1) await deleteImage(productData.thumbnail1);
-      if (productData.thumbnail2) await deleteImage(productData.thumbnail2);
-      if (productData.videoThumbnail)
-        await deleteImage(productData.videoThumbnail);
-
-      // Delete the document
+      // Delete the document (Cloudinary images will remain, which is fine for free tier)
       await deleteDoc(docRef);
       console.log(`✅ Product ${id} deleted successfully`);
 
       return { success: true };
     } catch (error) {
       console.error(`❌ Error deleting product ${id}:`, error);
+      throw error;
+    }
+  },
+};
+
+// ==================== REVIEWS API ====================
+
+export const reviewsAPI = {
+  // Get all reviews
+  getAll: async () => {
+    try {
+      const reviewsRef = collection(db, "reviews");
+      const q = query(reviewsRef, orderBy("createdAt", "desc"));
+      const querySnapshot = await getDocs(q);
+
+      const reviews = [];
+      querySnapshot.forEach((doc) => {
+        reviews.push({
+          id: doc.id,
+          ...doc.data(),
+        });
+      });
+
+      console.log(`✅ Loaded ${reviews.length} reviews from Firebase`);
+      return reviews;
+    } catch (error) {
+      console.error("❌ Error fetching reviews:", error);
+      throw error;
+    }
+  },
+
+  // Get reviews for a specific product
+  getByProduct: async (productName) => {
+    try {
+      const reviewsRef = collection(db, "reviews");
+      const q = query(
+        reviewsRef,
+        where("productName", "==", productName),
+        orderBy("createdAt", "desc"),
+      );
+      const querySnapshot = await getDocs(q);
+
+      const reviews = [];
+      querySnapshot.forEach((doc) => {
+        reviews.push({
+          id: doc.id,
+          ...doc.data(),
+        });
+      });
+
+      console.log(`✅ Loaded ${reviews.length} reviews for ${productName}`);
+      return reviews;
+    } catch (error) {
+      console.error("❌ Error fetching product reviews:", error);
+      throw error;
+    }
+  },
+
+  // Create a new review
+  create: async (reviewData) => {
+    try {
+      console.log("📝 Creating review:", reviewData);
+
+      const reviewsRef = collection(db, "reviews");
+      const docRef = await addDoc(reviewsRef, {
+        ...reviewData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+
+      console.log(`✅ Review created with ID: ${docRef.id}`);
+
+      return {
+        id: docRef.id,
+        ...reviewData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error("❌ Error creating review:", error);
+      throw error;
+    }
+  },
+
+  // Delete a review
+  delete: async (id) => {
+    try {
+      console.log(`🗑️ Deleting review: ${id}`);
+
+      if (!id) {
+        throw new Error("Review ID is required for deletion");
+      }
+
+      const docRef = doc(db, "reviews", id);
+
+      // Check if document exists first
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        throw new Error(`Review with ID ${id} does not exist`);
+      }
+
+      // Delete the document
+      await deleteDoc(docRef);
+      console.log(`✅ Review ${id} deleted successfully`);
+
+      return { success: true };
+    } catch (error) {
+      console.error(`❌ Error deleting review ${id}:`, error);
+      throw error;
+    }
+  },
+
+  // Update a review
+  update: async (id, reviewData) => {
+    try {
+      console.log(`📝 Updating review ${id}:`, reviewData);
+
+      if (!id) {
+        throw new Error("Review ID is required for update");
+      }
+
+      const docRef = doc(db, "reviews", id);
+
+      // Check if document exists first
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        throw new Error(`Review with ID ${id} does not exist`);
+      }
+
+      // Prepare update data
+      const updateData = {
+        ...reviewData,
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Remove undefined values
+      Object.keys(updateData).forEach((key) => {
+        if (updateData[key] === undefined) {
+          delete updateData[key];
+        }
+      });
+
+      // Perform the update
+      await updateDoc(docRef, updateData);
+
+      console.log(`✅ Review ${id} updated successfully`);
+
+      return {
+        id,
+        ...updateData,
+      };
+    } catch (error) {
+      console.error(`❌ Error updating review ${id}:`, error);
       throw error;
     }
   },
@@ -482,4 +721,4 @@ export const adminAPI = {
   },
 };
 
-export { db, storage };
+export { db };

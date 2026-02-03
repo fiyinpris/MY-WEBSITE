@@ -6,6 +6,37 @@ import { Heart } from "lucide-react";
 import headerBg from "../Images/image 9.jpg";
 import { productsAPI } from "../services/firebase";
 
+// ✅ GREEN LOADING SPINNER COMPONENT
+const LoadingSpinner = () => {
+  return (
+    <div className="fixed inset-0 bg-white/80 dark:bg-gray-900/80 z-[9999] flex items-center justify-center backdrop-blur-sm">
+      <div className="relative w-20 h-20">
+        {[...Array(12)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-6 bg-green-600 rounded-full"
+            style={{
+              left: "50%",
+              top: "50%",
+              transformOrigin: "1px -24px",
+              transform: `rotate(${i * 30}deg)`,
+              opacity: 1 - i * 0.08,
+              animation: `spin-fade 1.2s linear infinite`,
+              animationDelay: `${-1.2 + i * 0.1}s`,
+            }}
+          />
+        ))}
+      </div>
+      <style>{`
+        @keyframes spin-fade {
+          0% { opacity: 1; }
+          100% { opacity: 0.1; }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 export const ShopSection = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
@@ -16,10 +47,14 @@ export const ShopSection = () => {
   const [priceRange, setPriceRange] = useState(500000);
   const [showFilters, setShowFilters] = useState(false);
   const [headerImageLoaded, setHeaderImageLoaded] = useState(false);
-
   const [products, setProducts] = useState([]);
 
-  // ✅ FIXED: Create a stable "shuffle" based on product ID that never changes
+  // ✅ LOADING STATE
+  const [isLoading, setIsLoading] = useState(true);
+
+  const PRODUCTS_PER_PAGE = 12;
+
+  // ✅ CREATE STABLE "SHUFFLE" BASED ON PRODUCT ID
   const createFixedMixedOrder = (productList) => {
     return [...productList].sort((a, b) => {
       const hashA = (a.id.charCodeAt(0) * 9301 + 49297) % 233280;
@@ -28,26 +63,36 @@ export const ShopSection = () => {
     });
   };
 
-  // ✅ Load products from Firebase
+  // ✅ Load products from Firebase with loading state
   useEffect(() => {
     const loadProducts = async () => {
       try {
+        setIsLoading(true);
         const loadedProducts = await productsAPI.getAll();
         const mixedProducts = createFixedMixedOrder(loadedProducts);
         setProducts(mixedProducts);
       } catch (error) {
         console.error("Error loading products:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     loadProducts();
 
-    // Reload products periodically to get new additions
-    const interval = setInterval(loadProducts, 30000); // Every 30 seconds
+    // Reload products periodically (silently, no loading spinner)
+    const interval = setInterval(async () => {
+      try {
+        const loadedProducts = await productsAPI.getAll();
+        const mixedProducts = createFixedMixedOrder(loadedProducts);
+        setProducts(mixedProducts);
+      } catch (error) {
+        console.error("Error reloading products:", error);
+      }
+    }, 30000);
+
     return () => clearInterval(interval);
   }, []);
-
-  const PRODUCTS_PER_PAGE = 12;
 
   // Preload header image
   useEffect(() => {
@@ -183,6 +228,9 @@ export const ShopSection = () => {
 
   return (
     <div className="mt-12">
+      {/* ✅ LOADING SPINNER */}
+      {(isLoading || !headerImageLoaded) && <LoadingSpinner />}
+
       {/* Hero Banner */}
       <div className="relative w-full h-100 md:h-90 lg:h-90 mb-6 md:mb-8 overflow-hidden">
         <div
@@ -200,10 +248,10 @@ export const ShopSection = () => {
 
         <div className="relative h-full flex items-center justify-center px-4">
           <div className=" split-text-container text-white drop-shadow-2xl">
-            <span className="text-2xl lg:text-7xl md:text-5xl text-part left">
+            <span className="text-xl lg:text-7xl md:text-5xl text-part left">
               WELCOME TO&nbsp;
             </span>
-            <span className="text-2xl lg:text-7xl md:text-5xl text-part right">
+            <span className="text-xl lg:text-7xl md:text-5xl text-part right">
               my.LIGHTSTORE
             </span>
           </div>
@@ -261,7 +309,7 @@ export const ShopSection = () => {
             id="sidebar"
             className={`${
               showFilters ? "block" : "hidden"
-            } lg:block w-full lg:w-1/5 lg:min-w-[180px] lg:max-w-[300px] space-y-6 mb-6 lg:mb-0 sticky top-24 h-[calc(100vh-6rem)]`}
+            } lg:block w-full lg:w-1/5 lg:min-w-[180px] lg:max-w-[300px] space-y-6 mb-6 lg:mb-0 lg:sticky top-24 h-[calc(100vh-6rem)]`}
           >
             <div className="space-y-6 bg-background lg:bg-transparent p-4 lg:p-0 rounded-lg lg:rounded-none shadow-lg lg:shadow-none">
               <div className="flex justify-between items-center lg:hidden mb-4">
@@ -371,6 +419,7 @@ export const ShopSection = () => {
                 <div
                   key={product.id}
                   className="border p-3 md:p-4 flex flex-col items-stretch space-y-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+  style={{ minHeight: "320px" }}
                 >
                   <div
                     className="w-full h-40 sm:h-48 flex items-center justify-center overflow-hidden rounded-md bg-gray-200 relative cursor-pointer"
@@ -420,8 +469,6 @@ export const ShopSection = () => {
                 </div>
               ))}
             </div>
-
-
 
             {/* Pagination */}
             {totalPages > 1 && (
