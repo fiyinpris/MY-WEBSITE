@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "./CartSection";
 import { useWishlist } from "./WishlistSection";
-import { Heart } from "lucide-react";
+import { Heart, ShoppingCart, CheckCircle } from "lucide-react";
 import headerBg from "../Images/image 9.jpg";
 import { productsAPI } from "../services/firebase";
 
@@ -37,6 +37,32 @@ const LoadingSpinner = () => {
   );
 };
 
+// ✅ PRODUCT-STYLE NOTIFICATION COMPONENT (matching ProductSection.jsx)
+const AddToCartNotification = ({ productName, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 2000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-2xl animate-slideInRight max-w-sm mx-4">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
+            <ShoppingCart className="text-green-600" size={32} />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            Added to Cart!
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400">
+            {productName} successfully added to your cart
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const ShopSection = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
@@ -48,6 +74,8 @@ export const ShopSection = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [headerImageLoaded, setHeaderImageLoaded] = useState(false);
   const [products, setProducts] = useState([]);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationProduct, setNotificationProduct] = useState("");
 
   // ✅ LOADING STATE
   const [isLoading, setIsLoading] = useState(true);
@@ -159,8 +187,11 @@ export const ShopSection = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // ✅ UPDATED: Show notification instead of toast
   const handleAddToCart = (product) => {
     addToCart(product);
+    setNotificationProduct(product.name);
+    setShowNotification(true);
   };
 
   const handleProductClick = (productId) => {
@@ -230,6 +261,14 @@ export const ShopSection = () => {
     <div className="mt-12">
       {/* ✅ LOADING SPINNER */}
       {(isLoading || !headerImageLoaded) && <LoadingSpinner />}
+
+      {/* ✅ NOTIFICATION (replacing toast) */}
+      {showNotification && (
+        <AddToCartNotification
+          productName={notificationProduct}
+          onClose={() => setShowNotification(false)}
+        />
+      )}
 
       {/* Hero Banner */}
       <div className="relative w-full h-100 md:h-90 lg:h-90 mb-6 md:mb-8 overflow-hidden">
@@ -413,16 +452,15 @@ export const ShopSection = () => {
               </select>
             </div>
 
-            {/* Product Grid */}
+            {/* ✅ FIXED: Product Grid with proper alignment */}
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {currentProducts.map((product) => (
                 <div
                   key={product.id}
-                  className="border p-3 md:p-4 flex flex-col items-stretch space-y-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
-  style={{ minHeight: "320px" }}
+                  className="border p-3 md:p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col"
                 >
                   <div
-                    className="w-full h-40 sm:h-48 flex items-center justify-center overflow-hidden rounded-md bg-gray-200 relative cursor-pointer"
+                    className="w-full h-40 sm:h-48 flex items-center justify-center overflow-hidden rounded-md bg-gray-200 relative cursor-pointer mb-3"
                     onClick={() => handleProductClick(product.id)}
                   >
                     <img
@@ -449,18 +487,18 @@ export const ShopSection = () => {
                     </button>
                   </div>
 
-                  <div className="flex flex-col space-y-2">
+                  <div className="flex flex-col flex-1">
                     <h6
-                      className="font-semibold text-sm md:text-base cursor-pointer hover:text-green-600"
+                      className="font-semibold text-sm md:text-base cursor-pointer hover:text-green-600 mb-2"
                       onClick={() => handleProductClick(product.id)}
                     >
                       {product.name}
                     </h6>
-                    <p className="font-bold text-base md:text-lg text-green-600">
+                    <p className="font-bold text-base md:text-lg text-green-600 mb-3">
                       ₦{product.price.toLocaleString()}
                     </p>
                     <button
-                      className="normal-button w-full py-2 text-sm md:text-base cursor-pointer"
+                      className="normal-button w-full py-2 text-sm md:text-base cursor-pointer mt-auto"
                       onClick={() => handleAddToCart(product)}
                     >
                       Add to Cart
@@ -539,6 +577,36 @@ export const ShopSection = () => {
           </main>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes slideInRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+
+        .animate-slideInRight {
+          animation: slideInRight 0.4s ease-out;
+        }
+      `}</style>
     </div>
   );
 };

@@ -120,10 +120,10 @@ const trackPurchase = async (items, userEmail) => {
   }
 };
 
-// Toast Notification Component
+// ✅ COMPACT Toast Notification Component
 const Toast = ({ message, type, onClose }) => {
   useEffect(() => {
-    const timer = setTimeout(onClose, 4000);
+    const timer = setTimeout(onClose, 3000); // Reduced from 4000
     return () => clearTimeout(timer);
   }, [onClose]);
 
@@ -136,13 +136,13 @@ const Toast = ({ message, type, onClose }) => {
 
   return (
     <div
-      className={`fixed top-20 right-4 ${bgColor} border rounded-lg p-4 shadow-lg z-9999 max-w-md`}
+      className={`fixed top-20 right-4 ${bgColor} border rounded-lg px-3 py-2 shadow-lg z-9999 max-w-xs`}
     >
-      <div className="flex items-start gap-3">
-        <Icon className={`w-5 h-5 ${textColor} shrink-0 mt-0.5`} />
-        <p className={`${textColor} text-sm flex-1`}>{message}</p>
+      <div className="flex items-center gap-2">
+        <Icon className={`w-4 h-4 ${textColor} shrink-0`} />
+        <p className={`${textColor} text-xs font-medium flex-1`}>{message}</p>
         <button onClick={onClose} className={`${textColor} hover:opacity-70`}>
-          <X className="w-4 h-4" />
+          <X className="w-3 h-3" />
         </button>
       </div>
     </div>
@@ -541,7 +541,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                       name="country"
                       value={formData.country}
                       onChange={handleChange}
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm sm:text-base"
                       style={{ fontSize: "16px" }}
                     >
                       <option value="Nigeria">Nigeria</option>
@@ -565,7 +565,7 @@ const CheckoutPage = ({ onProceedToPayment, onBack }) => {
                       name="state"
                       value={formData.state}
                       onChange={handleChange}
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm sm:text-base"
                       style={{ fontSize: "16px" }}
                     >
                       <option value="">Select State</option>

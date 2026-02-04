@@ -11,6 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { reviewsAPI, productsAPI } from "../services/firebase";
+import emailjs from "@emailjs/browser";
 
 // Carousel images
 import myImage1 from "../Images/image 7.jpg";
@@ -29,23 +30,23 @@ function cn(...inputs) {
   return inputs.filter(Boolean).join(" ");
 }
 
-// ✅ GREEN LOADING SPINNER COMPONENT
+// ✅ LIGHTWEIGHT LOADING SPINNER - Only shown briefly on initial load
 const LoadingSpinner = () => {
   return (
-    <div className="fixed inset-0 bg-white/80 dark:bg-gray-900/80 z-[9999] flex items-center justify-center backdrop-blur-sm">
-      <div className="relative w-20 h-20">
-        {[...Array(12)].map((_, i) => (
+    <div className="fixed inset-0 bg-white/60 dark:bg-gray-900/60 z-[9999] flex items-center justify-center">
+      <div className="relative w-16 h-16">
+        {[...Array(8)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-2 h-6 bg-green-600 rounded-full"
+            className="absolute w-2 h-5 bg-green-600 rounded-full"
             style={{
               left: "50%",
               top: "50%",
-              transformOrigin: "1px -24px",
-              transform: `rotate(${i * 30}deg)`,
-              opacity: 1 - i * 0.08,
-              animation: `spin-fade 1.2s linear infinite`,
-              animationDelay: `${-1.2 + i * 0.1}s`,
+              transformOrigin: "1px -20px",
+              transform: `rotate(${i * 45}deg)`,
+              opacity: 1 - i * 0.12,
+              animation: `spin-fade 1s linear infinite`,
+              animationDelay: `${-1 + i * 0.125}s`,
             }}
           />
         ))}
@@ -131,9 +132,14 @@ export const HomeSection = () => {
   const [hasPurchased, setHasPurchased] = useState(false);
   const [showPurchaseWarning, setShowPurchaseWarning] = useState(false);
 
-  // ✅ FIXED: Only show loading on initial page load
+  // ✅ FIXED: Brief loading only on mount
   const [initialLoading, setInitialLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ✅ NEW: Scroll animation states for contact section
+  const [contactTextVisible, setContactTextVisible] = useState(false);
+  const [contactFormVisible, setContactFormVisible] = useState(false);
+  const contactSectionRef = useRef(null);
 
   const [reviewFormData, setReviewFormData] = useState({
     customerName: "",
@@ -152,6 +158,16 @@ export const HomeSection = () => {
   const [isSending, setIsSending] = useState(false);
   const [dragStart, setDragStart] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+
+  // ✅ EmailJS Configuration
+  const EMAILJS_SERVICE_ID = "service_f8jpcjv";
+  const EMAILJS_TEMPLATE_ID = "template_2dmkkl9";
+  const EMAILJS_PUBLIC_KEY = "aYMxHd4D49CBiJT-X";
+
+  // Initialize EmailJS
+  useEffect(() => {
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+  }, []);
 
   // ✅ Hero slides
   const heroSlides = [
@@ -180,6 +196,35 @@ export const HomeSection = () => {
       action: "shop",
     },
   ];
+
+  // ✅ NEW: Scroll observer for contact section
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Trigger animations when section comes into view
+            setTimeout(() => setContactTextVisible(true), 100);
+            setTimeout(() => setContactFormVisible(true), 300);
+          }
+        });
+      },
+      {
+        threshold: 0.2, // Trigger when 20% of the section is visible
+        rootMargin: "0px 0px -100px 0px", // Trigger slightly before reaching viewport
+      },
+    );
+
+    if (contactSectionRef.current) {
+      observer.observe(contactSectionRef.current);
+    }
+
+    return () => {
+      if (contactSectionRef.current) {
+        observer.unobserve(contactSectionRef.current);
+      }
+    };
+  }, []);
 
   // ✅ Load products from Firebase
   useEffect(() => {
@@ -251,10 +296,8 @@ export const HomeSection = () => {
     };
   }, []);
 
-  // ✅ FIXED: Load reviews from Firebase - only shows loading on FIRST load
+  // ✅ Load reviews from Firebase
   useEffect(() => {
-    let isFirstLoad = true;
-
     const loadReviews = async () => {
       try {
         const firebaseReviews = await reviewsAPI.getAll();
@@ -266,26 +309,18 @@ export const HomeSection = () => {
       } catch (error) {
         console.error("Error loading reviews:", error);
         setReviews([]);
-      } finally {
-        if (isFirstLoad) {
-          setInitialLoading(false); // ✅ Hide spinner after first load
-          isFirstLoad = false;
-        }
       }
     };
 
     loadReviews();
 
-    // Silently refresh reviews every 10 seconds (no loading spinner)
-    const interval = setInterval(() => {
-      isFirstLoad = false;
-      loadReviews();
-    }, 10000);
+    // Silently refresh reviews every 30 seconds
+    const interval = setInterval(loadReviews, 30000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ FIXED: Submit review to Firebase - uses button state, not full-screen loading
+  // ✅ Submit review to Firebase
   const handleReviewSubmit = async () => {
     if (!isSignedIn) {
       setShowSignInPrompt(true);
@@ -307,7 +342,7 @@ export const HomeSection = () => {
       return;
     }
 
-    setIsSubmitting(true); // ✅ Only for button feedback
+    setIsSubmitting(true);
     try {
       const newReview = {
         customerName: reviewFormData.customerName,
@@ -342,7 +377,7 @@ export const HomeSection = () => {
     }
   };
 
-  // ✅ FIXED: Delete review from Firebase - no full-screen loading
+  // ✅ Delete review from Firebase
   const handleDeleteReview = async (reviewId, reviewEmail) => {
     if (reviewEmail !== userEmail) {
       alert("You can only delete your own reviews");
@@ -375,28 +410,21 @@ export const HomeSection = () => {
     return email ? email.charAt(0).toUpperCase() : "U";
   };
 
-  // Preload carousel images
+  // ✅ OPTIMIZED: Fast page load - images load progressively
   useEffect(() => {
-    const preloadImages = async () => {
-      const imagePromises = heroSlides.map((slide) => {
-        return new Promise((resolve, reject) => {
-          const img = new Image();
-          img.src = slide.image;
-          img.onload = resolve;
-          img.onerror = reject;
-        });
-      });
+    // Hide loading spinner quickly
+    const timer = setTimeout(() => {
+      setInitialLoading(false);
+      setImagesLoaded(true);
+    }, 300);
 
-      try {
-        await Promise.all(imagePromises);
-      } catch (error) {
-        console.error("Error preloading images:", error);
-      } finally {
-        setImagesLoaded(true);
-      }
-    };
+    // Preload hero images in background
+    heroSlides.forEach((slide) => {
+      const img = new Image();
+      img.src = slide.image;
+    });
 
-    preloadImages();
+    return () => clearTimeout(timer);
   }, []);
 
   // Auto-scroll carousel every 4 seconds
@@ -410,14 +438,42 @@ export const HomeSection = () => {
     return () => clearInterval(interval);
   }, [isDragging]);
 
-  const handleSubmit = (e) => {
+  // ✅ FIXED: Contact form submit with EmailJS
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!formData.name || !formData.email || !formData.message) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
     setIsSending(true);
-    setTimeout(() => {
-      alert("Message sent!");
+
+    try {
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        {
+          to_name: "Fiyinfoluwa",
+          name: formData.name,
+          email: formData.email,
+          time: new Date().toLocaleString(),
+          message: formData.message,
+          contactnumber: formData.contactnumber || "Not provided",
+        },
+        EMAILJS_PUBLIC_KEY,
+      );
+
+      alert("Message sent successfully! We'll get back to you soon.");
       setFormData({ name: "", email: "", contactnumber: "", message: "" });
+    } catch (error) {
+      console.error("Error sending message:", error);
+      alert(
+        "Failed to send message. Please try again or email us directly at support@mylightstore.com",
+      );
+    } finally {
       setIsSending(false);
-    }, 2000);
+    }
   };
 
   const handleNextReview = () => {
@@ -489,8 +545,8 @@ export const HomeSection = () => {
 
   return (
     <section className="relative w-full">
-      {/* ✅ FIXED: Loading shows ONLY on initial page load */}
-      {(initialLoading || !imagesLoaded) && <LoadingSpinner />}
+      {/* ✅ BRIEF LOADING - Only on initial mount */}
+      {initialLoading && <LoadingSpinner />}
 
       {/* Full Width Carousel with Dynamic Text */}
       <div
@@ -558,7 +614,7 @@ export const HomeSection = () => {
                 <button
                   onClick={() => handleButtonClick(slide.action)}
                   className={cn(
-                    "liquid-button relative inline-block px-4 py-2 sm:px-5 sm:py-2 md:px-4 md:py-3 text-sm sm:text-base md:text-lg rounded-lg font-semibold shadow-xl cursor-pointer overflow-hidden transition-all duration-1000 ease-out pointer-events-auto group",
+                    "liquid-button relative inline-flex items-center px-4 py-2 sm:px-5 sm:py-2 md:px-4 md:py-3 text-sm sm:text-base md:text-lg rounded-lg font-semibold shadow-xl cursor-pointer overflow-hidden transition-all duration-1000 ease-out pointer-events-auto group",
                     index === currentSlide
                       ? "opacity-100 translate-y-0"
                       : "opacity-0 -translate-y-10",
@@ -567,13 +623,13 @@ export const HomeSection = () => {
                     transitionDelay: index === currentSlide ? "0.8s" : "0s",
                   }}
                 >
-                  <span className="relative z-10 text-white flex items-center gap-2">
+                  <span className="relative z-10 text-white">
                     {slide.buttonText}
-                    <ArrowRight
-                      size={20}
-                      className="transform transition-all duration-300 group-hover:translate-x-1"
-                    />
                   </span>
+                  <ArrowRight
+                    size={20}
+                    className="relative z-10 text-white opacity-0 w-0 ml-0 transform transition-all duration-300 group-hover:opacity-100 group-hover:w-5 group-hover:ml-2 group-hover:translate-x-0"
+                  />
                 </button>
               </div>
             </div>
@@ -1115,12 +1171,20 @@ export const HomeSection = () => {
         </div>
       )}
 
-      {/* Contact Form Section - ✅ RESTORED ORIGINAL LAYOUT */}
+      {/* ✅ FIXED: Contact Form Section with Scroll-Triggered Animation */}
       <div
+        ref={contactSectionRef}
         id="contact-section"
-        className="flex flex-col lg:flex-row justify-center items-center gap-8 bg-white py-16 px-4 md:px-0 lg:px-12 dark:bg-background"
+        className="flex flex-col lg:flex-row justify-center items-center gap-8 bg-white py-16 px-4 md:px-0 lg:px-12 dark:bg-background overflow-hidden"
       >
-        <div className="text-center lg:text-left max-w-md px-4 md:px-8 lg:px-0">
+        {/* ✅ LEFT SIDE: Contact Us Text with Scroll Animation */}
+        <div
+          className={`text-center lg:text-left max-w-md px-4 md:px-8 lg:px-0 transition-all duration-800 ${
+            contactTextVisible
+              ? "opacity-100 translate-x-0"
+              : "opacity-0 -translate-x-20"
+          }`}
+        >
           <h4 className="text-3xl sm:text-4xl font-bold text-primary mb-8">
             Contact Us
           </h4>
@@ -1130,8 +1194,15 @@ export const HomeSection = () => {
           </p>
         </div>
 
-        <div className="w-full md:w-full lg:max-w-lg bg-white dark:bg-background sm:shadow-lg sm:border sm:rounded-2xl sm:p-8">
-          <div className="space-y-6">
+        {/* ✅ RIGHT SIDE: Form with Scroll Animation */}
+        <div
+          className={`w-full md:w-full lg:max-w-lg bg-white dark:bg-background sm:shadow-lg sm:border sm:rounded-2xl sm:p-8 transition-all duration-800 delay-200 ${
+            contactFormVisible
+              ? "opacity-100 translate-x-0"
+              : "opacity-0 translate-x-20"
+          }`}
+        >
+          <form onSubmit={handleSubmit} className="space-y-6">
             <input type="hidden" name="to_name" value="Fiyinfoluwa" />
             <input
               type="hidden"
@@ -1150,6 +1221,7 @@ export const HomeSection = () => {
                 }
                 placeholder="Your Name"
                 className="w-full px-5 py-3 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60"
+                required
               />
               <input
                 type="email"
@@ -1161,6 +1233,7 @@ export const HomeSection = () => {
                 }
                 placeholder="Your Email"
                 className="w-full px-5 py-3 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60"
+                required
               />
             </div>
 
@@ -1185,10 +1258,11 @@ export const HomeSection = () => {
               }
               placeholder="Your Message"
               className="w-full border-border resize-none px-5 py-3 border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60 min-h-[150px]"
+              required
             />
 
             <button
-              onClick={handleSubmit}
+              type="submit"
               disabled={isSending}
               className="liquid-button-send w-full font-semibold py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70 relative overflow-hidden"
             >
@@ -1197,11 +1271,11 @@ export const HomeSection = () => {
                 {!isSending && <Send size={16} />}
               </span>
             </button>
-          </div>
+          </form>
         </div>
       </div>
 
-      {/* ✅ Professional CTA Section - NEW */}
+      {/* ✅ Professional CTA Section */}
       <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-800 dark:to-gray-900 py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h3 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
@@ -1211,10 +1285,10 @@ export const HomeSection = () => {
             Join thousands of creators who trust us for professional lighting
             equipment. Get exclusive deals, expert tips, and priority support.
           </p>
-          <div className="flex flex-row lg:flex-row gap-4 justify-center items-center">
+          <div className="flex flex-row sm:flex-row gap-4 justify-center items-center">
             <button
               onClick={() => (window.location.href = "/shop")}
-              className="lg:px-8 lg:py-4 px-4 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              className="px-3 py-3 lg:px-8 lg:py-4 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
             >
               Browse Products
             </button>
@@ -1226,13 +1300,124 @@ export const HomeSection = () => {
                   contactSection.scrollIntoView({ behavior: "smooth" });
                 }
               }}
-              className="lg:px-8 lg:py-4 px-4 py-2 bg-white text-primary border-2 border-primary rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 shadow-lg"
+              className="px-3 py-3 lg:px-8 lg:py-4 bg-white text-primary border-2 border-primary rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 shadow-lg"
             >
               Get in Touch
             </button>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes liquidFill {
+          0% {
+            transform: translateY(100%) scale(1.5);
+            opacity: 0;
+          }
+          50% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+          }
+        }
+
+        @keyframes scroll-fast {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+
+        @keyframes fade-in-up {
+          0% {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes bounce-slow {
+          0%,
+          100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-5px);
+          }
+        }
+
+        .animate-scroll-fast {
+          animation: scroll-fast 20s linear infinite;
+        }
+
+        .animate-scroll-fast:hover {
+          animation-play-state: paused;
+        }
+
+        .animate-fade-in-up {
+          animation: fade-in-up 0.6s ease-out forwards;
+          opacity: 0;
+        }
+
+        .animate-bounce-slow {
+          animation: bounce-slow 2s ease-in-out infinite;
+        }
+
+        /* Liquid Button Styles */
+        .liquid-button::before,
+        .liquid-button-product::before,
+        .liquid-button-modal::before,
+        .liquid-button-send::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+          border-radius: inherit;
+          transform: translateY(100%) scale(1.5);
+          transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+          z-index: 0;
+        }
+
+        .liquid-button::after,
+        .liquid-button-product::after,
+        .liquid-button-modal::after,
+        .liquid-button-send::after {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: #16a34a;
+          border-radius: inherit;
+          z-index: 0;
+        }
+
+        .liquid-button:hover::before,
+        .liquid-button-product:hover::before,
+        .liquid-button-modal:hover::before,
+        .liquid-button-send:hover::before {
+          transform: translateY(0) scale(1);
+          animation: liquidFill 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .liquid-button:active,
+        .liquid-button-product:active,
+        .liquid-button-modal:active,
+        .liquid-button-send:active {
+          transform: scale(0.95);
+        }
+      `}</style>
     </section>
   );
 };
