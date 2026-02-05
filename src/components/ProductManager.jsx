@@ -9,6 +9,7 @@ import {
   Filter,
   Lock,
   Loader2,
+  Tag,
 } from "lucide-react";
 import { productsAPI, adminAPI } from "../services/firebase";
 
@@ -22,6 +23,7 @@ export const ProductManager = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("ALL");
+  const [filterTag, setFilterTag] = useState("ALL");
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
@@ -29,10 +31,9 @@ export const ProductManager = () => {
   const [deviceId, setDeviceId] = useState("");
   const [sessionToken, setSessionToken] = useState("");
 
-  // ✅ NEW: Loading states
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [isUpdatingProduct, setIsUpdatingProduct] = useState(false);
-  const [isDeletingProduct, setIsDeletingProduct] = useState(null); // Store product ID being deleted
+  const [isDeletingProduct, setIsDeletingProduct] = useState(null);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -47,9 +48,14 @@ export const ProductManager = () => {
     description: "",
     badge: "",
     rating: 5,
+    tags: {
+      sale: false,
+      hot: false,
+      newArrivals: false,
+    },
+    discount: "",
   });
 
-  // Product categories
   const PRODUCT_CATEGORIES = [
     "RINGLIGHT",
     "LED LIGHT",
@@ -61,7 +67,6 @@ export const ProductManager = () => {
     "BACKDROP",
   ];
 
-  // Generate device fingerprint
   const generateDeviceId = () => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
@@ -82,7 +87,6 @@ export const ProductManager = () => {
     return btoa(JSON.stringify(deviceInfo));
   };
 
-  // ✅ Check admin session with Firebase
   useEffect(() => {
     const checkAdminSession = async () => {
       try {
@@ -104,7 +108,6 @@ export const ProductManager = () => {
     checkAdminSession();
   }, []);
 
-  // ✅ Load products from Firebase
   useEffect(() => {
     if (isAdmin) {
       loadProducts();
@@ -187,7 +190,7 @@ export const ProductManager = () => {
     }
   };
 
-  // ✅ Add product to Firebase WITH LOADING STATE
+  // ✅ FIXED: Proper price handling to prevent any rounding or precision issues
   const handleAddProduct = async () => {
     if (!formData.name || !formData.price || !formData.image) {
       alert("Please fill in all required fields and upload an image");
@@ -197,7 +200,16 @@ export const ProductManager = () => {
     try {
       setIsAddingProduct(true);
 
-      const cleanPrice = Math.round(Number(formData.price));
+      // ✅ Convert price to integer without any rounding
+      const priceString = String(formData.price).trim();
+      const cleanPrice = parseInt(priceString, 10);
+
+      // Validate price is a valid number
+      if (isNaN(cleanPrice) || cleanPrice < 0) {
+        alert("Please enter a valid price");
+        setIsAddingProduct(false);
+        return;
+      }
 
       const newProduct = {
         name: formData.name,
@@ -210,6 +222,8 @@ export const ProductManager = () => {
         description: formData.description || "",
         badge: formData.badge || "",
         rating: formData.rating || 5,
+        tags: formData.tags,
+        discount: formData.discount || "",
       };
 
       await productsAPI.create(newProduct);
@@ -225,7 +239,7 @@ export const ProductManager = () => {
     }
   };
 
-  // ✅ Update product in Firebase WITH LOADING STATE
+  // ✅ FIXED: Proper price handling to prevent any rounding or precision issues
   const handleEditProduct = async () => {
     if (!formData.name || !formData.price) {
       alert("Please fill in all required fields");
@@ -235,7 +249,16 @@ export const ProductManager = () => {
     try {
       setIsUpdatingProduct(true);
 
-      const cleanPrice = Math.round(Number(formData.price));
+      // ✅ Convert price to integer without any rounding
+      const priceString = String(formData.price).trim();
+      const cleanPrice = parseInt(priceString, 10);
+
+      // Validate price is a valid number
+      if (isNaN(cleanPrice) || cleanPrice < 0) {
+        alert("Please enter a valid price");
+        setIsUpdatingProduct(false);
+        return;
+      }
 
       const updatedProduct = {
         name: formData.name,
@@ -249,6 +272,8 @@ export const ProductManager = () => {
         description: formData.description || "",
         badge: formData.badge || "",
         rating: formData.rating || 5,
+        tags: formData.tags,
+        discount: formData.discount || "",
       };
 
       await productsAPI.update(editingProduct.id, updatedProduct);
@@ -265,7 +290,6 @@ export const ProductManager = () => {
     }
   };
 
-  // ✅ Delete product from Firebase WITH LOADING STATE
   const handleDeleteProduct = async (productId) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
 
@@ -287,7 +311,7 @@ export const ProductManager = () => {
     setFormData({
       name: product.name,
       category: product.category,
-      price: product.price.toString(),
+      price: String(product.price), // ✅ Convert to string for input field
       image: product.image,
       imageFile: null,
       thumbnail1: product.thumbnail1 || "",
@@ -296,6 +320,8 @@ export const ProductManager = () => {
       description: product.description || "",
       badge: product.badge || "",
       rating: product.rating || 5,
+      tags: product.tags || { sale: false, hot: false, newArrivals: false },
+      discount: product.discount || "",
     });
     setShowEditModal(true);
   };
@@ -313,6 +339,8 @@ export const ProductManager = () => {
       description: "",
       badge: "",
       rating: 5,
+      tags: { sale: false, hot: false, newArrivals: false },
+      discount: "",
     });
   };
 
@@ -322,10 +350,19 @@ export const ProductManager = () => {
       .includes(searchQuery.toLowerCase());
     const matchesCategory =
       filterCategory === "ALL" || product.category === filterCategory;
-    return matchesSearch && matchesCategory;
+
+    let matchesTag = true;
+    if (filterTag === "SALE") {
+      matchesTag = product.tags?.sale === true;
+    } else if (filterTag === "HOT") {
+      matchesTag = product.tags?.hot === true;
+    } else if (filterTag === "NEW") {
+      matchesTag = product.tags?.newArrivals === true;
+    }
+
+    return matchesSearch && matchesCategory && matchesTag;
   });
 
-  // ✅ Admin login with Firebase
   const handleAdminLogin = async () => {
     if (adminEmail.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
       alert("Access denied. You do not have admin privileges.");
@@ -342,7 +379,7 @@ export const ProductManager = () => {
       deviceId: deviceId,
       token: token,
       email: adminEmail,
-      expiry: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+      expiry: Date.now() + 7 * 24 * 60 * 60 * 1000,
     };
 
     try {
@@ -356,7 +393,6 @@ export const ProductManager = () => {
     }
   };
 
-  // ✅ Logout from Firebase
   const handleLogout = async () => {
     if (confirm("Are you sure you want to logout?")) {
       try {
@@ -372,14 +408,12 @@ export const ProductManager = () => {
     }
   };
 
-  // Render thumbnail upload section
   const renderThumbnailUploads = () => (
     <div>
       <label className="block text-sm font-semibold text-foreground mb-2">
         Additional Media (2 Images + 1 Video)
       </label>
       <div className="grid grid-cols-3 gap-3">
-        {/* Thumbnail 1 - Image */}
         <div className="border-2 border-dashed border-border rounded-lg p-2 text-center">
           {formData.thumbnail1 ? (
             <div className="relative">
@@ -412,7 +446,6 @@ export const ProductManager = () => {
           )}
         </div>
 
-        {/* Thumbnail 2 - Image */}
         <div className="border-2 border-dashed border-border rounded-lg p-2 text-center">
           {formData.thumbnail2 ? (
             <div className="relative">
@@ -445,7 +478,6 @@ export const ProductManager = () => {
           )}
         </div>
 
-        {/* Video Thumbnail */}
         <div className="border-2 border-dashed border-border rounded-lg p-2 text-center">
           {formData.videoThumbnail ? (
             <div className="relative">
@@ -492,6 +524,95 @@ export const ProductManager = () => {
       <p className="text-xs text-muted-foreground mt-2">
         Upload 2 additional images and 1 video to show in product details
       </p>
+    </div>
+  );
+
+  const renderTagsSection = () => (
+    <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-2 border-blue-300 dark:border-blue-700 rounded-xl p-5 shadow-sm">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="p-2 bg-blue-600 rounded-lg">
+          <Tag className="text-white" size={20} />
+        </div>
+        <label className="block text-base font-bold text-foreground">
+          Homepage Featured Sections
+        </label>
+      </div>
+      <p className="text-sm text-muted-foreground mb-4 bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+        💡 <strong>Important:</strong> Check at least one tag to display this
+        product on the homepage. Products with NO tags will only appear in the
+        Shop page.
+      </p>
+      <div className="space-y-3">
+        <label className="flex items-center gap-3 cursor-pointer hover:bg-white/70 dark:hover:bg-blue-900/40 p-3 rounded-lg transition-colors border-2 border-transparent hover:border-red-300">
+          <input
+            type="checkbox"
+            checked={formData.tags.sale}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                tags: { ...formData.tags, sale: e.target.checked },
+              })
+            }
+            className="w-5 h-5 text-red-600 rounded focus:ring-2 focus:ring-red-500 cursor-pointer"
+          />
+          <span className="text-sm font-semibold flex-1">
+            🔥 SALE - Display in "Sale" section on homepage
+          </span>
+        </label>
+
+        <label className="flex items-center gap-3 cursor-pointer hover:bg-white/70 dark:hover:bg-blue-900/40 p-3 rounded-lg transition-colors border-2 border-transparent hover:border-orange-300">
+          <input
+            type="checkbox"
+            checked={formData.tags.hot}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                tags: { ...formData.tags, hot: e.target.checked },
+              })
+            }
+            className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500 cursor-pointer"
+          />
+          <span className="text-sm font-semibold flex-1">
+            ⚡ HOT - Display in "Hot" section on homepage
+          </span>
+        </label>
+
+        <label className="flex items-center gap-3 cursor-pointer hover:bg-white/70 dark:hover:bg-blue-900/40 p-3 rounded-lg transition-colors border-2 border-transparent hover:border-green-300">
+          <input
+            type="checkbox"
+            checked={formData.tags.newArrivals}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                tags: { ...formData.tags, newArrivals: e.target.checked },
+              })
+            }
+            className="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500 cursor-pointer"
+          />
+          <span className="text-sm font-semibold flex-1">
+            ✨ NEW ARRIVALS - Display in "New Arrivals" section on homepage
+          </span>
+        </label>
+      </div>
+
+      <div className="mt-5 pt-4 border-t-2 border-blue-200 dark:border-blue-800">
+        <label className="block text-sm font-semibold text-foreground mb-2">
+          Discount Badge (Optional)
+        </label>
+        <input
+          type="text"
+          value={formData.discount}
+          onChange={(e) =>
+            setFormData({ ...formData, discount: e.target.value })
+          }
+          placeholder="e.g., SAVE 90%"
+          className="w-full px-4 py-2.5 border-2 border-border rounded-lg bg-white dark:bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+        />
+        <p className="text-xs text-muted-foreground mt-2">
+          💳 This will show as a red badge on the product card (e.g., "SAVE
+          90%")
+        </p>
+      </div>
     </div>
   );
 
@@ -553,7 +674,7 @@ export const ProductManager = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8 mt-14">
+    <div className="admin-product-manager min-h-screen bg-background p-4 md:p-8 mt-14">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-card rounded-2xl shadow-lg p-6 mb-6">
@@ -622,74 +743,116 @@ export const ProductManager = () => {
                 ))}
               </select>
             </div>
+            <div className="relative">
+              <Tag
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                size={20}
+              />
+              <select
+                value={filterTag}
+                onChange={(e) => setFilterTag(e.target.value)}
+                className="pl-10 pr-8 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
+              >
+                <option value="ALL">All Tags</option>
+                <option value="SALE">🔥 SALE</option>
+                <option value="HOT">⚡ HOT</option>
+                <option value="NEW">✨ NEW ARRIVALS</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        {/* ✅ Loading State */}
+        {/* Loading State */}
         {isLoadingProducts ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-12 h-12 animate-spin text-primary" />
           </div>
         ) : (
           <>
-            {/* Products Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+            {/* Product Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {filteredProducts.map((product) => (
                 <div
                   key={product.id}
-                  className="bg-card rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300"
+                  className="bg-card rounded-lg shadow-md hover:shadow-xl overflow-hidden transition-all duration-300"
                 >
-                  <div className="relative h-40 sm:h-48 md:h-56 bg-muted">
+                  {/* Image Section */}
+                  <div className="relative h-48 md:h-52 bg-gray-100 dark:bg-gray-800">
                     <img
                       src={product.image}
                       alt={product.name}
                       className="w-full h-full object-cover"
                     />
-                    {product.badge && (
-                      <span className="absolute top-2 sm:top-3 left-2 sm:left-3 bg-red-500 text-white px-2 py-1 rounded-md text-xs font-semibold">
-                        {product.badge}
+
+                    {/* Tags - Left side */}
+                    <div className="absolute top-2 left-2 flex flex-col gap-1">
+                      {product.tags?.sale && (
+                        <span className="bg-red-500 text-white px-2 py-0.5 rounded-md text-xs font-semibold shadow-md">
+                          SALE
+                        </span>
+                      )}
+                      {product.tags?.hot && (
+                        <span className="bg-orange-500 text-white px-2 py-0.5 rounded-md text-xs font-semibold shadow-md">
+                          HOT
+                        </span>
+                      )}
+                      {product.tags?.newArrivals && (
+                        <span className="bg-green-500 text-white px-2 py-0.5 rounded-md text-xs font-semibold shadow-md">
+                          NEW
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Discount Badge - Right side */}
+                    {product.discount && (
+                      <span className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-md text-xs font-bold shadow-md">
+                        {product.discount}
                       </span>
                     )}
                   </div>
 
-                  <div className="p-3 sm:p-5">
+                  {/* Product Info Section */}
+                  <div className="p-4">
+                    {/* Category Badge */}
                     <div className="mb-2">
-                      <span className="inline-block text-xs bg-primary/10 text-primary px-2 py-1 rounded-md">
+                      <span className="inline-block text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-full">
                         {product.category}
                       </span>
                     </div>
-                    <h3 className="text-sm sm:text-lg font-bold text-foreground mb-2 line-clamp-2">
+
+                    {/* Product Name */}
+                    <h3 className="text-sm font-bold text-foreground mb-2 line-clamp-2 h-10">
                       {product.name}
                     </h3>
-                    <p className="text-base sm:text-xl font-bold text-primary mb-3 sm:mb-4">
+
+                    {/* Price */}
+                    <p className="text-lg font-bold text-green-600 dark:text-green-400 mb-4">
                       ₦{product.price.toLocaleString()}
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-2">
+                    {/* Action Buttons - Border Style */}
+                    <div className="flex gap-2">
                       <button
                         onClick={() => openEditModal(product)}
                         disabled={isDeletingProduct === product.id}
-                        className="flex-1 border-2 border-blue-300 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 font-semibold py-2 sm:py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white font-medium py-2 rounded-md transition-all flex items-center justify-center gap-1.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <Edit size={14} className="sm:w-4 sm:h-4" />
+                        <Edit size={14} />
                         Edit
                       </button>
                       <button
                         onClick={() => handleDeleteProduct(product.id)}
                         disabled={isDeletingProduct === product.id}
-                        className="flex-1 border-2 border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 font-semibold py-2 sm:py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white font-medium py-2 rounded-md transition-all flex items-center justify-center gap-1.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isDeletingProduct === product.id ? (
                           <>
-                            <Loader2
-                              size={14}
-                              className="animate-spin sm:w-4 sm:h-4"
-                            />
+                            <Loader2 size={14} className="animate-spin" />
                             Deleting...
                           </>
                         ) : (
                           <>
-                            <Trash2 size={14} className="sm:w-4 sm:h-4" />
+                            <Trash2 size={14} />
                             Delete
                           </>
                         )}
@@ -708,19 +871,23 @@ export const ProductManager = () => {
                   No Products Found
                 </h3>
                 <p className="text-muted-foreground mb-6">
-                  {searchQuery || filterCategory !== "ALL"
+                  {searchQuery ||
+                  filterCategory !== "ALL" ||
+                  filterTag !== "ALL"
                     ? "Try adjusting your search or filters"
                     : "Get started by adding your first product"}
                 </p>
-                {!searchQuery && filterCategory === "ALL" && (
-                  <button
-                    onClick={() => setShowAddModal(true)}
-                    className="bg-primary hover:bg-primary/90 text-white font-semibold px-6 py-3 rounded-lg transition-colors inline-flex items-center gap-2"
-                  >
-                    <Plus size={20} />
-                    Add First Product
-                  </button>
-                )}
+                {!searchQuery &&
+                  filterCategory === "ALL" &&
+                  filterTag === "ALL" && (
+                    <button
+                      onClick={() => setShowAddModal(true)}
+                      className="bg-primary hover:bg-primary/90 text-white font-semibold px-6 py-3 rounded-lg transition-colors inline-flex items-center gap-2"
+                    >
+                      <Plus size={20} />
+                      Add First Product
+                    </button>
+                  )}
               </div>
             )}
           </>
@@ -728,8 +895,8 @@ export const ProductManager = () => {
 
         {/* Add Product Modal */}
         {showAddModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-card rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+            <div className="bg-card rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto my-8">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-foreground">
@@ -795,9 +962,14 @@ export const ProductManager = () => {
                         setFormData({ ...formData, price: e.target.value })
                       }
                       disabled={isAddingProduct}
-                      placeholder="25000"
+                      placeholder="16000"
+                      step="1"
+                      min="0"
                       className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Enter whole numbers only (e.g., 16000, not 16000.50)
+                    </p>
                   </div>
 
                   <div>
@@ -871,7 +1043,8 @@ export const ProductManager = () => {
                     />
                   </div>
 
-                  {/* ✅ LOADING BUTTON */}
+                  {renderTagsSection()}
+
                   <button
                     onClick={handleAddProduct}
                     disabled={isAddingProduct}
@@ -894,8 +1067,8 @@ export const ProductManager = () => {
 
         {/* Edit Product Modal */}
         {showEditModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-card rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+            <div className="bg-card rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto my-8">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-foreground">
@@ -962,8 +1135,14 @@ export const ProductManager = () => {
                         setFormData({ ...formData, price: e.target.value })
                       }
                       disabled={isUpdatingProduct}
+                      placeholder="16000"
+                      step="1"
+                      min="0"
                       className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Enter whole numbers only (e.g., 16000, not 16000.50)
+                    </p>
                   </div>
 
                   <div>
@@ -1033,7 +1212,8 @@ export const ProductManager = () => {
                     />
                   </div>
 
-                  {/* ✅ LOADING BUTTON */}
+                  {renderTagsSection()}
+
                   <button
                     onClick={handleEditProduct}
                     disabled={isUpdatingProduct}

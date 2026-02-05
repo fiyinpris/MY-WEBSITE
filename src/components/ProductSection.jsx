@@ -11,23 +11,9 @@ import {
 import { useState, useEffect } from "react";
 import { useCart } from "./CartSection";
 import { useWishlist } from "./WishlistSection";
+import { productsAPI } from "../services/firebase";
 
-/* ================= IMAGES ================= */
-import ringlight1 from "../Images/image R.jpeg";
-import tripodStand1 from "../Images/image T1.jpeg";
-import ledLight1 from "../Images/image L.jpeg";
-import softbox1 from "../Images/image S.jpeg";
-import Microphone1 from "../Images/image M.jpeg";
-import ringlight2 from "../Images/image R3.jpeg";
-
-import ringlight3 from "../Images/image R4.jpeg";
-import tripodStand2 from "../Images/image T.jpeg";
-import ledLight2 from "../Images/image L1.jpeg";
-import softbox2 from "../Images/image S.jpeg";
-import microphone2 from "../Images/image M.jpeg";
-import tripodStand3 from "../Images/image T4.jpeg";
-/* ========================================= */
-
+/* ================= IMAGES FOR HERO SLIDER ================= */
 import Slider1 from "../Images/image 20.jpg";
 import Slider2 from "../Images/image 21.jpg";
 import Slider3 from "../Images/image 23.jpg";
@@ -78,6 +64,9 @@ export const ProductSection = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [imagesLoaded, setImagesLoaded] = useState(false);
 
+  // ✅ NEW: Products from Firebase
+  const [products, setProducts] = useState([]);
+
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
 
@@ -90,11 +79,14 @@ export const ProductSection = () => {
 
   const categories = [
     "All",
-    "Ringlight",
-    "LED Light",
-    "Tripod",
-    "Microphone",
-    "Softbox",
+    "RINGLIGHT",
+    "LED LIGHT",
+    "INFLUENCER LIGHT",
+    "TRIPOD STAND",
+    "MICROPHONE",
+    "SOFTBOX",
+    "ACCESSORIES",
+    "BACKDROP",
   ];
 
   const heroSlides = [
@@ -123,6 +115,32 @@ export const ProductSection = () => {
       tabName: "newarrivals",
     },
   ];
+
+  // ✅ Load products from Firebase
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const loadedProducts = await productsAPI.getAll();
+        setProducts(loadedProducts);
+      } catch (error) {
+        console.error("Error loading products:", error);
+      }
+    };
+
+    loadProducts();
+
+    // Reload products periodically
+    const interval = setInterval(async () => {
+      try {
+        const loadedProducts = await productsAPI.getAll();
+        setProducts(loadedProducts);
+      } catch (error) {
+        console.error("Error reloading products:", error);
+      }
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   // ✅ Preload hero images
   useEffect(() => {
@@ -163,7 +181,7 @@ export const ProductSection = () => {
       if (!isDragging) {
         setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length);
       }
-    }, 4000); // Faster: 4 seconds instead of 5
+    }, 4000);
     return () => clearInterval(interval);
   }, [isDragging]);
 
@@ -228,140 +246,29 @@ export const ProductSection = () => {
     }
   };
 
-  /* ================= PRODUCTS ================= */
-  const products = [
-    {
-      id: 1,
-      name: "Ringlight",
-      category: "Ringlight",
-      type: "hot",
-      price: 25000,
-      rating: 4.5,
-      desc: "Professional ring light ideal for makeup, photography and streaming.",
-      img: ringlight1,
-    },
-    {
-      id: 2,
-      name: "Tripod Stand",
-      category: "Tripod",
-      type: "sale",
-      price: 20000,
-      rating: 4.8,
-      desc: "Durable adjustable tripod stand perfect for cameras and ringlights.",
-      discount: "SAVE 90%",
-      img: tripodStand1,
-    },
-    {
-      id: 3,
-      name: "Microphone",
-      category: "Microphone",
-      type: "newarrivals",
-      price: 18000,
-      rating: 4.7,
-      desc: "Studio-quality microphone suitable for podcasts and content creation.",
-      img: Microphone1,
-    },
-    {
-      id: 4,
-      name: "LED Light",
-      category: "LED Light",
-      type: "hot",
-      price: 30000,
-      rating: 4.6,
-      desc: "LED light panel for professional photo and video shoots.",
-      img: ledLight1,
-    },
-    {
-      id: 5,
-      name: "Softbox",
-      category: "Softbox",
-      type: "sale",
-      price: 40000,
-      rating: 4.9,
-      desc: "Complete softbox kit for perfect lighting in photography studios.",
-      discount: "SAVE 30%",
-      img: softbox1,
-    },
-    {
-      id: 6,
-      name: "Ringlight",
-      category: "Ringlight",
-      type: "hot",
-      price: 25000,
-      rating: 4.5,
-      desc: "Professional ring light ideal for makeup, photography and streaming.",
-      img: ringlight2,
-    },
-    {
-      id: 7,
-      name: "Tripod Stand",
-      category: "Tripod",
-      type: "sale",
-      price: 20000,
-      rating: 4.8,
-      desc: "Durable adjustable tripod stand perfect for cameras and ringlights.",
-      discount: "SAVE 90%",
-      img: tripodStand2,
-    },
-    {
-      id: 8,
-      name: "Podcast Mic",
-      category: "Microphone",
-      type: "newarrivals",
-      price: 18000,
-      rating: 4.7,
-      desc: "Studio-quality microphone suitable for podcasts and content creation.",
-      img: microphone2,
-    },
-    {
-      id: 9,
-      name: "LED Light",
-      category: "LED Light",
-      type: "hot",
-      price: 30000,
-      rating: 4.6,
-      desc: "LED light panel for professional photo and video shoots.",
-      img: ledLight2,
-    },
-    {
-      id: 10,
-      name: "Softbox",
-      category: "Softbox",
-      type: "sale",
-      price: 40000,
-      rating: 4.9,
-      desc: "Complete softbox kit for perfect lighting in photography studios.",
-      discount: "SAVE 30%",
-      img: softbox2,
-    },
-    {
-      id: 11,
-      name: "Ringlight",
-      category: "Ringlight",
-      type: "hot",
-      price: 25000,
-      rating: 4.5,
-      desc: "Professional ring light ideal for makeup, photography and streaming.",
-      img: ringlight3,
-    },
-    {
-      id: 12,
-      name: "Tripod Stand",
-      category: "Tripod",
-      type: "sale",
-      price: 20000,
-      rating: 4.8,
-      desc: "Durable adjustable tripod stand perfect for cameras and ringlights.",
-      discount: "SAVE 90%",
-      img: tripodStand3,
-    },
-  ];
-
+  // ✅ Filter products based on tags and category
   const filteredProducts = products.filter((product) => {
-    const matchType = activeTab === "all" ? true : product.type === activeTab;
+    // Filter by tag (sale, hot, newArrivals, or all)
+    let matchTag = false;
+    if (activeTab === "all") {
+      // ALL tab shows only products with at least one tag (sale, hot, or newArrivals)
+      matchTag =
+        product.tags?.sale === true ||
+        product.tags?.hot === true ||
+        product.tags?.newArrivals === true;
+    } else if (activeTab === "sale") {
+      matchTag = product.tags?.sale === true;
+    } else if (activeTab === "hot") {
+      matchTag = product.tags?.hot === true;
+    } else if (activeTab === "newarrivals") {
+      matchTag = product.tags?.newArrivals === true;
+    }
+
+    // Filter by category
     const matchCategory =
       selectedCategory === "All" ? true : product.category === selectedCategory;
-    return matchType && matchCategory;
+
+    return matchTag && matchCategory;
   });
 
   const openModal = (product) => setSelectedProduct(product);
@@ -433,7 +340,7 @@ export const ProductSection = () => {
   };
 
   return (
-    <section className="relative w-full overflow-hidden">
+    <section className="homepage-product-section relative w-full overflow-hidden">
       {/* ✅ LOADING SPINNER */}
       {isLoading && <LoadingSpinner />}
 
@@ -468,12 +375,9 @@ export const ProductSection = () => {
                   }}
                 />
 
-                {/* Gradient Overlay - Dark left, Bright right */}
                 <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
 
-                {/* Animated Text Layer */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white space-y-3 px-4">
-                  {/* Title - slides from LEFT with bouncy period */}
                   <h1
                     className={`relative text-5xl md:text-7xl lg:text-8xl font-extrabold transition-all duration-[1.2s] ease-out ${
                       index === currentHeroSlide
@@ -497,7 +401,6 @@ export const ProductSection = () => {
                     </span>
                   </h1>
 
-                  {/* Subtitle - slides from RIGHT with bouncy period */}
                   <p
                     className={`text-2xl md:text-4xl font-bold text-yellow-300 transition-all duration-[1.2s] ease-out ${
                       index === currentHeroSlide
@@ -521,7 +424,6 @@ export const ProductSection = () => {
                     </span>
                   </p>
 
-                  {/* Description - slides from LEFT with bouncy period */}
                   <p
                     className={`max-w-2xl text-white/90 text-sm md:text-base transition-all duration-[1.2s] ease-out ${
                       index === currentHeroSlide
@@ -545,7 +447,6 @@ export const ProductSection = () => {
                     </span>
                   </p>
 
-                  {/* Button - appears with fade and scale */}
                   <button
                     onClick={() => handleHeroButtonClick(slide.tabName)}
                     className={`liquid-button relative px-8 py-3 rounded-full font-semibold cursor-pointer transition-all duration-[1.2s] ease-out overflow-hidden ${
@@ -617,14 +518,14 @@ export const ProductSection = () => {
       {/* Spacer when tabs are fixed */}
       {isTabsFixed && <div className="h-[60px] sm:h-[68px] md:h-[72px]"></div>}
 
-      {/* ================= PRODUCTS ================= */}
+      {/* ================= PRODUCTS FROM FIREBASE ================= */}
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 max-w-7xl mx-3 lg:mx-10 mb-20 my-7">
         {filteredProducts.length > 0 ? (
           filteredProducts.map((product) => (
             <div
               key={product.id}
               tabIndex={0}
-              className="p-3 md:p-4 flex flex-col items-stretch space-y-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border group focus:outline-none cursor-pointer"
+              className="homepage-product-card p-3 md:p-4 flex flex-col items-stretch space-y-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border group focus:outline-none cursor-pointer"
               onMouseEnter={() => setHoveredProduct(product.id)}
               onMouseLeave={() => setHoveredProduct(null)}
               onClick={() => openModal(product)}
@@ -671,7 +572,7 @@ export const ProductSection = () => {
                 </div>
 
                 <img
-                  src={product.img}
+                  src={product.image}
                   alt={product.name}
                   className="w-full h-46 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
@@ -698,14 +599,11 @@ export const ProductSection = () => {
               {/* Product Details */}
               <div>
                 <div className="flex items-center gap-1 mb-2">
-                  {renderStars(product.rating)}
+                  {renderStars(product.rating || 5)}
                 </div>
-                <h3 className="text-sm sm:text-base font-semibold text-foreground mb-1 line-clamp-1">
+                <h3 className="text-sm sm:text-base font-semibold text-foreground mb-3 line-clamp-2">
                   {product.name}
                 </h3>
-                <p className="text-xs text-foreground/70 mb-2 line-clamp-2 hidden sm:block">
-                  {product.desc}
-                </p>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-base sm:text-lg font-bold text-green-600">
                     ₦{product.price.toLocaleString()}
@@ -729,7 +627,10 @@ export const ProductSection = () => {
           <div className="col-span-full text-center py-20">
             <div className="text-4xl sm:text-6xl mb-4">🔍</div>
             <p className="text-lg sm:text-xl text-gray-500">
-              No products found
+              No products available right now
+            </p>
+            <p className="text-sm text-gray-400 mt-2">
+              Please check back again later.
             </p>
           </div>
         )}
@@ -744,7 +645,7 @@ export const ProductSection = () => {
               <div className="relative">
                 <button
                   onClick={() => setSelectedProduct(null)}
-                  className="absolute top-2 right-2 z-10 bg-white text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-500 p-2 rounded-full shadow-lg transition-colors cursor-pointer"
+                  className="bg-card absolute top-2 right-2 z-10 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-500 p-2 rounded-full shadow-lg transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -755,7 +656,7 @@ export const ProductSection = () => {
                     </span>
                   )}
                   <img
-                    src={selectedProduct.img}
+                    src={selectedProduct.image}
                     alt={selectedProduct.name}
                     className="w-full h-64 sm:h-80 md:h-96 object-cover"
                   />
@@ -767,10 +668,9 @@ export const ProductSection = () => {
                 <div>
                   {/* Rating */}
                   <div className="flex items-center gap-1">
-                    {renderStars(selectedProduct.rating, 18)}
+                    {renderStars(selectedProduct.rating || 5, 18)}
                     <span className="text-sm text-gray-600 dark:text-gray-400 ml-2">
-                      {selectedProduct.rating} ({selectedProduct.reviews}{" "}
-                      reviews)
+                      {selectedProduct.rating || 5} (Reviews)
                     </span>
                   </div>
 
@@ -778,12 +678,13 @@ export const ProductSection = () => {
                     {selectedProduct.name}
                   </h2>
 
-                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4">
+                  <p className="text-sm sm:text-base text-gray-400 dark:text-gray-400 mb-4">
                     Category: {selectedProduct.category}
                   </p>
 
-                  <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
-                    {selectedProduct.desc}
+                  <p className="text-sm sm:text-base text-gray-400 mb-6 leading-relaxed">
+                    {selectedProduct.description ||
+                      "High-quality product for your needs"}
                   </p>
 
                   {/* Price */}
@@ -981,6 +882,11 @@ export const ProductSection = () => {
         .liquid-button-small:active,
         .liquid-button-modal:active {
           transform: scale(0.95);
+        }
+
+        /* Scoped styles for homepage product cards */
+        .homepage-product-section .homepage-product-card {
+          /* Specific styling for homepage product cards */
         }
       `}</style>
     </section>

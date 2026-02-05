@@ -25,6 +25,10 @@ export const SearchSection = () => {
     }, 3000);
   };
 
+  const handleProductClick = (productId) => {
+    navigate(`/product/${productId}`);
+  };
+
   return (
     <section className="pt-24 px-8 pb-10 min-h-screen bg-background">
       <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-2">
@@ -116,7 +120,7 @@ export const SearchSection = () => {
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
               We couldn't find any products matching "
               <span className="font-semibold">{searchQuery}</span>". Try
-              searching for: ringlight, tripod, LED light, softbox, or
+              different keywords like: ringlight, tripod, LED light, softbox, or
               microphone.
             </p>
             <button
@@ -135,7 +139,8 @@ export const SearchSection = () => {
               {results.map((product) => (
                 <div
                   key={product.id}
-                  className="border border-border rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-card w-full"
+                  className="border border-border rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-card w-full cursor-pointer"
+                  onClick={() => handleProductClick(product.id)}
                 >
                   {/* Product Image */}
                   <div className="relative overflow-hidden h-40 sm:h-48 md:h-56 bg-muted">
@@ -147,7 +152,10 @@ export const SearchSection = () => {
 
                     {/* Wishlist Button */}
                     <button
-                      onClick={() => addToWishlist(product)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToWishlist(product);
+                      }}
                       className="absolute top-3 right-3 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-shadow"
                     >
                       <Heart
@@ -184,7 +192,10 @@ export const SearchSection = () => {
 
                     {/* Add to Cart Button */}
                     <button
-                      onClick={() => handleAddToCart(product)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToCart(product);
+                      }}
                       className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-2 md:py-2.5 rounded-lg transition-colors duration-300 flex items-center justify-center gap-2 text-sm md:text-base"
                     >
                       <ShoppingCart size={16} />
