@@ -275,7 +275,6 @@ export const NavBar = () => {
           <Link to="/" className="text-xl sm:text-2xl font-bold text-primary">
             <span className="text-glow text-foreground">my.</span>LIGHTSTORE
           </Link>
-
           <div className="flex items-center gap-6 lg:gap-8">
             {!isSearchOpen ? (
               <>

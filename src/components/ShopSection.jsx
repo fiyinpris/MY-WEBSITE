@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "./CartSection";
 import { useWishlist } from "./WishlistSection";
-import { Heart, ShoppingCart, CheckCircle } from "lucide-react";
+import { Heart, ShoppingCart, CheckCircle, Star } from "lucide-react";
 import headerBg from "../Images/image 9.jpg";
-import { productsAPI } from "../services/firebase";
+import { productsAPI, reviewsAPI } from "../services/firebase";
 
 // ✅ GREEN LOADING SPINNER COMPONENT
 const LoadingSpinner = () => {
@@ -77,6 +77,9 @@ export const ShopSection = () => {
   const [showNotification, setShowNotification] = useState(false);
   const [notificationProduct, setNotificationProduct] = useState("");
 
+  // ✅ NEW: Reviews from Firebase
+  const [allReviews, setAllReviews] = useState([]);
+
   // ✅ LOADING STATE
   const [isLoading, setIsLoading] = useState(true);
 
@@ -122,12 +125,100 @@ export const ShopSection = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // ✅ Load reviews from Firebase
+  useEffect(() => {
+    const loadReviews = async () => {
+      try {
+        const loadedReviews = await reviewsAPI.getAll();
+        setAllReviews(loadedReviews || []);
+      } catch (error) {
+        console.error("Error loading reviews:", error);
+        setAllReviews([]);
+      }
+    };
+
+    loadReviews();
+
+    // Reload reviews periodically
+    const interval = setInterval(loadReviews, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Preload header image
   useEffect(() => {
     const img = new Image();
     img.src = headerBg;
     img.onload = () => setHeaderImageLoaded(true);
   }, []);
+
+  // ✅ Get review count for a product
+  const getProductReviewCount = (productName) => {
+    return allReviews.filter(
+      (review) =>
+        review.productName?.toLowerCase() === productName?.toLowerCase(),
+    ).length;
+  };
+
+  // ✅ Get average rating for a product
+  const getProductAverageRating = (productName) => {
+    const productReviews = allReviews.filter(
+      (review) =>
+        review.productName?.toLowerCase() === productName?.toLowerCase(),
+    );
+
+    if (productReviews.length === 0) return 0;
+
+    const totalRating = productReviews.reduce(
+      (sum, review) => sum + (review.rating || 0),
+      0,
+    );
+    return totalRating / productReviews.length;
+  };
+
+  // ✅ Scroll to home reviews section
+  const scrollToHomeReviews = () => {
+    // Navigate to home page
+    navigate("/");
+    // Wait for navigation, then scroll to reviews
+    setTimeout(() => {
+      const reviewsSection = document.querySelector(
+        ".flex.flex-col.justify-center.items-center.bg-green-200",
+      );
+      if (reviewsSection) {
+        reviewsSection.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 300);
+  };
+
+  const renderStars = (rating, size = 14) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+    for (let i = 0; i < 5; i++) {
+      if (i < fullStars)
+        stars.push(
+          <Star
+            key={i}
+            size={size}
+            className="text-yellow-400 fill-yellow-400"
+          />,
+        );
+      else if (i === fullStars && hasHalfStar)
+        stars.push(
+          <div key={i} className="relative inline-block">
+            <Star size={size} className="text-gray-300" />
+            <div
+              className="absolute top-0 left-0 overflow-hidden"
+              style={{ width: "50%" }}
+            >
+              <Star size={size} className="text-yellow-400 fill-yellow-400" />
+            </div>
+          </div>,
+        );
+      else stars.push(<Star key={i} size={size} className="text-gray-300" />);
+    }
+    return stars;
+  };
 
   // ✅ Filter products by category and price
   let filteredProducts = products.filter((product) => {
@@ -271,9 +362,9 @@ export const ShopSection = () => {
       )}
 
       {/* Hero Banner */}
-      <div className="relative w-full h-100 md:h-90 lg:h-90 mb-6 md:mb-8 overflow-hidden">
+      <div className="relative w-full h-100 md:h-100 lg:h-100 2xl:h-150 3xl:h-200 mb-6 md:mb-8 overflow-hidden">
         <div
-          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-500 ${
+          className={`absolute inset-0 bg-cover lg:bg-[position:50%_35%] md:bg-[position:50%_35%] bg-center transition-opacity duration-500 ${
             headerImageLoaded ? "opacity-100" : "opacity-0"
           }`}
           style={{ backgroundImage: `url(${headerBg})` }}
@@ -452,60 +543,81 @@ export const ShopSection = () => {
               </select>
             </div>
 
-            {/* ✅ FIXED: Product Grid with proper alignment */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-              {currentProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="border p-3 md:p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col"
-                >
+            {/* ✅ Product Grid - Responsive for all screen sizes including XL, XXL, XXXL */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-5 3xl:grid-cols-7 gap-4 md:gap-6">
+              {currentProducts.map((product) => {
+                const reviewCount = getProductReviewCount(product.name);
+                const avgRating = getProductAverageRating(product.name);
+
+                return (
                   <div
-                    className="w-full h-40 sm:h-48 flex items-center justify-center overflow-hidden rounded-md bg-gray-200 relative cursor-pointer mb-3"
-                    onClick={() => handleProductClick(product.id)}
+                    key={product.id}
+                    className="border p-3 md:p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col"
                   >
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-
-                    <button
-                      className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white shadow hover:bg-gray-100 cursor-pointer z-10"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addToWishlist(product);
-                      }}
-                    >
-                      <Heart
-                        className={`w-5 h-5 ${
-                          isInWishlist(product.id)
-                            ? "text-red-500 fill-red-500"
-                            : "text-gray-400"
-                        }`}
-                      />
-                    </button>
-                  </div>
-
-                  <div className="flex flex-col flex-1">
-                    <h6
-                      className="font-semibold text-sm md:text-base cursor-pointer hover:text-green-600 mb-2"
+                    <div
+                      className="w-full h-40 sm:h-48 flex items-center justify-center overflow-hidden rounded-md bg-gray-200 relative cursor-pointer mb-3"
                       onClick={() => handleProductClick(product.id)}
                     >
-                      {product.name}
-                    </h6>
-                    <p className="font-bold text-base md:text-lg text-green-600 mb-3">
-                      ₦{product.price.toLocaleString()}
-                    </p>
-                    <button
-                      className="normal-button w-full py-2 text-sm md:text-base cursor-pointer mt-auto"
-                      onClick={() => handleAddToCart(product)}
-                    >
-                      Add to Cart
-                    </button>
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+
+                      <button
+                        className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white shadow hover:bg-gray-100 cursor-pointer z-10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToWishlist(product);
+                        }}
+                      >
+                        <Heart
+                          className={`w-5 h-5 ${
+                            isInWishlist(product.id)
+                              ? "text-red-500 fill-red-500"
+                              : "text-gray-400"
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    <div className="flex flex-col flex-1">
+                      <h6
+                        className="font-semibold text-sm md:text-base cursor-pointer hover:text-green-600 mb-2"
+                        onClick={() => handleProductClick(product.id)}
+                      >
+                        {product.name}
+                      </h6>
+
+                      {/* ✅ REVIEWS - NO STARS, JUST TEXT */}
+                      {reviewCount > 0 ? (
+                        <button
+                          onClick={scrollToHomeReviews}
+                          className="text-xs text-blue-600 dark:text-blue-400 hover:underline mb-2 text-left"
+                        >
+                          {reviewCount}{" "}
+                          {reviewCount === 1 ? "Review" : "Reviews"}
+                        </button>
+                      ) : (
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                          0 Reviews
+                        </div>
+                      )}
+
+                      <p className="font-bold text-base md:text-lg text-green-600 mb-3">
+                        ₦{product.price.toLocaleString()}
+                      </p>
+                      <button
+                        className="normal-button w-full py-2 text-sm md:text-base cursor-pointer mt-auto"
+                        onClick={() => handleAddToCart(product)}
+                      >
+                        Add to Cart
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Pagination */}

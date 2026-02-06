@@ -7,11 +7,12 @@ import {
   Star,
   ArrowLeft,
   ArrowRight,
+  MessageSquare,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useCart } from "./CartSection";
 import { useWishlist } from "./WishlistSection";
-import { productsAPI } from "../services/firebase";
+import { productsAPI, reviewsAPI } from "../services/firebase";
 
 /* ================= IMAGES FOR HERO SLIDER ================= */
 import Slider1 from "../Images/image 20.jpg";
@@ -66,6 +67,9 @@ export const ProductSection = () => {
 
   // ✅ NEW: Products from Firebase
   const [products, setProducts] = useState([]);
+
+  // ✅ NEW: Reviews from Firebase
+  const [allReviews, setAllReviews] = useState([]);
 
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
@@ -139,6 +143,25 @@ export const ProductSection = () => {
       }
     }, 30000); // Refresh every 30 seconds
 
+    return () => clearInterval(interval);
+  }, []);
+
+  // ✅ Load reviews from Firebase
+  useEffect(() => {
+    const loadReviews = async () => {
+      try {
+        const loadedReviews = await reviewsAPI.getAll();
+        setAllReviews(loadedReviews || []);
+      } catch (error) {
+        console.error("Error loading reviews:", error);
+        setAllReviews([]);
+      }
+    };
+
+    loadReviews();
+
+    // Reload reviews periodically
+    const interval = setInterval(loadReviews, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -270,6 +293,41 @@ export const ProductSection = () => {
 
     return matchTag && matchCategory;
   });
+
+  // ✅ Get review count for a product
+  const getProductReviewCount = (productName) => {
+    return allReviews.filter(
+      (review) =>
+        review.productName?.toLowerCase() === productName?.toLowerCase(),
+    ).length;
+  };
+
+  // ✅ Get average rating for a product
+  const getProductAverageRating = (productName) => {
+    const productReviews = allReviews.filter(
+      (review) =>
+        review.productName?.toLowerCase() === productName?.toLowerCase(),
+    );
+
+    if (productReviews.length === 0) return 0;
+
+    const totalRating = productReviews.reduce(
+      (sum, review) => sum + (review.rating || 0),
+      0,
+    );
+    return totalRating / productReviews.length;
+  };
+
+  // ✅ Scroll to reviews section
+  const scrollToReviews = () => {
+    const reviewsSection = document.querySelector(
+      ".flex.flex-col.justify-center.items-center.bg-green-200",
+    );
+    if (reviewsSection) {
+      reviewsSection.scrollIntoView({ behavior: "smooth", block: "center" });
+      setSelectedProduct(null);
+    }
+  };
 
   const openModal = (product) => setSelectedProduct(product);
 
@@ -519,110 +577,130 @@ export const ProductSection = () => {
       {isTabsFixed && <div className="h-[60px] sm:h-[68px] md:h-[72px]"></div>}
 
       {/* ================= PRODUCTS FROM FIREBASE ================= */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 max-w-7xl mx-3 lg:mx-10 mb-20 my-7">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 3xl:grid-cols-7 gap-3 sm:gap-4 lg:gap-6 lg:px-4 max-w-[1920px] mx-3 lg:mx-10 xl:mx-auto mb-20 my-7">
         {filteredProducts.length > 0 ? (
-          filteredProducts.map((product) => (
-            <div
-              key={product.id}
-              tabIndex={0}
-              className="homepage-product-card p-3 md:p-4 flex flex-col items-stretch space-y-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border group focus:outline-none cursor-pointer"
-              onMouseEnter={() => setHoveredProduct(product.id)}
-              onMouseLeave={() => setHoveredProduct(null)}
-              onClick={() => openModal(product)}
-            >
-              {/* Product Image */}
-              <div className="relative overflow-hidden">
-                {product.discount && (
-                  <span className="absolute top-2 left-2 z-20 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md shadow-lg">
-                    {product.discount}
-                  </span>
-                )}
+          filteredProducts.map((product) => {
+            const reviewCount = getProductReviewCount(product.name);
+            const avgRating = getProductAverageRating(product.name);
 
-                {/* Heart & Eye buttons on hover */}
-                <div className="absolute top-2 right-2 z-20 flex flex-col gap-2 opacity-0 group-focus-within:opacity-100 md:group-hover:opacity-100 transition-opacity duration-300">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      addToWishlist(product);
-                    }}
-                    className="bg-card p-1.5 sm:p-2 rounded-full shadow-lg cursor-pointer hover:bg-red-50 hover:scale-110 transition-all duration-200"
+            return (
+              <div
+                key={product.id}
+                tabIndex={0}
+                className="homepage-product-card p-3 md:p-4 flex flex-col items-stretch space-y-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border group focus:outline-none cursor-pointer"
+                onMouseEnter={() => setHoveredProduct(product.id)}
+                onMouseLeave={() => setHoveredProduct(null)}
+                onClick={() => openModal(product)}
+              >
+                {/* Product Image */}
+                <div className="relative overflow-hidden">
+                  {product.discount && (
+                    <span className="absolute top-2 left-2 z-20 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md shadow-lg">
+                      {product.discount}
+                    </span>
+                  )}
+
+                  {/* Heart & Eye buttons on hover */}
+                  <div className="absolute top-2 right-2 z-20 flex flex-col gap-2 opacity-0 group-focus-within:opacity-100 md:group-hover:opacity-100 transition-opacity duration-300">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToWishlist(product);
+                      }}
+                      className="bg-card p-1.5 sm:p-2 rounded-full shadow-lg cursor-pointer hover:bg-red-50 hover:scale-110 transition-all duration-200"
+                    >
+                      <Heart
+                        size={16}
+                        className={
+                          isInWishlist(product.id)
+                            ? "text-red-500 fill-red-500"
+                            : "text-gray-600 hover:text-red-500"
+                        }
+                      />
+                    </button>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openModal(product);
+                      }}
+                      className="bg-card p-1.5 sm:p-2 rounded-full shadow-lg cursor-pointer hover:bg-green-50 hover:scale-110 transition-all duration-200"
+                    >
+                      <Eye
+                        size={16}
+                        className="text-gray-600 hover:text-green-600"
+                      />
+                    </button>
+                  </div>
+
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-46 object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+
+                  {/* Quick Add */}
+                  <div
+                    className={`absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent transition-all duration-300 ${
+                      hoveredProduct === product.id
+                        ? "translate-y-0 opacity-100"
+                        : "translate-y-full opacity-0"
+                    }`}
                   >
-                    <Heart
-                      size={16}
-                      className={
-                        isInWishlist(product.id)
-                          ? "text-red-500 fill-red-500"
-                          : "text-gray-600 hover:text-red-500"
-                      }
-                    />
-                  </button>
+                    <button
+                      onClick={(e) => handleQuickAddToCart(e, product)}
+                      className="liquid-button-small w-full font-semibold py-2 text-xs sm:text-sm rounded-md transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer relative overflow-hidden"
+                    >
+                      <span className="relative z-10 text-white flex items-center gap-2">
+                        <ShoppingCart size={14} /> Quick Add
+                      </span>
+                    </button>
+                  </div>
+                </div>
 
+                {/* Product Details - WITH CLICKABLE REVIEWS */}
+                <div>
+                  <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2 line-clamp-2">
+                    {product.name}
+                  </h3>
+
+                  {/* ✅ REVIEW SECTION - NO STARS, JUST TEXT */}
+                  {reviewCount > 0 ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        scrollToReviews();
+                      }}
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline mb-3 text-left"
+                    >
+                      {reviewCount} {reviewCount === 1 ? "Review" : "Reviews"}
+                    </button>
+                  ) : (
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                      0 Reviews
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-base sm:text-lg font-bold text-green-600">
+                      ₦{product.price.toLocaleString()}
+                    </span>
+                  </div>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       openModal(product);
                     }}
-                    className="bg-card p-1.5 sm:p-2 rounded-full shadow-lg cursor-pointer hover:bg-green-50 hover:scale-110 transition-all duration-200"
-                  >
-                    <Eye
-                      size={16}
-                      className="text-gray-600 hover:text-green-600"
-                    />
-                  </button>
-                </div>
-
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-46 object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-
-                {/* Quick Add */}
-                <div
-                  className={`absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent transition-all duration-300 ${
-                    hoveredProduct === product.id
-                      ? "translate-y-0 opacity-100"
-                      : "translate-y-full opacity-0"
-                  }`}
-                >
-                  <button
-                    onClick={(e) => handleQuickAddToCart(e, product)}
-                    className="liquid-button-small w-full font-semibold py-2 text-xs sm:text-sm rounded-md transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer relative overflow-hidden"
+                    className="liquid-button-small w-full font-semibold py-2 text-xs sm:text-sm rounded-md transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer relative overflow-hidden"
                   >
                     <span className="relative z-10 text-white flex items-center gap-2">
-                      <ShoppingCart size={14} /> Quick Add
+                      <ShoppingCart size={14} /> Add to Cart
                     </span>
                   </button>
                 </div>
               </div>
-
-              {/* Product Details */}
-              <div>
-                <div className="flex items-center gap-1 mb-2">
-                  {renderStars(product.rating || 5)}
-                </div>
-                <h3 className="text-sm sm:text-base font-semibold text-foreground mb-3 line-clamp-2">
-                  {product.name}
-                </h3>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-base sm:text-lg font-bold text-green-600">
-                    ₦{product.price.toLocaleString()}
-                  </span>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openModal(product);
-                  }}
-                  className="liquid-button-small w-full font-semibold py-2 text-xs sm:text-sm rounded-md transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer relative overflow-hidden"
-                >
-                  <span className="relative z-10 text-white flex items-center gap-2">
-                    <ShoppingCart size={14} /> Add to Cart
-                  </span>
-                </button>
-              </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <div className="col-span-full text-center py-20">
             <div className="text-4xl sm:text-6xl mb-4">🔍</div>
@@ -636,111 +714,129 @@ export const ProductSection = () => {
         )}
       </div>
 
-      {/* Product Modal */}
-      {selectedProduct && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-          <div className="bg-card rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh]">
-            <div className="grid md:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6 md:p-8">
-              {/* Image Section */}
-              <div className="relative">
-                <button
-                  onClick={() => setSelectedProduct(null)}
-                  className="bg-card absolute top-2 right-2 z-10 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-500 p-2 rounded-full shadow-lg transition-colors cursor-pointer"
-                >
-                  <X size={20} />
-                </button>
-                <div className="relative rounded-xl overflow-hidden bg-gray-100">
-                  {selectedProduct.discount && (
-                    <span className="absolute top-4 left-4 bg-red-500 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded-md shadow-lg z-10">
-                      {selectedProduct.discount}
-                    </span>
-                  )}
-                  <img
-                    src={selectedProduct.image}
-                    alt={selectedProduct.name}
-                    className="w-full h-64 sm:h-80 md:h-96 object-cover"
-                  />
-                </div>
-              </div>
+      {/* Product Modal - WITH CLICKABLE REVIEWS */}
+      {selectedProduct &&
+        (() => {
+          const reviewCount = getProductReviewCount(selectedProduct.name);
+          const avgRating = getProductAverageRating(selectedProduct.name);
 
-              {/* Details Section */}
-              <div className="flex flex-col gap-8">
-                <div>
-                  {/* Rating */}
-                  <div className="flex items-center gap-1">
-                    {renderStars(selectedProduct.rating || 5, 18)}
-                    <span className="text-sm text-gray-600 dark:text-gray-400 ml-2">
-                      {selectedProduct.rating || 5} (Reviews)
-                    </span>
+          return (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+              <div className="bg-card rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh]">
+                <div className="grid md:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6 md:p-8">
+                  {/* Image Section */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setSelectedProduct(null)}
+                      className="bg-card absolute top-2 right-2 z-10 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-500 p-2 rounded-full shadow-lg transition-colors cursor-pointer"
+                    >
+                      <X size={20} />
+                    </button>
+                    <div className="relative rounded-xl overflow-hidden bg-gray-100">
+                      {selectedProduct.discount && (
+                        <span className="absolute top-4 left-4 bg-red-500 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded-md shadow-lg z-10">
+                          {selectedProduct.discount}
+                        </span>
+                      )}
+                      <img
+                        src={selectedProduct.image}
+                        alt={selectedProduct.name}
+                        className="w-full h-64 sm:h-80 md:h-96 object-cover"
+                      />
+                    </div>
                   </div>
 
-                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                    {selectedProduct.name}
-                  </h2>
+                  {/* Details Section */}
+                  <div className="flex flex-col gap-8">
+                    <div>
+                      {/* ✅ REVIEWS IN MODAL - STARS ONLY WHEN REVIEWS EXIST */}
+                      {reviewCount > 0 ? (
+                        <button
+                          onClick={scrollToReviews}
+                          className="flex items-center gap-1 hover:opacity-70 transition-opacity mb-2"
+                        >
+                          {renderStars(avgRating, 18)}
+                          <span className="text-sm text-gray-600 dark:text-gray-400 ml-2">
+                            {reviewCount}{" "}
+                            {reviewCount === 1 ? "Review" : "Reviews"}
+                          </span>
+                        </button>
+                      ) : (
+                        <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                          0 Reviews
+                        </div>
+                      )}
 
-                  <p className="text-sm sm:text-base text-gray-400 dark:text-gray-400 mb-4">
-                    Category: {selectedProduct.category}
-                  </p>
+                      <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                        {selectedProduct.name}
+                      </h2>
 
-                  <p className="text-sm sm:text-base text-gray-400 mb-6 leading-relaxed">
-                    {selectedProduct.description ||
-                      "High-quality product for your needs"}
-                  </p>
+                      <p className="text-sm sm:text-base text-gray-400 dark:text-gray-400 mb-4">
+                        Category: {selectedProduct.category}
+                      </p>
 
-                  {/* Price */}
-                  <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-2.5 sm:p-3 w-32">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl sm:text-2xl font-semibold text-green-600">
-                        ₦{selectedProduct.price.toLocaleString()}
-                      </span>
+                      <p className="text-sm sm:text-base text-gray-400 mb-6 leading-relaxed">
+                        {selectedProduct.description ||
+                          "High-quality product for your needs"}
+                      </p>
+
+                      {/* Price */}
+                      <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-2.5 sm:p-3 w-32">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl sm:text-2xl font-semibold text-green-600">
+                            ₦{selectedProduct.price.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-row gap-2 sm:gap-3 mb-5">
+                      {/* Add to Cart */}
+                      <button
+                        onClick={() => handleAddToCart(selectedProduct)}
+                        className="liquid-button-modal flex-1 font-semibold py-2.5 sm:py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg text-xs sm:text-sm cursor-pointer relative overflow-hidden"
+                      >
+                        <span className="relative z-10 text-white flex items-center gap-1.5">
+                          <ShoppingCart size={16} />
+                          Add to Cart
+                        </span>
+                      </button>
+
+                      {/* Buy Now */}
+                      <button
+                        onClick={() => handleAddToCart(selectedProduct)}
+                        className="liquid-button-modal flex-1 font-semibold py-2.5 sm:py-3 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg text-xs sm:text-sm cursor-pointer relative overflow-hidden"
+                      >
+                        <span className="relative z-10 text-white">
+                          Buy Now
+                        </span>
+                      </button>
+
+                      {/* Wishlist */}
+                      <button
+                        onClick={() => addToWishlist(selectedProduct)}
+                        className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-medium py-2.5 sm:py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 text-xs sm:text-sm cursor-pointer"
+                      >
+                        <Heart
+                          size={16}
+                          className={
+                            isInWishlist(selectedProduct.id)
+                              ? "text-red-500 fill-red-500"
+                              : ""
+                          }
+                        />
+                        {isInWishlist(selectedProduct.id)
+                          ? "In Wishlist"
+                          : "Wishlist"}
+                      </button>
                     </div>
                   </div>
                 </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-row gap-2 sm:gap-3 mb-5">
-                  {/* Add to Cart */}
-                  <button
-                    onClick={() => handleAddToCart(selectedProduct)}
-                    className="liquid-button-modal flex-1 font-semibold py-2.5 sm:py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg text-xs sm:text-sm cursor-pointer relative overflow-hidden"
-                  >
-                    <span className="relative z-10 text-white flex items-center gap-1.5">
-                      <ShoppingCart size={16} />
-                      Add to Cart
-                    </span>
-                  </button>
-
-                  {/* Buy Now */}
-                  <button
-                    onClick={() => handleAddToCart(selectedProduct)}
-                    className="liquid-button-modal flex-1 font-semibold py-2.5 sm:py-3 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg text-xs sm:text-sm cursor-pointer relative overflow-hidden"
-                  >
-                    <span className="relative z-10 text-white">Buy Now</span>
-                  </button>
-
-                  {/* Wishlist */}
-                  <button
-                    onClick={() => addToWishlist(selectedProduct)}
-                    className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-medium py-2.5 sm:py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 text-xs sm:text-sm cursor-pointer"
-                  >
-                    <Heart
-                      size={16}
-                      className={
-                        isInWishlist(selectedProduct.id)
-                          ? "text-red-500 fill-red-500"
-                          : ""
-                      }
-                    />
-                    {isInWishlist(selectedProduct.id)
-                      ? "In Wishlist"
-                      : "Wishlist"}
-                  </button>
-                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          );
+        })()}
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
