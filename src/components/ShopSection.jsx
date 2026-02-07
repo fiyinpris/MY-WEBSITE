@@ -37,32 +37,6 @@ const LoadingSpinner = () => {
   );
 };
 
-// ✅ PRODUCT-STYLE NOTIFICATION COMPONENT (matching ProductSection.jsx)
-const AddToCartNotification = ({ productName, onClose }) => {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 2000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-2xl animate-slideInRight max-w-sm mx-4">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
-            <ShoppingCart className="text-green-600" size={32} />
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-            Added to Cart!
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400">
-            {productName} successfully added to your cart
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export const ShopSection = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
@@ -74,8 +48,6 @@ export const ShopSection = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [headerImageLoaded, setHeaderImageLoaded] = useState(false);
   const [products, setProducts] = useState([]);
-  const [showNotification, setShowNotification] = useState(false);
-  const [notificationProduct, setNotificationProduct] = useState("");
 
   // ✅ NEW: Reviews from Firebase
   const [allReviews, setAllReviews] = useState([]);
@@ -278,11 +250,9 @@ export const ShopSection = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // ✅ UPDATED: Show notification instead of toast
+  // ✅ UPDATED: Just add to cart without notification
   const handleAddToCart = (product) => {
     addToCart(product);
-    setNotificationProduct(product.name);
-    setShowNotification(true);
   };
 
   const handleProductClick = (productId) => {
@@ -353,18 +323,10 @@ export const ShopSection = () => {
       {/* ✅ LOADING SPINNER */}
       {(isLoading || !headerImageLoaded) && <LoadingSpinner />}
 
-      {/* ✅ NOTIFICATION (replacing toast) */}
-      {showNotification && (
-        <AddToCartNotification
-          productName={notificationProduct}
-          onClose={() => setShowNotification(false)}
-        />
-      )}
-
       {/* Hero Banner */}
-      <div className="relative w-full h-100 md:h-100 lg:h-100 2xl:h-150 3xl:h-200 mb-6 md:mb-8 overflow-hidden">
+      <div className="relative w-full h-100 md:h-90 lg:h-90 mb-6 md:mb-8 overflow-hidden">
         <div
-          className={`absolute inset-0 bg-cover lg:bg-[position:50%_35%] md:bg-[position:50%_35%] bg-center transition-opacity duration-500 ${
+          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-500 ${
             headerImageLoaded ? "opacity-100" : "opacity-0"
           }`}
           style={{ backgroundImage: `url(${headerBg})` }}
@@ -544,7 +506,7 @@ export const ShopSection = () => {
             </div>
 
             {/* ✅ Product Grid - Responsive for all screen sizes including XL, XXL, XXXL */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-5 3xl:grid-cols-7 gap-4 md:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-5 gap-4 md:gap-6 mb-15">
               {currentProducts.map((product) => {
                 const reviewCount = getProductReviewCount(product.name);
                 const avgRating = getProductAverageRating(product.name);
@@ -590,21 +552,6 @@ export const ShopSection = () => {
                         {product.name}
                       </h6>
 
-                      {/* ✅ REVIEWS - NO STARS, JUST TEXT */}
-                      {reviewCount > 0 ? (
-                        <button
-                          onClick={scrollToHomeReviews}
-                          className="text-xs text-blue-600 dark:text-blue-400 hover:underline mb-2 text-left"
-                        >
-                          {reviewCount}{" "}
-                          {reviewCount === 1 ? "Review" : "Reviews"}
-                        </button>
-                      ) : (
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                          0 Reviews
-                        </div>
-                      )}
-
                       <p className="font-bold text-base md:text-lg text-green-600 mb-3">
                         ₦{product.price.toLocaleString()}
                       </p>
@@ -622,7 +569,7 @@ export const ShopSection = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-center items-center mt-6 mb-8 md:mt-8 space-x-2 md:space-x-3">
+              <div className="flex justify-center items-center mt-6 mb-18 md:mt-8 space-x-2 md:space-x-3 m">
                 <button
                   className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm md:text-base cursor-pointer"
                   onClick={goPrev}
@@ -689,36 +636,6 @@ export const ShopSection = () => {
           </main>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes slideInRight {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-
-        .animate-slideInRight {
-          animation: slideInRight 0.4s ease-out;
-        }
-      `}</style>
     </div>
   );
 };

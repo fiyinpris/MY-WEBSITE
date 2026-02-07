@@ -7,10 +7,9 @@ import {
   ArrowLeft,
   Minus,
   Plus,
+  MessageCircle,
+  X,
   Star,
-  ArrowBigLeft,
-  ArrowBigRight,
-  Trash2,
 } from "lucide-react";
 import { productsAPI, reviewsAPI } from "../services/firebase";
 
@@ -31,22 +30,35 @@ export const ProductDetail = () => {
   const [startPos, setStartPos] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
-  // ✅ NEW: Review states
   const [reviews, setReviews] = useState([]);
-  const [currentReview, setCurrentReview] = useState(0);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+
+  // ✅ Add Review Modal State
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reviewFormData, setReviewFormData] = useState({
+    customerName: "",
+    email: "",
+    productName: "",
+    rating: 5,
+    comment: "",
+  });
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   }, []);
 
-  // ✅ Load product from Firebase
   useEffect(() => {
     const loadProduct = async () => {
       try {
         const foundProduct = await productsAPI.getById(id);
         setProduct(foundProduct);
+        // ✅ Pre-fill product name in review form
+        setReviewFormData((prev) => ({
+          ...prev,
+          productName: foundProduct?.name || "",
+        }));
       } catch (error) {
         console.error("Error loading product:", error);
       } finally {
@@ -57,14 +69,12 @@ export const ProductDetail = () => {
     loadProduct();
   }, [id]);
 
-  // ✅ NEW: Load reviews that match this product
   useEffect(() => {
     const loadReviews = async () => {
       if (!product) return;
 
       try {
         const allReviews = await reviewsAPI.getAll();
-        // Filter reviews that match this product's name (case-insensitive)
         const productReviews = allReviews.filter(
           (review) =>
             review.productName.toLowerCase() === product.name.toLowerCase(),
@@ -78,7 +88,6 @@ export const ProductDetail = () => {
 
     loadReviews();
 
-    // Reload reviews periodically
     const interval = setInterval(async () => {
       if (!product) return;
       try {
@@ -96,7 +105,6 @@ export const ProductDetail = () => {
     return () => clearInterval(interval);
   }, [product]);
 
-  // ✅ NEW: Check auth
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -107,6 +115,7 @@ export const ProductDetail = () => {
           if (email) {
             setIsSignedIn(true);
             setUserEmail(email);
+            setReviewFormData((prev) => ({ ...prev, email }));
           }
         }
       } catch (error) {
@@ -135,32 +144,37 @@ export const ProductDetail = () => {
     }
   };
 
-  // ✅ NEW: Review navigation
-  const handleNextReview = () => {
-    if (reviews.length > 0) {
-      setCurrentReview((prev) => (prev + 1) % reviews.length);
-    }
-  };
-
-  const handlePrevReview = () => {
-    if (reviews.length > 0) {
-      setCurrentReview((prev) => (prev - 1 + reviews.length) % reviews.length);
-    }
-  };
-
-  // ✅ NEW: Delete review
-  const handleDeleteReview = async (reviewId, reviewEmail) => {
-    if (reviewEmail !== userEmail) {
-      alert("You can only delete your own reviews");
+  // ✅ Handle Review Submission
+  const handleReviewSubmit = async () => {
+    if (!isSignedIn) {
+      alert("Please sign in to leave a review");
+      navigate("/signin");
       return;
     }
 
-    if (!confirm("Are you sure you want to delete this review?")) {
+    if (
+      !reviewFormData.customerName ||
+      !reviewFormData.email ||
+      !reviewFormData.productName ||
+      !reviewFormData.comment
+    ) {
+      alert("Please fill in all fields");
       return;
     }
 
+    setIsSubmitting(true);
     try {
-      await reviewsAPI.delete(reviewId);
+      const newReview = {
+        customerName: reviewFormData.customerName,
+        email: reviewFormData.email,
+        productName: reviewFormData.productName,
+        rating: reviewFormData.rating,
+        comment: reviewFormData.comment,
+        date: new Date().toISOString().split("T")[0],
+        verified: true,
+      };
+
+      await reviewsAPI.create(newReview);
 
       // Reload reviews
       const allReviews = await reviewsAPI.getAll();
@@ -170,53 +184,35 @@ export const ProductDetail = () => {
       );
       setReviews(productReviews);
 
-      if (currentReview >= productReviews.length) {
-        setCurrentReview(0);
-      }
-
-      alert("Review deleted successfully!");
+      // Reset form
+      setReviewFormData({
+        customerName: "",
+        email: userEmail,
+        productName: product.name,
+        rating: 5,
+        comment: "",
+      });
+      setShowReviewModal(false);
+      alert("Thank you for your review!");
     } catch (error) {
-      console.error("Error deleting review:", error);
-      alert(`Error deleting review: ${error.message}`);
+      console.error("Error submitting review:", error);
+      alert(`Error saving review: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // ✅ NEW: Helper functions
-  const getEmailInitial = (email) => {
-    return email ? email.charAt(0).toUpperCase() : "U";
-  };
-
-  const renderStars = (rating, size = 20) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-
-    for (let i = 0; i < 5; i++) {
-      if (i < fullStars) {
-        stars.push(
-          <Star
-            key={i}
-            size={size}
-            className="text-yellow-400 fill-yellow-400"
-          />,
-        );
-      } else if (i === fullStars && hasHalfStar) {
-        stars.push(
-          <div key={i} className="relative inline-block">
-            <Star size={size} className="text-gray-300" />
-            <div
-              className="absolute top-0 left-0 overflow-hidden"
-              style={{ width: "50%" }}
-            >
-              <Star size={size} className="text-yellow-400 fill-yellow-400" />
-            </div>
-          </div>,
-        );
-      } else {
-        stars.push(<Star key={i} size={size} className="text-gray-300" />);
+  // ✅ Scroll to home reviews section
+  const scrollToHomeReviews = () => {
+    navigate("/");
+    setTimeout(() => {
+      const reviewsSection = document.querySelector(
+        ".flex.flex-col.justify-center.items-center.bg-green-200",
+      );
+      if (reviewsSection) {
+        reviewsSection.scrollIntoView({ behavior: "smooth", block: "center" });
       }
-    }
-    return stars;
+    }, 300);
   };
 
   const scrollToMedia = (index) => {
@@ -328,11 +324,8 @@ export const ProductDetail = () => {
           <span>Back to Shop</span>
         </button>
 
-        {/* PRODUCT DETAILS */}
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12 mb-12">
-          {/* Images Section */}
           <div className="flex flex-col md:flex-row gap-4">
-            {/* Desktop: Vertical Thumbnails + Main Display */}
             <div className="hidden lg:flex lg:flex-row gap-4 w-full">
               <div className="flex flex-col gap-2 w-20">
                 {allMedia.map((media, index) => (
@@ -406,7 +399,6 @@ export const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Mobile: Draggable Carousel */}
             <div className="lg:hidden w-full">
               <div className="relative">
                 <div
@@ -481,7 +473,6 @@ export const ProductDetail = () => {
             </div>
           </div>
 
-          {/* Info Section */}
           <div className="flex flex-col">
             <span className="inline-block text-sm bg-primary/10 text-primary px-3 py-1 rounded-full mb-3 w-fit">
               {product.category}
@@ -491,12 +482,18 @@ export const ProductDetail = () => {
               {product.name}
             </h1>
 
-            {/* ✅ NEW: Rating with review count */}
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex">{renderStars(product.rating || 5)}</div>
-              <span className="text-gray-600 dark:text-gray-400 text-sm">
-                ({reviews.length} {reviews.length === 1 ? "review" : "reviews"})
-              </span>
+            {/* ✅ CLICKABLE REVIEW COUNT - NO STARS */}
+            <div className="mb-4">
+              <button
+                onClick={scrollToHomeReviews}
+                className="text-gray-600 dark:text-gray-400 text-sm hover:text-primary hover:underline transition-colors cursor-pointer"
+              >
+                {reviews.length === 0
+                  ? "0 reviews"
+                  : reviews.length === 1
+                    ? "1 review"
+                    : `${reviews.length} reviews`}
+              </button>
             </div>
 
             <p className="text-4xl font-bold text-green-600 mb-6">
@@ -540,12 +537,19 @@ export const ProductDetail = () => {
               </div>
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex gap-4 mb-4">
               <button
                 onClick={handleAddToCart}
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-4 rounded-lg transition-colors"
               >
                 Add to Cart
+              </button>
+
+              <button
+                onClick={handleAddToCart}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-lg transition-colors"
+              >
+                Buy Now
               </button>
 
               <button
@@ -563,111 +567,120 @@ export const ProductDetail = () => {
                 />
               </button>
             </div>
+
+            {/* ✅ ADD REVIEW BUTTON */}
+            <button
+              onClick={() => setShowReviewModal(true)}
+              className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              <MessageCircle size={20} />
+              Add a Review
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* ✅ NEW: REVIEWS SECTION */}
-        <div className="bg-green-50 dark:bg-gray-800 rounded-2xl p-6 sm:p-8 mt-12">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 dark:text-white">
-            Customer Reviews ({reviews.length})
-          </h2>
-
-          {reviews.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">💬</div>
-              <h3 className="text-2xl font-bold mb-2 dark:text-white">
-                No Reviews Yet
+      {/* ✅ REVIEW MODAL */}
+      {showReviewModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Add Review
               </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Be the first to share your experience with this product!
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Reviews submitted on the homepage will appear here
-              </p>
+              <button
+                onClick={() => setShowReviewModal(false)}
+                className="bg-card hover:text-gray-700 border rounded-2xl w-8 h-8"
+              >
+                <X size={24} />
+              </button>
             </div>
-          ) : (
-            <div className="relative max-w-3xl mx-auto">
-              {/* Review Card */}
-              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6 sm:p-8">
-                <div className="flex justify-center -mt-14 mb-6">
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl sm:text-4xl font-bold shadow-lg border-4 border-white dark:border-gray-900">
-                    {getEmailInitial(reviews[currentReview].email)}
-                  </div>
-                </div>
 
-                <div className="flex justify-center items-center gap-1 mb-4">
-                  {renderStars(reviews[currentReview].rating)}
-                </div>
+            <div className="space-y-4">
+              <input
+                type="text"
+                placeholder="Your Name"
+                value={reviewFormData.customerName}
+                onChange={(e) =>
+                  setReviewFormData({
+                    ...reviewFormData,
+                    customerName: e.target.value,
+                  })
+                }
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+              />
 
-                <p className="text-center text-base sm:text-lg mb-4 text-gray-700 dark:text-gray-300">
-                  {reviews[currentReview].comment}
-                </p>
+              <input
+                type="email"
+                placeholder="Your Email"
+                value={reviewFormData.email}
+                onChange={(e) =>
+                  setReviewFormData({
+                    ...reviewFormData,
+                    email: e.target.value,
+                  })
+                }
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                disabled={isSignedIn}
+              />
 
-                <p className="font-semibold text-center text-green-600 mb-1">
-                  - {reviews[currentReview].customerName}
-                </p>
+              <input
+                type="text"
+                placeholder="Product Name"
+                value={reviewFormData.productName}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl cursor-not-allowed"
+                disabled
+              />
 
-                <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                  {new Date(reviews[currentReview].date).toLocaleDateString()}
-                </p>
-
-                {/* Delete button for own reviews */}
-                {isSignedIn && reviews[currentReview].email === userEmail && (
-                  <div className="flex justify-center mt-4">
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                  Rating
+                </label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
                     <button
+                      key={star}
                       onClick={() =>
-                        handleDeleteReview(
-                          reviews[currentReview].id,
-                          reviews[currentReview].email,
-                        )
+                        setReviewFormData({ ...reviewFormData, rating: star })
                       }
-                      className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
-                      title="Delete my review"
+                      className="focus:outline-none"
                     >
-                      <Trash2 size={18} />
+                      <Star
+                        size={32}
+                        className={
+                          star <= reviewFormData.rating
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "fill-gray-300 text-gray-300"
+                        }
+                      />
                     </button>
-                  </div>
-                )}
+                  ))}
+                </div>
               </div>
 
-              {/* Navigation - Desktop */}
-              {reviews.length > 1 && (
-                <>
-                  <button
-                    onClick={handlePrevReview}
-                    className="hidden sm:flex absolute left-[-4rem] top-1/2 -translate-y-1/2 bg-green-600 text-white rounded-full p-3 hover:bg-green-700 transition"
-                  >
-                    <ArrowBigLeft size={24} />
-                  </button>
+              <textarea
+                placeholder="Your Review"
+                value={reviewFormData.comment}
+                onChange={(e) =>
+                  setReviewFormData({
+                    ...reviewFormData,
+                    comment: e.target.value,
+                  })
+                }
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl  focus:outline-none focus:ring-2 focus:ring-primary min-h-[120px] resize-none"
+              />
 
-                  <button
-                    onClick={handleNextReview}
-                    className="hidden sm:flex absolute right-[-4rem] top-1/2 -translate-y-1/2 bg-green-600 text-white rounded-full p-3 hover:bg-green-700 transition"
-                  >
-                    <ArrowBigRight size={24} />
-                  </button>
-
-                  {/* Navigation - Mobile */}
-                  <div className="flex sm:hidden justify-center gap-6 mt-6">
-                    <button
-                      onClick={handlePrevReview}
-                      className="bg-green-600 text-white rounded-full p-3 hover:bg-green-700 transition"
-                    >
-                      <ArrowBigLeft size={20} />
-                    </button>
-                    <button
-                      onClick={handleNextReview}
-                      className="bg-green-600 text-white rounded-full p-3 hover:bg-green-700 transition"
-                    >
-                      <ArrowBigRight size={20} />
-                    </button>
-                  </div>
-                </>
-              )}
+              <button
+                onClick={handleReviewSubmit}
+                disabled={isSubmitting}
+                className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? "Submitting..." : "Submit Review"}
+              </button>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

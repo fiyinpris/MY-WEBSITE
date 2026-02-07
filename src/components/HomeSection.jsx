@@ -200,19 +200,16 @@ export const HomeSection = () => {
 
   // ✅ Get review count for a product
   const getProductReviewCount = (productName) => {
-    return allReviews.filter(
-      (review) =>
-        review.productName?.toLowerCase() === productName?.toLowerCase(),
+    return allReviews.filter(review => 
+      review.productName?.toLowerCase() === productName?.toLowerCase()
     ).length;
   };
 
   // ✅ Scroll to reviews section
   const scrollToReviews = () => {
-    const reviewsSection = document.querySelector(
-      ".flex.flex-col.justify-center.items-center.bg-green-200",
-    );
+    const reviewsSection = document.querySelector('.flex.flex-col.justify-center.items-center.bg-green-200');
     if (reviewsSection) {
-      reviewsSection.scrollIntoView({ behavior: "smooth", block: "center" });
+      reviewsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   };
 
@@ -775,7 +772,7 @@ export const HomeSection = () => {
             <div className="flex gap-4 md:gap-6 animate-scroll-fast hover:pause-scroll">
               {products.concat(products).map((product, index) => {
                 const reviewCount = getProductReviewCount(product.name);
-
+                
                 return (
                   <div
                     key={`${product.id}-${index}`}
@@ -800,21 +797,6 @@ export const HomeSection = () => {
                     </div>
 
                     <div className="p-3 md:p-4 text-left">
-                      {/* ✅ NO STARS - ONLY REVIEW COUNT TEXT */}
-                      {reviewCount > 0 ? (
-                        <button
-                          onClick={scrollToReviews}
-                          className="text-xs text-blue-600 dark:text-blue-400 hover:underline mb-2 text-left"
-                        >
-                          {reviewCount}{" "}
-                          {reviewCount === 1 ? "Review" : "Reviews"}
-                        </button>
-                      ) : (
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                          0 Reviews
-                        </div>
-                      )}
-
                       <h3 className="text-sm md:text-base font-bold text-foreground mb-2">
                         {product.name}
                       </h3>
@@ -850,21 +832,6 @@ export const HomeSection = () => {
           <p className="font-bold text-2xl sm:text-3xl">
             What Our Customer says
           </p>
-          <button
-            onClick={() => {
-              if (!isSignedIn) {
-                setShowSignInPrompt(true);
-              } else if (!hasPurchased) {
-                setShowPurchaseWarning(true);
-              } else {
-                setShowReviewModal(true);
-              }
-            }}
-            className="bg-primary hover:bg-primary/90 text-white rounded-full p-2 sm:p-3 transition shadow-lg"
-            title="Leave a review"
-          >
-            <Plus size={20} />
-          </button>
         </div>
 
         {reviews.length === 0 ? (
@@ -872,22 +839,8 @@ export const HomeSection = () => {
             <div className="text-6xl mb-4">💬</div>
             <h3 className="text-2xl font-bold mb-2">No Reviews Yet</h3>
             <p className="text-gray-600 mb-6">
-              Be the first to share your experience!
+              Be the first to share your experience on the product detail page!
             </p>
-            <button
-              onClick={() => {
-                if (!isSignedIn) {
-                  setShowSignInPrompt(true);
-                } else if (!hasPurchased) {
-                  setShowPurchaseWarning(true);
-                } else {
-                  setShowReviewModal(true);
-                }
-              }}
-              className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-            >
-              Write a Review
-            </button>
           </div>
         ) : (
           <div className="relative border bg-white p-6 sm:p-8 shadow-md w-full sm:w-4/5 md:w-[600px] mt-10 border-transparent flex flex-col items-center rounded-xl">
@@ -968,228 +921,6 @@ export const HomeSection = () => {
         )}
       </div>
 
-      {/* Modals - Sign In Prompt */}
-      {showSignInPrompt && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-gray-800">
-                Sign In Required
-              </h3>
-              <button
-                onClick={() => setShowSignInPrompt(false)}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-8 h-8 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-              </div>
-              <p className="text-gray-600 mb-4">
-                Please sign in to leave a review.
-              </p>
-              <p className="text-sm text-gray-500">
-                You'll need an account to submit reviews.
-              </p>
-            </div>
-
-            <button
-              onClick={() => {
-                setShowSignInPrompt(false);
-                window.location.href = "/signin";
-              }}
-              className="liquid-button-modal w-full px-6 py-3 rounded-lg font-semibold shadow-md relative overflow-hidden"
-            >
-              <span className="relative z-10 text-white">Go to Sign In</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Review Modal */}
-      {showReviewModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-gray-800">
-                  Leave a Review
-                </h3>
-                <button
-                  onClick={() => setShowReviewModal(false)}
-                  className="text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Your Name
-                  </label>
-                  <input
-                    type="text"
-                    value={reviewFormData.customerName}
-                    onChange={(e) =>
-                      setReviewFormData({
-                        ...reviewFormData,
-                        customerName: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-900 outline-none focus:outline-none"
-                    placeholder="Your full name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Your Email (Auto-filled)
-                  </label>
-                  <input
-                    type="email"
-                    value={reviewFormData.email}
-                    readOnly
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed outline-none focus:outline-none"
-                    placeholder="your.email@example.com"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Your email is automatically filled from your account
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Product Name
-                  </label>
-                  <input
-                    type="text"
-                    value={reviewFormData.productName}
-                    onChange={(e) =>
-                      setReviewFormData({
-                        ...reviewFormData,
-                        productName: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-900 outline-none focus:outline-none"
-                    placeholder="Product you purchased"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Rating
-                  </label>
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        onClick={() =>
-                          setReviewFormData({ ...reviewFormData, rating: star })
-                        }
-                        className="focus:outline-none transition-transform hover:scale-110"
-                      >
-                        <Star
-                          size={24}
-                          className={
-                            star <= reviewFormData.rating
-                              ? "fill-yellow-400 text-yellow-400"
-                              : "text-gray-300"
-                          }
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Your Review
-                  </label>
-                  <textarea
-                    value={reviewFormData.comment}
-                    onChange={(e) =>
-                      setReviewFormData({
-                        ...reviewFormData,
-                        comment: e.target.value,
-                      })
-                    }
-                    rows="4"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none bg-white text-gray-900 outline-none focus:outline-none"
-                    placeholder="Tell us about your experience..."
-                  />
-                </div>
-
-                <button
-                  onClick={handleReviewSubmit}
-                  disabled={isSubmitting}
-                  className="liquid-button-modal w-full px-6 py-3 rounded-lg font-semibold shadow-md relative overflow-hidden disabled:opacity-50"
-                >
-                  <span className="relative z-10 text-white">
-                    {isSubmitting ? "Submitting..." : "Submit Review"}
-                  </span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Purchase Warning Modal */}
-      {showPurchaseWarning && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-gray-800">
-                Purchase Required
-              </h3>
-              <button
-                onClick={() => setShowPurchaseWarning(false)}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ShoppingCart className="text-yellow-600" size={32} />
-              </div>
-              <p className="text-gray-600 mb-4">
-                You need to purchase a product before you can leave a review.
-              </p>
-              <p className="text-sm text-gray-500">
-                This helps us ensure all reviews come from verified customers.
-              </p>
-            </div>
-
-            <button
-              onClick={() => {
-                setShowPurchaseWarning(false);
-                window.location.href = "/shop";
-              }}
-              className="liquid-button-modal w-full px-6 py-3 rounded-lg font-semibold shadow-md relative overflow-hidden"
-            >
-              <span className="relative z-10 text-white">Shop Products</span>
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* ✅ CONTACT SECTION WITH SCROLL ANIMATION */}
       <div

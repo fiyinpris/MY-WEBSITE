@@ -55,7 +55,6 @@ export const ProductSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [hoveredProduct, setHoveredProduct] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
   const [isTabsFixed, setIsTabsFixed] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -333,18 +332,12 @@ export const ProductSection = () => {
 
   const handleAddToCart = (product) => {
     addToCart(product);
-    setShowConfirmModal(true);
-    setTimeout(() => {
-      setShowConfirmModal(false);
-      setSelectedProduct(null);
-    }, 2000);
+    setSelectedProduct(null);
   };
 
   const handleQuickAddToCart = (e, product) => {
     e.stopPropagation();
     addToCart(product);
-    setShowConfirmModal(true);
-    setTimeout(() => setShowConfirmModal(false), 2000);
   };
 
   const handleHeroButtonClick = (tabName) => {
@@ -577,7 +570,7 @@ export const ProductSection = () => {
       {isTabsFixed && <div className="h-[60px] sm:h-[68px] md:h-[72px]"></div>}
 
       {/* ================= PRODUCTS FROM FIREBASE ================= */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 3xl:grid-cols-7 gap-3 sm:gap-4 lg:gap-6 lg:px-4 max-w-[1920px] mx-3 lg:mx-10 xl:mx-auto mb-20 my-7">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6 max-w-[1920px] mx-3 lg:mx-10 lg:px-4 xl:mx-auto mb-20 my-7">
         {filteredProducts.length > 0 ? (
           filteredProducts.map((product) => {
             const reviewCount = getProductReviewCount(product.name);
@@ -658,28 +651,11 @@ export const ProductSection = () => {
                   </div>
                 </div>
 
-                {/* Product Details - WITH CLICKABLE REVIEWS */}
+                {/* Product Details */}
                 <div>
                   <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2 line-clamp-2">
                     {product.name}
                   </h3>
-
-                  {/* ✅ REVIEW SECTION - NO STARS, JUST TEXT */}
-                  {reviewCount > 0 ? (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        scrollToReviews();
-                      }}
-                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline mb-3 text-left"
-                    >
-                      {reviewCount} {reviewCount === 1 ? "Review" : "Reviews"}
-                    </button>
-                  ) : (
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                      0 Reviews
-                    </div>
-                  )}
 
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-base sm:text-lg font-bold text-green-600">
@@ -749,24 +725,6 @@ export const ProductSection = () => {
                   {/* Details Section */}
                   <div className="flex flex-col gap-8">
                     <div>
-                      {/* ✅ REVIEWS IN MODAL - STARS ONLY WHEN REVIEWS EXIST */}
-                      {reviewCount > 0 ? (
-                        <button
-                          onClick={scrollToReviews}
-                          className="flex items-center gap-1 hover:opacity-70 transition-opacity mb-2"
-                        >
-                          {renderStars(avgRating, 18)}
-                          <span className="text-sm text-gray-600 dark:text-gray-400 ml-2">
-                            {reviewCount}{" "}
-                            {reviewCount === 1 ? "Review" : "Reviews"}
-                          </span>
-                        </button>
-                      ) : (
-                        <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                          0 Reviews
-                        </div>
-                      )}
-
                       <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                         {selectedProduct.name}
                       </h2>
@@ -837,25 +795,6 @@ export const ProductSection = () => {
             </div>
           );
         })()}
-
-      {/* Confirmation Modal */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-2xl animate-slideInRight max-w-sm mx-4">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ShoppingCart className="text-green-600" size={32} />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                Added to Cart!
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Item successfully added to your cart
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       <style jsx>{`
         /* Hide scrollbar for tab container */

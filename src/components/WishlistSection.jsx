@@ -193,7 +193,7 @@ export const WishlistPage = () => {
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">
             My Wishlist
           </h1>
-          <div className="bg-red-100 dark:bg-red-900/30 border border-red-500 dark:border-red-700 text-red-700 dark:text-red-400 px-4 py-2 rounded-lg">
+          <div className="bg-red-100 border-red-500 dark:border-red-700 text-red-700 dark:text-red-400 px-4 py-2 rounded-lg">
             <p className="font-semibold text-sm sm:text-base">
               {wishlistItems.length}{" "}
               {wishlistItems.length === 1 ? "item" : "items"}
