@@ -569,7 +569,7 @@ export const ProductSection = () => {
       {/* Spacer when tabs are fixed */}
       {isTabsFixed && <div className="h-[60px] sm:h-[68px] md:h-[72px]"></div>}
 
-      {/* ================= PRODUCTS FROM FIREBASE ================= */}
+      {/* ================= PRODUCTS FROM FIREBASE - FIXED ================= */}
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6 max-w-[1920px] mx-3 lg:mx-10 lg:px-4 xl:mx-auto mb-20 my-7">
         {filteredProducts.length > 0 ? (
           filteredProducts.map((product) => {
@@ -580,7 +580,7 @@ export const ProductSection = () => {
               <div
                 key={product.id}
                 tabIndex={0}
-                className="homepage-product-card p-3 md:p-4 flex flex-col items-stretch space-y-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border group focus:outline-none cursor-pointer"
+                className="homepage-product-card p-3 md:p-4 flex flex-col items-stretch space-y-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border group focus:outline-none cursor-pointer h-full"
                 onMouseEnter={() => setHoveredProduct(product.id)}
                 onMouseLeave={() => setHoveredProduct(null)}
                 onClick={() => openModal(product)}
@@ -651,23 +651,24 @@ export const ProductSection = () => {
                   </div>
                 </div>
 
-                {/* Product Details */}
-                <div>
-                  <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2 line-clamp-2">
+                {/* Product Details - FIXED */}
+                <div className="flex flex-col flex-1">
+                  <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2 line-clamp-2 min-h-[40px]">
                     {product.name}
                   </h3>
 
-                  <div className="flex items-center gap-2 mb-3">
+                  <div className="flex items-center gap-2 mb-3 min-h-[28px]">
                     <span className="text-base sm:text-lg font-bold text-green-600">
                       ₦{product.price.toLocaleString()}
                     </span>
                   </div>
+
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       openModal(product);
                     }}
-                    className="liquid-button-small w-full font-semibold py-2 text-xs sm:text-sm rounded-md transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer relative overflow-hidden"
+                    className="liquid-button-small w-full font-semibold py-2 text-xs sm:text-sm rounded-md transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer relative overflow-hidden mt-auto"
                   >
                     <span className="relative z-10 text-white flex items-center gap-2">
                       <ShoppingCart size={14} /> Add to Cart
@@ -690,21 +691,21 @@ export const ProductSection = () => {
         )}
       </div>
 
-      {/* Product Modal - WITH CLICKABLE REVIEWS */}
+      {/* Product Modal - FIXED FOR MOBILE */}
       {selectedProduct &&
         (() => {
           const reviewCount = getProductReviewCount(selectedProduct.name);
           const avgRating = getProductAverageRating(selectedProduct.name);
 
           return (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-              <div className="bg-card rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh]">
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 animate-fadeIn">
+              <div className="bg-card rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
                 <div className="grid md:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6 md:p-8">
                   {/* Image Section */}
                   <div className="relative">
                     <button
                       onClick={() => setSelectedProduct(null)}
-                      className="bg-card absolute top-2 right-2 z-10 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-500 p-2 rounded-full shadow-lg transition-colors cursor-pointer"
+                      className="bg-card absolute top-1 right-0 z-10 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-500 p-2 rounded-full shadow-lg transition-colors cursor-pointer"
                     >
                       <X size={20} />
                     </button>
@@ -748,8 +749,8 @@ export const ProductSection = () => {
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex flex-row gap-2 sm:gap-3 mb-5">
+                    {/* Action Buttons - FIXED */}
+                    <div className="flex flex-row gap-2 mb-10 sm:gap-3">
                       {/* Add to Cart */}
                       <button
                         onClick={() => handleAddToCart(selectedProduct)}

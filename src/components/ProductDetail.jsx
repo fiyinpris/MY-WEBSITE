@@ -583,7 +583,7 @@ export const ProductDetail = () => {
       {/* ✅ REVIEW MODAL */}
       {showReviewModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl">
+          <div className="bg-card rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl max-h-[100vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
                 Add Review

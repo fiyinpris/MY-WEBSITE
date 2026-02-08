@@ -324,7 +324,7 @@ export const ShopSection = () => {
       {(isLoading || !headerImageLoaded) && <LoadingSpinner />}
 
       {/* Hero Banner */}
-      <div className="relative w-full h-100 md:h-90 lg:h-90 mb-6 md:mb-8 overflow-hidden">
+      <div className="relative w-full h-100 md:h-90 lg:h-90 2xl:h-400 mb-6 md:mb-8 overflow-hidden">
         <div
           className={`absolute inset-0 bg-cover bg-center transition-opacity duration-500 ${
             headerImageLoaded ? "opacity-100" : "opacity-0"
@@ -505,8 +505,8 @@ export const ShopSection = () => {
               </select>
             </div>
 
-            {/* ✅ Product Grid - Responsive for all screen sizes including XL, XXL, XXXL */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-5 gap-4 md:gap-6 mb-15">
+            {/* ✅ FIXED: Product Grid with proper alignment */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-6 mb-8">
               {currentProducts.map((product) => {
                 const reviewCount = getProductReviewCount(product.name);
                 const avgRating = getProductAverageRating(product.name);
@@ -514,10 +514,10 @@ export const ShopSection = () => {
                 return (
                   <div
                     key={product.id}
-                    className="border p-3 md:p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col"
+                    className="border p-3 md:p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col h-full"
                   >
                     <div
-                      className="w-full h-40 sm:h-48 flex items-center justify-center overflow-hidden rounded-md bg-gray-200 relative cursor-pointer mb-3"
+                      className="w-full h-40 sm:h-48 2xl:h-150 flex items-center justify-center overflow-hidden rounded-md bg-gray-200 relative cursor-pointer mb-3"
                       onClick={() => handleProductClick(product.id)}
                     >
                       <img
@@ -546,15 +546,16 @@ export const ShopSection = () => {
 
                     <div className="flex flex-col flex-1">
                       <h6
-                        className="font-semibold text-sm md:text-base cursor-pointer hover:text-green-600 mb-2"
+                        className="font-semibold text-sm md:text-base cursor-pointer hover:text-green-600 mb-2 line-clamp-2 min-h-[40px]"
                         onClick={() => handleProductClick(product.id)}
                       >
                         {product.name}
                       </h6>
 
-                      <p className="font-bold text-base md:text-lg text-green-600 mb-3">
+                      <p className="font-bold text-base md:text-lg text-green-600 mb-3 min-h-[28px]">
                         ₦{product.price.toLocaleString()}
                       </p>
+
                       <button
                         className="normal-button w-full py-2 text-sm md:text-base cursor-pointer mt-auto"
                         onClick={() => handleAddToCart(product)}
@@ -569,7 +570,7 @@ export const ShopSection = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-center items-center mt-6 mb-18 md:mt-8 space-x-2 md:space-x-3 m">
+              <div className="flex justify-center items-center mt-6 mb-8 md:mt-8 space-x-2 md:space-x-3">
                 <button
                   className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm md:text-base cursor-pointer"
                   onClick={goPrev}

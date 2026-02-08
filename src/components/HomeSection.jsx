@@ -134,8 +134,6 @@ export const HomeSection = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ✅ SCROLL ANIMATION STATES
-  const [contactTextVisible, setContactTextVisible] = useState(false);
-  const [contactFormVisible, setContactFormVisible] = useState(false);
   const [productsVisible, setProductsVisible] = useState(false);
   const [reviewsVisible, setReviewsVisible] = useState(false);
   const [ctaVisible, setCtaVisible] = useState(false);
@@ -162,6 +160,14 @@ export const HomeSection = () => {
   const [isSending, setIsSending] = useState(false);
   const [dragStart, setDragStart] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+
+  // ✅ IMPROVED: Infinite carousel drag states
+  const [carouselTranslate, setCarouselTranslate] = useState(0);
+  const [isCarouselDragging, setIsCarouselDragging] = useState(false);
+  const [dragStartX, setDragStartX] = useState(0);
+  const [dragStartTranslate, setDragStartTranslate] = useState(0);
+  const carouselRef = useRef(null);
+  const animationRef = useRef(null);
 
   const EMAILJS_SERVICE_ID = "service_f8jpcjv";
   const EMAILJS_TEMPLATE_ID = "template_2dmkkl9";
@@ -200,16 +206,19 @@ export const HomeSection = () => {
 
   // ✅ Get review count for a product
   const getProductReviewCount = (productName) => {
-    return allReviews.filter(review => 
-      review.productName?.toLowerCase() === productName?.toLowerCase()
+    return allReviews.filter(
+      (review) =>
+        review.productName?.toLowerCase() === productName?.toLowerCase(),
     ).length;
   };
 
   // ✅ Scroll to reviews section
   const scrollToReviews = () => {
-    const reviewsSection = document.querySelector('.flex.flex-col.justify-center.items-center.bg-green-200');
+    const reviewsSection = document.querySelector(
+      ".flex.flex-col.justify-center.items-center.bg-green-200",
+    );
     if (reviewsSection) {
-      reviewsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      reviewsSection.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   };
 
@@ -227,9 +236,6 @@ export const HomeSection = () => {
             setTimeout(() => setProductsVisible(true), 100);
           } else if (entry.target === reviewsSectionRef.current) {
             setTimeout(() => setReviewsVisible(true), 100);
-          } else if (entry.target === contactSectionRef.current) {
-            setTimeout(() => setContactTextVisible(true), 100);
-            setTimeout(() => setContactFormVisible(true), 300);
           } else if (entry.target === ctaSectionRef.current) {
             setTimeout(() => setCtaVisible(true), 100);
           }
@@ -240,7 +246,6 @@ export const HomeSection = () => {
     if (productsSectionRef.current)
       observer.observe(productsSectionRef.current);
     if (reviewsSectionRef.current) observer.observe(reviewsSectionRef.current);
-    if (contactSectionRef.current) observer.observe(contactSectionRef.current);
     if (ctaSectionRef.current) observer.observe(ctaSectionRef.current);
 
     return () => {
@@ -248,8 +253,6 @@ export const HomeSection = () => {
         observer.unobserve(productsSectionRef.current);
       if (reviewsSectionRef.current)
         observer.unobserve(reviewsSectionRef.current);
-      if (contactSectionRef.current)
-        observer.unobserve(contactSectionRef.current);
       if (ctaSectionRef.current) observer.unobserve(ctaSectionRef.current);
     };
   }, []);
@@ -533,6 +536,58 @@ export const HomeSection = () => {
     }
   };
 
+  // ✅ IMPROVED: Infinite carousel auto-animation with RAF
+  useEffect(() => {
+    if (!isCarouselDragging && carouselRef.current) {
+      const animate = () => {
+        setCarouselTranslate((prev) => {
+          const newTranslate = prev - 0.5; // Adjust speed here
+          // Reset when we've scrolled one full set
+          if (Math.abs(newTranslate) >= carouselRef.current.scrollWidth / 2) {
+            return 0;
+          }
+          return newTranslate;
+        });
+        animationRef.current = requestAnimationFrame(animate);
+      };
+      animationRef.current = requestAnimationFrame(animate);
+      return () => cancelAnimationFrame(animationRef.current);
+    }
+  }, [isCarouselDragging]);
+
+  // ✅ IMPROVED: Carousel drag handlers with infinite scroll
+  const handleCarouselDragStart = (e) => {
+    const clientX = e.type === "mousedown" ? e.clientX : e.touches[0].clientX;
+    setIsCarouselDragging(true);
+    setDragStartX(clientX);
+    setDragStartTranslate(carouselTranslate);
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+  };
+
+  const handleCarouselDragMove = (e) => {
+    if (!isCarouselDragging) return;
+    e.preventDefault();
+    const clientX = e.type === "mousemove" ? e.clientX : e.touches[0].clientX;
+    const diff = clientX - dragStartX;
+    setCarouselTranslate(dragStartTranslate + diff);
+  };
+
+  const handleCarouselDragEnd = () => {
+    if (!isCarouselDragging) return;
+    setIsCarouselDragging(false);
+
+    // Normalize position to prevent gaps
+    if (carouselRef.current) {
+      const containerWidth = carouselRef.current.scrollWidth / 2;
+      const normalizedTranslate =
+        ((carouselTranslate % containerWidth) + containerWidth) %
+        containerWidth;
+      setCarouselTranslate(-normalizedTranslate);
+    }
+  };
+
   const renderStars = (rating, size = 14) => {
     const stars = [];
     const fullStars = Math.floor(rating);
@@ -749,7 +804,7 @@ export const HomeSection = () => {
         </div>
       </div>
 
-      {/* ✅ PRODUCTS SECTION - NO STARS, ONLY REVIEW COUNT */}
+      {/* ✅ PRODUCTS SECTION - IMPROVED INFINITE CAROUSEL */}
       <div
         ref={productsSectionRef}
         className={`mt-12 p-4 overflow-hidden transition-all duration-1000 ${
@@ -769,21 +824,40 @@ export const HomeSection = () => {
           </p>
 
           <div className="relative">
-            <div className="flex gap-4 md:gap-6 animate-scroll-fast hover:pause-scroll">
-              {products.concat(products).map((product, index) => {
+            <div
+              ref={carouselRef}
+              className="flex gap-4 md:gap-6 cursor-grab active:cursor-grabbing select-none"
+              onMouseDown={handleCarouselDragStart}
+              onMouseMove={handleCarouselDragMove}
+              onMouseUp={handleCarouselDragEnd}
+              onMouseLeave={handleCarouselDragEnd}
+              onTouchStart={handleCarouselDragStart}
+              onTouchMove={handleCarouselDragMove}
+              onTouchEnd={handleCarouselDragEnd}
+              style={{
+                transform: `translateX(${carouselTranslate}px)`,
+                transition: isCarouselDragging
+                  ? "none"
+                  : "transform 0.05s linear",
+                touchAction: "pan-y",
+              }}
+            >
+              {/* Triple the products for seamless infinite scroll */}
+              {[...products, ...products, ...products].map((product, index) => {
                 const reviewCount = getProductReviewCount(product.name);
-                
+
                 return (
                   <div
                     key={`${product.id}-${index}`}
-                    className="flex-shrink-0 w-[150px] lg:w-[200px] md:w-[200px] xl:w-[220px] 2xl:w-[240px] bg-card rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 group animate-fade-in-up"
+                    className="flex-shrink-0 w-[150px] lg:w-[200px] md:w-[200px] xl:w-[220px] 2xl:w-[240px] bg-card rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 group animate-fade-in-up flex flex-col"
                     style={{ animationDelay: `${(index % 6) * 0.1}s` }}
                   >
-                    <div className="relative overflow-hidden h-35 sm:h-44 md:h-48 xl:h-52 2xl:h-56 bg-muted">
+                    <div className="relative overflow-hidden h-35 sm:h-44 md:h-48 xl:h-52 2xl:h-56 bg-muted pointer-events-none">
                       <img
                         src={product.image}
                         alt={product.name}
                         loading="lazy"
+                        draggable="false"
                         className="w-full h-full object-cover group-hover:scale-110 group-hover:rotate-2 transition-all duration-700"
                       />
                       {product.badge && (
@@ -791,22 +865,23 @@ export const HomeSection = () => {
                           {product.badge}
                         </div>
                       )}
-                      <button className="absolute bottom-3 right-3 bg-card p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-primary-foreground transform group-hover:rotate-12">
+                      <button className="absolute bottom-3 right-3 bg-card p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-primary-foreground transform group-hover:rotate-12 pointer-events-auto">
                         <ShoppingCart size={18} />
                       </button>
                     </div>
 
-                    <div className="p-3 md:p-4 text-left">
-                      <h3 className="text-sm md:text-base font-bold text-foreground mb-2">
+                    <div className="p-3 md:p-4 text-left flex flex-col flex-1 pointer-events-none">
+                      <h3 className="text-sm md:text-base font-bold text-foreground mb-2 line-clamp-2 min-h-[40px]">
                         {product.name}
                       </h3>
-                      <div className="flex items-center gap-2 mb-3">
+
+                      <div className="flex items-center gap-2 mb-3 min-h-[28px]">
                         <span className="text-base md:text-lg font-bold text-primary">
                           ₦{product.price.toLocaleString()}
                         </span>
                       </div>
 
-                      <button className="liquid-button-product w-full font-semibold py-2 text-xs md:text-sm rounded-lg transition-colors duration-300 flex items-center justify-center gap-2 relative overflow-hidden">
+                      <button className="liquid-button-product w-full font-semibold py-2 text-xs md:text-sm rounded-lg transition-colors duration-300 flex items-center justify-center gap-2 relative overflow-hidden mt-auto pointer-events-auto">
                         <span className="relative z-10 text-white flex items-center gap-2">
                           <ShoppingCart size={14} />
                           Add to Cart
@@ -921,20 +996,13 @@ export const HomeSection = () => {
         )}
       </div>
 
-
-      {/* ✅ CONTACT SECTION WITH SCROLL ANIMATION */}
+      {/* ✅ CONTACT SECTION WITHOUT ANIMATIONS */}
       <div
         ref={contactSectionRef}
         id="contact-section"
         className="flex flex-col lg:flex-row justify-center items-center gap-8 bg-white py-16 px-4 md:px-0 lg:px-12 dark:bg-background overflow-hidden"
       >
-        <div
-          className={`text-center lg:text-left max-w-md px-4 md:px-8 lg:px-0 transition-all duration-800 ${
-            contactTextVisible
-              ? "opacity-100 translate-x-0"
-              : "opacity-0 -translate-x-20"
-          }`}
-        >
+        <div className="text-center lg:text-left max-w-md px-4 md:px-8 lg:px-0">
           <h4 className="text-3xl sm:text-4xl font-bold text-primary mb-8">
             Contact Us
           </h4>
@@ -944,13 +1012,7 @@ export const HomeSection = () => {
           </p>
         </div>
 
-        <div
-          className={`w-full md:w-full lg:max-w-lg bg-white dark:bg-background sm:shadow-lg sm:border sm:rounded-2xl sm:p-8 transition-all duration-800 delay-200 ${
-            contactFormVisible
-              ? "opacity-100 translate-x-0"
-              : "opacity-0 translate-x-20"
-          }`}
-        >
+        <div className="w-full md:w-full lg:max-w-lg bg-white dark:bg-background sm:shadow-lg sm:border sm:rounded-2xl sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <input type="hidden" name="to_name" value="Fiyinfoluwa" />
             <input
@@ -1077,15 +1139,6 @@ export const HomeSection = () => {
           }
         }
 
-        @keyframes scroll-fast {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-
         @keyframes fade-in-up {
           0% {
             opacity: 0;
@@ -1105,21 +1158,6 @@ export const HomeSection = () => {
           50% {
             transform: translateY(-5px);
           }
-        }
-
-        /* Mobile faster carousel */
-        @media (max-width: 640px) {
-          .animate-scroll-fast {
-            animation: scroll-fast 12s linear infinite;
-          }
-        }
-
-        .animate-scroll-fast {
-          animation: scroll-fast 20s linear infinite;
-        }
-
-        .animate-scroll-fast:hover {
-          animation-play-state: paused;
         }
 
         .animate-fade-in-up {
