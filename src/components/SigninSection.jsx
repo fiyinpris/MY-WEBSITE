@@ -1,3 +1,6 @@
+// ✅ COMPLETE SigninSection.jsx with Steps 6 & 7 (Password Reset)
+// This file includes ALL steps including the missing password reset flow
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import emailjs from "@emailjs/browser";
@@ -31,12 +34,9 @@ export const SigninSection = () => {
   useEffect(() => {
     emailjs.init("aYMxHd4D49CBiJT-X");
     checkBiometricAvailability();
-
-    // Load and initialize Google One Tap
     loadGoogleOneTap();
   }, []);
 
-  // Scroll to top whenever step 5 (success screen) is reached
   useEffect(() => {
     if (step === 5) {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -44,26 +44,18 @@ export const SigninSection = () => {
   }, [step]);
 
   const loadGoogleOneTap = () => {
-    // Check if script is already loaded
     if (window.google) {
       initializeGoogleOneTap();
       return;
     }
 
-    // Load Google Identity Services script
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.defer = true;
-
-    script.onload = () => {
-      initializeGoogleOneTap();
-    };
-
-    script.onerror = () => {
+    script.onload = () => initializeGoogleOneTap();
+    script.onerror = () =>
       console.error("Failed to load Google Sign-In script");
-    };
-
     document.body.appendChild(script);
   };
 
@@ -77,9 +69,8 @@ export const SigninSection = () => {
         callback: handleGoogleOneTapResponse,
         auto_select: false,
         cancel_on_tap_outside: true,
-        ux_mode: "popup", // Use popup mode for better localhost support
+        ux_mode: "popup",
       });
-
       console.log("✅ Google Sign-In initialized successfully");
     } catch (error) {
       console.error("❌ Error initializing Google Sign-In:", error);
@@ -91,25 +82,19 @@ export const SigninSection = () => {
       setLoading(true);
       setError("");
 
-      // Parse the JWT token to get user info
       const userObject = parseJwt(response.credential);
-      console.log("✅ Google User Data:", userObject);
-
       const userData = {
         name: userObject.name || userObject.given_name || "Google User",
         email: userObject.email || "",
         phone: "",
       };
 
-      // Check if user already exists
       const users = getRegisteredUsers();
       let existingUser = users.find(
         (u) => u.email?.toLowerCase() === userData.email.toLowerCase(),
       );
 
       if (!existingUser) {
-        // New user - add to registered users
-        console.log("📝 New Google user - adding to registeredUsers");
         users.push({
           ...userData,
           password: `google_${Math.random().toString(36).slice(-8)}Aa1`,
@@ -117,24 +102,14 @@ export const SigninSection = () => {
         saveRegisteredUsers(users);
         setIsExistingUser(false);
       } else {
-        console.log("✅ Existing Google user found");
         setIsExistingUser(true);
       }
 
-      // Save to localStorage
       localStorage.setItem("user", JSON.stringify(userData));
-
-      // Trigger navbar update
       window.dispatchEvent(new Event("userUpdated"));
 
-      // ✅ FIX: Go directly to home for both new and existing users
-      // Show success screen briefly then redirect
       setStep(5);
-
-      setTimeout(() => {
-        navigate("/");
-      }, 2000);
-
+      setTimeout(() => navigate("/"), 2000);
       setLoading(false);
     } catch (error) {
       console.error("❌ Google Sign-In Error:", error);
@@ -150,7 +125,6 @@ export const SigninSection = () => {
           await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
         setBiometricAvailable(available);
       } catch (error) {
-        console.log("Biometric not available:", error);
         setBiometricAvailable(false);
       }
     }
@@ -163,17 +137,13 @@ export const SigninSection = () => {
       biometricAvailable &&
       !biometricAttempting
     ) {
-      const timer = setTimeout(() => {
-        handleBiometricAuth();
-      }, 1000);
+      const timer = setTimeout(() => handleBiometricAuth(), 1000);
       return () => clearTimeout(timer);
     }
   }, [step, isExistingUser, biometricAvailable]);
 
   const handleBiometricAuth = async () => {
-    if (!biometricAvailable || biometricAttempting) {
-      return;
-    }
+    if (!biometricAvailable || biometricAttempting) return;
 
     try {
       setBiometricAttempting(true);
@@ -219,16 +189,11 @@ export const SigninSection = () => {
               }),
             );
             window.dispatchEvent(new Event("userUpdated"));
-
-            // Show success - scroll will happen automatically via useEffect
             setStep(5);
-            setTimeout(() => {
-              navigate("/");
-            }, 2000);
+            setTimeout(() => navigate("/"), 2000);
           }
         }
       } catch (error) {
-        console.log("Biometric auth cancelled or failed:", error);
         setError("");
         setBiometricAttempting(false);
       }
@@ -238,7 +203,6 @@ export const SigninSection = () => {
     } catch (error) {
       setLoading(false);
       setBiometricAttempting(false);
-      console.error("Biometric error:", error);
     }
   };
 
@@ -291,10 +255,7 @@ export const SigninSection = () => {
       /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/.test(email);
 
     if (isPhone) {
-      console.log(`SMS OTP for ${email}: ${otpCode}`);
-      alert(
-        `Demo: OTP sent to ${email}\nYour OTP is: ${otpCode}\n\nIn production, this would be sent via SMS.`,
-      );
+      alert(`Demo: OTP sent to ${email}\nYour OTP is: ${otpCode}`);
       setLoading(false);
       setStep(2);
       setTimer(60);
@@ -308,11 +269,9 @@ export const SigninSection = () => {
         setLoading(false);
         setStep(2);
         setTimer(60);
-        console.log("OTP sent successfully:", otpCode);
       } catch (error) {
         setLoading(false);
         setError("Failed to send OTP. Please try again.");
-        console.error("EmailJS Error:", error);
       }
     }
   };
@@ -345,15 +304,12 @@ export const SigninSection = () => {
   };
 
   const validatePassword = (password) => {
-    if (password.length < 8) {
+    if (password.length < 8)
       return "Password must be at least 8 characters long";
-    }
-    if (!/[A-Z]/.test(password)) {
+    if (!/[A-Z]/.test(password))
       return "Password must contain at least one uppercase letter (A-Z)";
-    }
-    if (!/[a-z]/.test(password)) {
+    if (!/[a-z]/.test(password))
       return "Password must contain at least one lowercase letter (a-z)";
-    }
     return null;
   };
 
@@ -363,9 +319,7 @@ export const SigninSection = () => {
     }
 
     const passwordError = validatePassword(password);
-    if (passwordError) {
-      return setError(passwordError);
-    }
+    if (passwordError) return setError(passwordError);
 
     if (password !== confirmPassword) {
       return setError(
@@ -394,13 +348,8 @@ export const SigninSection = () => {
     );
 
     window.dispatchEvent(new Event("userUpdated"));
-
-    // Show success - scroll will happen automatically via useEffect
     setStep(5);
-
-    setTimeout(() => {
-      navigate("/");
-    }, 2000);
+    setTimeout(() => navigate("/"), 2000);
   };
 
   const handlePasswordLogin = () => {
@@ -422,12 +371,8 @@ export const SigninSection = () => {
         }),
       );
       window.dispatchEvent(new Event("userUpdated"));
-
-      // Show success - scroll will happen automatically via useEffect
       setStep(5);
-      setTimeout(() => {
-        navigate("/");
-      }, 2000);
+      setTimeout(() => navigate("/"), 2000);
     } else {
       setError(
         "Wrong password. Try again or click 'Forgot Password?' to reset it.",
@@ -444,7 +389,6 @@ export const SigninSection = () => {
       /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/.test(email);
 
     if (isPhone) {
-      console.log(`SMS Reset Code for ${email}: ${resetCode}`);
       alert(`Demo: Reset code sent to ${email}\nYour code is: ${resetCode}`);
       setLoading(false);
       setStep(6);
@@ -452,6 +396,7 @@ export const SigninSection = () => {
       setOtp(["", "", "", ""]);
       setPassword("");
       setConfirmPassword("");
+      setError("");
     } else {
       try {
         await emailjs.send("service_f8jpcjv", "template_gpentyl", {
@@ -465,11 +410,10 @@ export const SigninSection = () => {
         setOtp(["", "", "", ""]);
         setPassword("");
         setConfirmPassword("");
-        console.log("Reset code sent:", resetCode);
+        setError("");
       } catch (error) {
         setLoading(false);
         setError("Failed to send reset code. Please try again.");
-        console.error("EmailJS Error:", error);
       }
     }
   };
@@ -491,25 +435,20 @@ export const SigninSection = () => {
     }
 
     try {
-      // Create a hidden button that auto-clicks
       const tempDiv = document.createElement("div");
       tempDiv.style.display = "none";
       document.body.appendChild(tempDiv);
 
-      // Render the button
       window.google.accounts.id.renderButton(tempDiv, {
         theme: "filled_blue",
         size: "large",
       });
 
-      // Auto-click the button after a tiny delay
       setTimeout(() => {
         const googleButton = tempDiv.querySelector('div[role="button"]');
         if (googleButton) {
           googleButton.click();
-          console.log("✅ Google Sign-In triggered automatically");
         }
-        // Clean up after clicking
         setTimeout(() => {
           if (document.body.contains(tempDiv)) {
             document.body.removeChild(tempDiv);
@@ -517,7 +456,6 @@ export const SigninSection = () => {
         }, 1000);
       }, 100);
     } catch (error) {
-      console.error("Error triggering Google Sign-In:", error);
       setError("Failed to open Google Sign-In. Please try again.");
     }
   };
@@ -544,7 +482,6 @@ export const SigninSection = () => {
                 Use your full name, email, or phone to sign up or log in.
               </p>
               <div className="space-y-6">
-                {/* FULL NAME INPUT AT THE TOP */}
                 <div>
                   <label className="block text-sm font-medium text-primary mb-2">
                     Full Name *
@@ -558,7 +495,6 @@ export const SigninSection = () => {
                   />
                 </div>
 
-                {/* EMAIL / PHONE INPUT */}
                 <div>
                   <label className="block text-sm font-medium text-primary mb-2">
                     Email or Mobile Number *
@@ -616,7 +552,6 @@ export const SigninSection = () => {
                       onClick={handleGoogleLogin}
                       type="button"
                       className="w-12 h-12 flex items-center justify-center hover:opacity-80 hover:scale-105 active:scale-95 transition"
-                      title="Sign in with Google"
                     >
                       <svg
                         className="w-12 h-12"
@@ -654,14 +589,11 @@ export const SigninSection = () => {
                   </span>
                   .
                 </p>
-                <p className="text-xs text-center text-foreground/60 mt-4">
-                  Need help? Visit our Help Center or contact us.
-                </p>
               </div>
             </>
           )}
 
-          {/* STEP 2: OTP VERIFICATION (NEW USERS) */}
+          {/* STEP 2: OTP VERIFICATION */}
           {step === 2 && (
             <>
               <h1 className="text-2xl font-semibold text-center text-foreground mb-2">
@@ -726,9 +658,6 @@ export const SigninSection = () => {
                   </button>
                 )}
               </p>
-              <p className="text-xs text-center text-foreground/60 mt-4">
-                Need help? Visit our Help Center or contact us on 19586.
-              </p>
             </>
           )}
 
@@ -748,9 +677,7 @@ export const SigninSection = () => {
                 <div className="flex flex-col items-center mb-6">
                   <div className="relative">
                     <div
-                      className={`w-20 h-20 bg-green-100 dark:bg-green-900 flex items-center justify-center rounded-full transition-all ${
-                        biometricAttempting ? "animate-pulse" : ""
-                      }`}
+                      className={`w-20 h-20 bg-green-100 dark:bg-green-900 flex items-center justify-center rounded-full transition-all ${biometricAttempting ? "animate-pulse" : ""}`}
                     >
                       <Fingerprint className="w-10 h-10 text-green-600 dark:text-green-400" />
                     </div>
@@ -826,9 +753,6 @@ export const SigninSection = () => {
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
-                  <p className="text-xs text-foreground/60 mt-2">
-                    Password must be at least 8 characters long
-                  </p>
                 </div>
                 {error && (
                   <p className="text-red-500 text-sm text-center">{error}</p>
@@ -1011,31 +935,19 @@ export const SigninSection = () => {
                     Password Requirements:
                   </p>
                   <p
-                    className={`${
-                      password.length >= 8
-                        ? "text-green-600"
-                        : "text-foreground/60"
-                    }`}
+                    className={`${password.length >= 8 ? "text-green-600" : "text-foreground/60"}`}
                   >
                     {password.length >= 8 ? "✓" : "•"} Password must be at least
                     8 characters long
                   </p>
                   <p
-                    className={`${
-                      /[A-Z]/.test(password)
-                        ? "text-green-600"
-                        : "text-foreground/60"
-                    }`}
+                    className={`${/[A-Z]/.test(password) ? "text-green-600" : "text-foreground/60"}`}
                   >
                     {/[A-Z]/.test(password) ? "✓" : "•"} Password must contain
                     at least one uppercase letter (A-Z)
                   </p>
                   <p
-                    className={`${
-                      /[a-z]/.test(password)
-                        ? "text-green-600"
-                        : "text-foreground/60"
-                    }`}
+                    className={`${/[a-z]/.test(password) ? "text-green-600" : "text-foreground/60"}`}
                   >
                     {/[a-z]/.test(password) ? "✓" : "•"} Password must contain
                     at least one lowercase letter (a-z)
@@ -1102,7 +1014,236 @@ export const SigninSection = () => {
             </>
           )}
 
-          {/* STEP 6 & 7: Password Reset steps remain the same */}
+          {/* ✅ STEP 6: VERIFY RESET CODE */}
+          {step === 6 && (
+            <>
+              <h1 className="text-2xl font-semibold text-center text-foreground mb-2">
+                Verify reset code
+              </h1>
+              <p className="text-center text-foreground/60 mb-2">
+                We have sent a reset code to
+              </p>
+              <p className="text-center text-foreground font-medium mb-8">
+                {email}
+              </p>
+              <div className="flex gap-3 justify-center mb-6">
+                {[0, 1, 2, 3].map((index) => (
+                  <input
+                    key={index}
+                    id={`reset-otp-${index}`}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={otp[index]}
+                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Backspace" && !otp[index] && index > 0) {
+                        const prevInput = document.getElementById(
+                          `reset-otp-${index - 1}`,
+                        );
+                        if (prevInput) prevInput.focus();
+                      }
+                      if (e.key === "Enter" && otp.join("").length === 4) {
+                        if (otp.join("") === generatedOtp) {
+                          setStep(7);
+                          setError("");
+                        } else {
+                          setError("Invalid reset code");
+                        }
+                      }
+                    }}
+                    className="w-16 h-16 text-center text-2xl font-semibold border-2 border-green-500 bg-background text-foreground rounded focus:outline-none focus:border-green-600"
+                  />
+                ))}
+              </div>
+              {error && (
+                <p className="text-red-500 text-sm text-center mb-4">{error}</p>
+              )}
+              <button
+                onClick={() => {
+                  if (otp.join("") === generatedOtp) {
+                    setStep(7);
+                    setError("");
+                  } else {
+                    setError("Invalid reset code. Please try again.");
+                  }
+                }}
+                disabled={otp.join("").length !== 4}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3.5 font-semibold text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-4 rounded"
+              >
+                Verify Code
+              </button>
+              <p className="text-center text-foreground/60 text-sm">
+                {timer > 0 ? (
+                  <span>
+                    Resend code in{" "}
+                    <span className="text-green-600 font-semibold">
+                      {timer}s
+                    </span>
+                  </span>
+                ) : (
+                  <button
+                    onClick={handleForgotPassword}
+                    className="text-green-600 font-semibold underline"
+                  >
+                    Resend code
+                  </button>
+                )}
+              </p>
+            </>
+          )}
+
+          {/* ✅ STEP 7: SET NEW PASSWORD */}
+          {step === 7 && (
+            <>
+              <h1 className="text-2xl font-semibold text-center text-foreground mb-2">
+                Set new password
+              </h1>
+              <p className="text-center text-foreground/60 mb-8">
+                Create a new password for your account
+              </p>
+              <div className="space-y-6">
+                <div className="bg-muted p-4 rounded flex justify-between items-center">
+                  <span className="text-foreground">{email}</span>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-2">
+                    New Password *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter new password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 py-3 pr-12 border-2 border-border bg-background text-foreground rounded focus:outline-none focus:border-primary transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/60"
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-2">
+                    Confirm Password *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Re-enter password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full px-4 py-3 pr-12 border-2 border-border bg-background text-foreground rounded focus:outline-none focus:border-primary transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/60"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff size={20} />
+                      ) : (
+                        <Eye size={20} />
+                      )}
+                    </button>
+                  </div>
+                  {confirmPassword && password !== confirmPassword && (
+                    <p className="text-red-500 text-xs mt-2">
+                      Passwords do not match
+                    </p>
+                  )}
+                  {confirmPassword && password === confirmPassword && (
+                    <p className="text-green-600 text-xs mt-2">
+                      ✓ Passwords match
+                    </p>
+                  )}
+                </div>
+
+                <div className="mt-3 p-3 bg-muted rounded text-xs space-y-1">
+                  <p className="font-medium text-foreground mb-2">
+                    Password Requirements:
+                  </p>
+                  <p
+                    className={
+                      password.length >= 8
+                        ? "text-green-600"
+                        : "text-foreground/60"
+                    }
+                  >
+                    {password.length >= 8 ? "✓" : "•"} At least 8 characters
+                  </p>
+                  <p
+                    className={
+                      /[A-Z]/.test(password)
+                        ? "text-green-600"
+                        : "text-foreground/60"
+                    }
+                  >
+                    {/[A-Z]/.test(password) ? "✓" : "•"} One uppercase letter
+                  </p>
+                  <p
+                    className={
+                      /[a-z]/.test(password)
+                        ? "text-green-600"
+                        : "text-foreground/60"
+                    }
+                  >
+                    {/[a-z]/.test(password) ? "✓" : "•"} One lowercase letter
+                  </p>
+                </div>
+
+                {error && (
+                  <p className="text-red-500 text-sm text-center">{error}</p>
+                )}
+
+                <button
+                  onClick={() => {
+                    const passwordError = validatePassword(password);
+                    if (passwordError) {
+                      setError(passwordError);
+                      return;
+                    }
+                    if (password !== confirmPassword) {
+                      setError("Passwords do not match");
+                      return;
+                    }
+
+                    const users = getRegisteredUsers();
+                    const userIndex = users.findIndex(
+                      (u) =>
+                        u.email?.toLowerCase() === email.toLowerCase() ||
+                        u.phone === email,
+                    );
+
+                    if (userIndex !== -1) {
+                      users[userIndex].password = password;
+                      saveRegisteredUsers(users);
+                      setStep(5);
+                      setTimeout(() => navigate("/"), 2000);
+                    } else {
+                      setError("User not found");
+                    }
+                  }}
+                  disabled={
+                    !password ||
+                    !confirmPassword ||
+                    password !== confirmPassword
+                  }
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3.5 font-semibold text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded"
+                >
+                  Reset Password
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

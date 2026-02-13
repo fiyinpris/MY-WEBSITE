@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useCallback, useRef } from "react";
 import { productsAPI } from "../services/firebase";
 
 export const SearchContext = createContext();
@@ -8,6 +8,8 @@ export const SearchProvider = ({ children }) => {
   const [results, setResults] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false); // ✅ NEW: Prevents flicker
+  const prevQueryRef = useRef(""); // ✅ Track previous query
 
   // ✅ Load products from Firebase on mount
   useEffect(() => {
@@ -42,7 +44,7 @@ export const SearchProvider = ({ children }) => {
   }, []);
 
   // ✅ IMPROVED: Better search algorithm with fuzzy matching
-  const searchProducts = (query, products) => {
+  const searchProducts = useCallback((query, products) => {
     if (!query || query.trim() === "") return [];
     if (!products || products.length === 0) return [];
 
@@ -84,7 +86,6 @@ export const SearchProvider = ({ children }) => {
         }
 
         // Fuzzy matching for common typos/variations
-        // Example: "ringlight" matches "ring light", "ring-light"
         const normalizedName = productName.replace(/[\s\-_]/g, "");
         const normalizedTerm = term.replace(/[\s\-_]/g, "");
 
@@ -93,7 +94,6 @@ export const SearchProvider = ({ children }) => {
         }
 
         // Partial word matching for compound products
-        // Example: "LED" in "LED 660" or "M140" in "M140 Mobile LED Light"
         const nameWords = productName.split(/[\s\-_]+/);
         nameWords.forEach((word) => {
           if (word === term) {
@@ -112,27 +112,47 @@ export const SearchProvider = ({ children }) => {
       .filter(({ score }) => score > 0)
       .sort((a, b) => b.score - a.score)
       .map(({ product }) => product);
-  };
+  }, []);
 
-  // ✅ Auto-search when query changes with improved algorithm
+  // ✅ FIXED: Synchronous immediate search - no debouncing, no delays
   useEffect(() => {
-    if (searchQuery.trim() !== "" && allProducts.length > 0) {
-      const searchResults = searchProducts(searchQuery, allProducts);
-      setResults(searchResults);
-
-      console.log(
-        `🔍 Search for "${searchQuery}": Found ${searchResults.length} results`,
-      );
-      if (searchResults.length > 0) {
-        console.log(
-          "Top results:",
-          searchResults.slice(0, 3).map((p) => p.name),
-        );
-      }
-    } else {
-      setResults([]);
+    // Skip if products aren't loaded yet
+    if (loading || allProducts.length === 0) {
+      return;
     }
-  }, [searchQuery, allProducts]);
+
+    const trimmedQuery = searchQuery.trim();
+
+    // If search query is empty, immediately clear results
+    if (trimmedQuery === "") {
+      setResults([]);
+      setSearching(false);
+      prevQueryRef.current = "";
+      return;
+    }
+
+    // Only search if query actually changed
+    if (trimmedQuery === prevQueryRef.current) {
+      return;
+    }
+
+    // Update previous query
+    prevQueryRef.current = trimmedQuery;
+
+    // Perform search synchronously
+    const searchResults = searchProducts(trimmedQuery, allProducts);
+    setResults(searchResults);
+
+    console.log(
+      `🔍 Search for "${trimmedQuery}": Found ${searchResults.length} results`,
+    );
+    if (searchResults.length > 0) {
+      console.log(
+        "Top results:",
+        searchResults.slice(0, 3).map((p) => p.name),
+      );
+    }
+  }, [searchQuery, allProducts, loading, searchProducts]);
 
   return (
     <SearchContext.Provider
@@ -144,6 +164,7 @@ export const SearchProvider = ({ children }) => {
         allProducts,
         setAllProducts,
         loading,
+        searching,
       }}
     >
       {children}

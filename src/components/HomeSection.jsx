@@ -133,7 +133,6 @@ export const HomeSection = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ✅ SCROLL ANIMATION STATES
   const [productsVisible, setProductsVisible] = useState(false);
   const [reviewsVisible, setReviewsVisible] = useState(false);
   const [ctaVisible, setCtaVisible] = useState(false);
@@ -161,13 +160,15 @@ export const HomeSection = () => {
   const [dragStart, setDragStart] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  // ✅ IMPROVED: Infinite carousel drag states
-  const [carouselTranslate, setCarouselTranslate] = useState(0);
-  const [isCarouselDragging, setIsCarouselDragging] = useState(false);
-  const [dragStartX, setDragStartX] = useState(0);
-  const [dragStartTranslate, setDragStartTranslate] = useState(0);
-  const carouselRef = useRef(null);
-  const animationRef = useRef(null);
+  // Carousel states
+  const [carouselOffset, setCarouselOffset] = useState(0);
+  const [isDraggingCarousel, setIsDraggingCarousel] = useState(false);
+  const [dragStartPos, setDragStartPos] = useState(0);
+  const [dragCurrentPos, setDragCurrentPos] = useState(0);
+  const carouselContainerRef = useRef(null);
+  const carouselInnerRef = useRef(null);
+  const animationFrameRef = useRef(null);
+  const lastTimeRef = useRef(Date.now());
 
   const EMAILJS_SERVICE_ID = "service_f8jpcjv";
   const EMAILJS_TEMPLATE_ID = "template_2dmkkl9";
@@ -204,7 +205,6 @@ export const HomeSection = () => {
     emailjs.init(EMAILJS_PUBLIC_KEY);
   }, []);
 
-  // ✅ Get review count for a product
   const getProductReviewCount = (productName) => {
     return allReviews.filter(
       (review) =>
@@ -212,7 +212,6 @@ export const HomeSection = () => {
     ).length;
   };
 
-  // ✅ Scroll to reviews section
   const scrollToReviews = () => {
     const reviewsSection = document.querySelector(
       ".flex.flex-col.justify-center.items-center.bg-green-200",
@@ -222,7 +221,6 @@ export const HomeSection = () => {
     }
   };
 
-  // ✅ SCROLL OBSERVERS FOR ALL SECTIONS
   useEffect(() => {
     const observerOptions = {
       threshold: 0.15,
@@ -271,7 +269,6 @@ export const HomeSection = () => {
     loadProducts();
   }, []);
 
-  // ✅ Load all reviews
   useEffect(() => {
     const loadReviews = async () => {
       try {
@@ -536,56 +533,84 @@ export const HomeSection = () => {
     }
   };
 
-  // ✅ IMPROVED: Infinite carousel auto-animation with RAF
+  // ✅ FIXED: Slower infinite carousel auto-scroll
   useEffect(() => {
-    if (!isCarouselDragging && carouselRef.current) {
-      const animate = () => {
-        setCarouselTranslate((prev) => {
-          const newTranslate = prev - 0.5; // Adjust speed here
-          // Reset when we've scrolled one full set
-          if (Math.abs(newTranslate) >= carouselRef.current.scrollWidth / 2) {
-            return 0;
-          }
-          return newTranslate;
-        });
-        animationRef.current = requestAnimationFrame(animate);
-      };
-      animationRef.current = requestAnimationFrame(animate);
-      return () => cancelAnimationFrame(animationRef.current);
-    }
-  }, [isCarouselDragging]);
+    if (isDraggingCarousel || !carouselInnerRef.current) return;
 
-  // ✅ IMPROVED: Carousel drag handlers with infinite scroll
-  const handleCarouselDragStart = (e) => {
-    const clientX = e.type === "mousedown" ? e.clientX : e.touches[0].clientX;
-    setIsCarouselDragging(true);
-    setDragStartX(clientX);
-    setDragStartTranslate(carouselTranslate);
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
+    const animate = () => {
+      const now = Date.now();
+      const deltaTime = now - lastTimeRef.current;
+      lastTimeRef.current = now;
+
+      // ✅ VERY SLOW: 0.04 px/ms — barely perceptible, smooth drift
+      const speed = 0.04;
+      const movement = speed * deltaTime;
+
+      setCarouselOffset((prevOffset) => {
+        const innerEl = carouselInnerRef.current;
+        if (!innerEl) return prevOffset;
+        // The inner strip is duplicated once (2 copies), so singleSetWidth = half the total
+        const singleSetWidth = innerEl.scrollWidth / 2;
+        const newOffset = prevOffset - movement;
+
+        if (Math.abs(newOffset) >= singleSetWidth) {
+          return newOffset + singleSetWidth;
+        }
+        return newOffset;
+      });
+
+      animationFrameRef.current = requestAnimationFrame(animate);
+    };
+
+    animationFrameRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [isDraggingCarousel]);
+
+  // ✅ FIXED DRAG HANDLERS
+  const handleCarouselMouseDown = (e) => {
+    setIsDraggingCarousel(true);
+    setDragStartPos(e.type === "mousedown" ? e.clientX : e.touches[0].clientX);
+    setDragCurrentPos(
+      e.type === "mousedown" ? e.clientX : e.touches[0].clientX,
+    );
+
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
     }
   };
 
-  const handleCarouselDragMove = (e) => {
-    if (!isCarouselDragging) return;
+  const handleCarouselMouseMove = (e) => {
+    if (!isDraggingCarousel) return;
     e.preventDefault();
-    const clientX = e.type === "mousemove" ? e.clientX : e.touches[0].clientX;
-    const diff = clientX - dragStartX;
-    setCarouselTranslate(dragStartTranslate + diff);
+
+    const currentX = e.type === "mousemove" ? e.clientX : e.touches[0].clientX;
+    const diff = currentX - dragCurrentPos;
+
+    setCarouselOffset((prev) => {
+      const innerEl = carouselInnerRef.current;
+      if (!innerEl) return prev;
+      const singleSetWidth = innerEl.scrollWidth / 2;
+      const newOffset = prev + diff;
+
+      if (Math.abs(newOffset) >= singleSetWidth) {
+        return newOffset + singleSetWidth;
+      }
+      if (newOffset > 0) {
+        return newOffset - singleSetWidth;
+      }
+      return newOffset;
+    });
+
+    setDragCurrentPos(currentX);
   };
 
-  const handleCarouselDragEnd = () => {
-    if (!isCarouselDragging) return;
-    setIsCarouselDragging(false);
-
-    // Normalize position to prevent gaps
-    if (carouselRef.current) {
-      const containerWidth = carouselRef.current.scrollWidth / 2;
-      const normalizedTranslate =
-        ((carouselTranslate % containerWidth) + containerWidth) %
-        containerWidth;
-      setCarouselTranslate(-normalizedTranslate);
-    }
+  const handleCarouselMouseUp = () => {
+    setIsDraggingCarousel(false);
+    lastTimeRef.current = Date.now();
   };
 
   const renderStars = (rating, size = 14) => {
@@ -622,9 +647,88 @@ export const HomeSection = () => {
     <section className="relative w-full">
       {initialLoading && <LoadingSpinner />}
 
-      {/* Hero Carousel */}
+      {/* ============================================================
+          HERO CAROUSEL
+          - Desktop/tablet (sm+): full overlay layout (original)
+          - Mobile (< sm): image top, text + button BELOW (Jan Deux style)
+      ============================================================ */}
+
+      {/* ── MOBILE HERO (< sm) ── 
+          Single block: image fills full height, text overlays at the bottom.
+          No separate black panel below. Title hidden, only subtitle + button shown.
+      ── */}
       <div
-        className="relative w-full h-[80vh] sm:h-[75vh] md:h-[90vh] lg:h-[90vh] overflow-hidden md:mb-8 cursor-grab active:cursor-grabbing"
+        className="sm:hidden relative w-full overflow-hidden cursor-grab active:cursor-grabbing"
+        onMouseDown={handleHeroDragStart}
+        onMouseUp={handleHeroDragEnd}
+        onMouseLeave={() => setIsDragging(false)}
+        onTouchStart={handleHeroDragStart}
+        onTouchEnd={handleHeroDragEnd}
+        onWheel={handleHeroWheel}
+      >
+        {/* Full-height image container — taller on mobile, dots above text */}
+        <div
+          className="relative w-full overflow-hidden"
+          style={{ height: "170vw", maxHeight: "800px", minHeight: "560px" }}
+        >
+          {/* Slide images */}
+          {heroSlides.map((slide, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 transition-opacity duration-[1200ms] ease-in-out ${
+                index === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
+              }`}
+            >
+              <div
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                style={{ backgroundImage: `url(${slide.image})` }}
+              />
+            </div>
+          ))}
+
+          {/* Gradient overlay — darkens bottom for readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent z-20 pointer-events-none" />
+
+          {/* All bottom content: subtitle → button → dots */}
+          <div className="absolute bottom-0 left-0 right-0 z-30 flex flex-col items-center px-5 pb-6 text-center text-white">
+            {/* Subtitle + button (title hidden on mobile) */}
+            {heroSlides.map((slide, index) =>
+              index === currentSlide ? (
+                <div key={index} className="flex flex-col items-center">
+                  <p className="text-sm text-white/90 leading-relaxed mb-4 max-w-xs drop-shadow-md">
+                    {slide.subtitle}
+                  </p>
+                  <button
+                    onClick={() => handleButtonClick(slide.action)}
+                    className="border border-white text-white text-[11px] font-semibold tracking-[0.2em] uppercase px-7 py-3 hover:bg-white hover:text-black transition-all duration-300 mb-5"
+                  >
+                    {slide.buttonText}
+                  </button>
+                </div>
+              ) : null,
+            )}
+
+            {/* Dots BELOW the button */}
+            <div className="flex gap-2">
+              {heroSlides.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentSlide(idx)}
+                  className={
+                    currentSlide === idx
+                      ? "bg-white w-6 h-1.5 rounded-full transition-all duration-300"
+                      : "bg-white/50 w-2 h-1.5 rounded-full transition-all duration-300"
+                  }
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── DESKTOP / TABLET HERO (sm+) – original layout unchanged ── */}
+      <div
+        className="hidden sm:block relative w-full h-[75vh] md:h-[90vh] lg:h-[90vh] overflow-hidden md:mb-8 cursor-grab active:cursor-grabbing"
         onMouseDown={handleHeroDragStart}
         onMouseUp={handleHeroDragEnd}
         onMouseLeave={() => setIsDragging(false)}
@@ -684,21 +788,21 @@ export const HomeSection = () => {
                 <button
                   onClick={() => handleButtonClick(slide.action)}
                   className={cn(
-                    "liquid-button relative inline-flex items-center px-4 py-2 sm:px-5 sm:py-2 md:px-4 md:py-3 text-sm sm:text-base md:text-lg rounded-lg font-semibold shadow-xl cursor-pointer overflow-hidden transition-all duration-1000 ease-out pointer-events-auto group",
+                    "group inline-flex items-center gap-0 border border-white text-white text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase px-10 py-3 hover:bg-white hover:text-black transition-all duration-300 cursor-pointer pointer-events-auto",
                     index === currentSlide
                       ? "opacity-100 translate-y-0"
                       : "opacity-0 -translate-y-10",
                   )}
                   style={{
                     transitionDelay: index === currentSlide ? "0.8s" : "0s",
+                    transition:
+                      "opacity 1s ease-out, transform 1s ease-out, background-color 0.3s, color 0.3s",
                   }}
                 >
-                  <span className="relative z-10 text-white">
-                    {slide.buttonText}
-                  </span>
+                  {slide.buttonText}
                   <ArrowRight
-                    size={20}
-                    className="relative z-10 text-white opacity-0 w-0 ml-0 transform transition-all duration-300 group-hover:opacity-100 group-hover:w-5 group-hover:ml-2 group-hover:translate-x-0"
+                    size={16}
+                    className="opacity-0 w-0 overflow-hidden transition-all duration-300 group-hover:opacity-100 group-hover:w-5 group-hover:ml-2"
                   />
                 </button>
               </div>
@@ -706,14 +810,14 @@ export const HomeSection = () => {
           </div>
         ))}
 
-        {/* Navigation Arrows - Desktop */}
+        {/* Navigation Arrows */}
         <button
           onClick={() =>
             setCurrentSlide(
               (currentSlide - 1 + heroSlides.length) % heroSlides.length,
             )
           }
-          className="hidden sm:block absolute left-2 sm:left-4 md:left-1 lg:left-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 transition-all duration-300 z-20 pointer-events-auto"
+          className="absolute left-2 sm:left-4 md:left-1 lg:left-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 transition-all duration-300 z-20 pointer-events-auto"
         >
           <svg
             width="20"
@@ -732,7 +836,7 @@ export const HomeSection = () => {
           onClick={() =>
             setCurrentSlide((currentSlide + 1) % heroSlides.length)
           }
-          className="hidden sm:block absolute right-2 sm:right-4 md:right-1 lg:right-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 transition-all duration-300 z-20 pointer-events-auto"
+          className="absolute right-2 sm:right-4 md:right-1 lg:right-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 transition-all duration-300 z-20 pointer-events-auto"
         >
           <svg
             width="20"
@@ -746,47 +850,6 @@ export const HomeSection = () => {
             <path d="M9 18l6-6-6-6" />
           </svg>
         </button>
-
-        {/* Mobile Navigation */}
-        <div className="sm:hidden absolute bottom-16 left-1/2 -translate-x-1/2 flex gap-20 z-20 pointer-events-auto">
-          <button
-            onClick={() =>
-              setCurrentSlide(
-                (currentSlide - 1 + heroSlides.length) % heroSlides.length,
-              )
-            }
-            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 transition-all duration-300"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
-
-          <button
-            onClick={() =>
-              setCurrentSlide((currentSlide + 1) % heroSlides.length)
-            }
-            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 transition-all duration-300"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
-        </div>
 
         {/* Dot Indicators */}
         <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20 pointer-events-auto">
@@ -804,7 +867,11 @@ export const HomeSection = () => {
         </div>
       </div>
 
-      {/* ✅ PRODUCTS SECTION - IMPROVED INFINITE CAROUSEL */}
+      {/* ============================================================
+          PRODUCTS SECTION - FIXED INFINITE CAROUSEL
+          ✅ Duplicated ONCE (not 3x) to prevent repeat cards
+          ✅ Speed slowed to 0.12 px/ms
+      ============================================================ */}
       <div
         ref={productsSectionRef}
         className={`mt-12 p-4 overflow-hidden transition-all duration-1000 ${
@@ -823,34 +890,38 @@ export const HomeSection = () => {
             to miss
           </p>
 
-          <div className="relative">
+          <div
+            ref={carouselContainerRef}
+            className="relative overflow-hidden"
+            onMouseDown={handleCarouselMouseDown}
+            onMouseMove={handleCarouselMouseMove}
+            onMouseUp={handleCarouselMouseUp}
+            onMouseLeave={handleCarouselMouseUp}
+            onTouchStart={handleCarouselMouseDown}
+            onTouchMove={handleCarouselMouseMove}
+            onTouchEnd={handleCarouselMouseUp}
+          >
             <div
-              ref={carouselRef}
+              ref={carouselInnerRef}
               className="flex gap-4 md:gap-6 cursor-grab active:cursor-grabbing select-none"
-              onMouseDown={handleCarouselDragStart}
-              onMouseMove={handleCarouselDragMove}
-              onMouseUp={handleCarouselDragEnd}
-              onMouseLeave={handleCarouselDragEnd}
-              onTouchStart={handleCarouselDragStart}
-              onTouchMove={handleCarouselDragMove}
-              onTouchEnd={handleCarouselDragEnd}
               style={{
-                transform: `translateX(${carouselTranslate}px)`,
-                transition: isCarouselDragging
-                  ? "none"
-                  : "transform 0.05s linear",
+                transform: `translateX(${carouselOffset}px)`,
+                transition: "none",
                 touchAction: "pan-y",
+                willChange: "transform",
               }}
             >
-              {/* Triple the products for seamless infinite scroll */}
-              {[...products, ...products, ...products].map((product, index) => {
+              {/* ✅ FIXED: Duplicated TWICE (2 copies) — not 3 — so cards only appear once visually */}
+              {[...products, ...products].map((product, index) => {
                 const reviewCount = getProductReviewCount(product.name);
 
                 return (
                   <div
                     key={`${product.id}-${index}`}
                     className="flex-shrink-0 w-[150px] lg:w-[200px] md:w-[200px] xl:w-[220px] 2xl:w-[240px] bg-card rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 group animate-fade-in-up flex flex-col"
-                    style={{ animationDelay: `${(index % 6) * 0.1}s` }}
+                    style={{
+                      animationDelay: `${(index % products.length) * 0.1}s`,
+                    }}
                   >
                     <div className="relative overflow-hidden h-35 sm:h-44 md:h-48 xl:h-52 2xl:h-56 bg-muted pointer-events-none">
                       <img
@@ -996,7 +1067,7 @@ export const HomeSection = () => {
         )}
       </div>
 
-      {/* ✅ CONTACT SECTION WITHOUT ANIMATIONS */}
+      {/* ✅ CONTACT SECTION */}
       <div
         ref={contactSectionRef}
         id="contact-section"
