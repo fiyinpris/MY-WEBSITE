@@ -34,7 +34,6 @@ export const ProductDetail = () => {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
 
-  // ✅ Add Review Modal State
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reviewFormData, setReviewFormData] = useState({
@@ -54,7 +53,6 @@ export const ProductDetail = () => {
       try {
         const foundProduct = await productsAPI.getById(id);
         setProduct(foundProduct);
-        // ✅ Pre-fill product name in review form
         setReviewFormData((prev) => ({
           ...prev,
           productName: foundProduct?.name || "",
@@ -144,7 +142,6 @@ export const ProductDetail = () => {
     }
   };
 
-  // ✅ Handle Review Submission
   const handleReviewSubmit = async () => {
     if (!isSignedIn) {
       alert("Please sign in to leave a review");
@@ -176,7 +173,6 @@ export const ProductDetail = () => {
 
       await reviewsAPI.create(newReview);
 
-      // Reload reviews
       const allReviews = await reviewsAPI.getAll();
       const productReviews = allReviews.filter(
         (review) =>
@@ -184,7 +180,6 @@ export const ProductDetail = () => {
       );
       setReviews(productReviews);
 
-      // Reset form
       setReviewFormData({
         customerName: "",
         email: userEmail,
@@ -202,7 +197,6 @@ export const ProductDetail = () => {
     }
   };
 
-  // ✅ Scroll to home reviews section
   const scrollToHomeReviews = () => {
     navigate("/");
     setTimeout(() => {
@@ -297,7 +291,8 @@ export const ProductDetail = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background py-12 sm:px-6 px-4 lg:px-14 mt-10">
+    // ✅ Remove padding on mobile (px-0), add padding for larger screens
+    <div className="min-h-screen bg-background py-6 sm:py-12 mt-10 px-0 sm:px-6 lg:px-14">
       <style>{`
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
@@ -315,7 +310,8 @@ export const ProductDetail = () => {
         }
       `}</style>
 
-      <div className="max-w-7xl mx-auto">
+      {/* ✅ Back button with padding only on mobile */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-0">
         <button
           onClick={handleBackClick}
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
@@ -323,9 +319,13 @@ export const ProductDetail = () => {
           <ArrowLeft size={20} />
           <span>Back to Shop</span>
         </button>
+      </div>
 
-        <div className="grid md:grid-cols-2 gap-8 lg:gap-12 mb-12">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 lg:gap-12 mb-12">
+          {/* ── Media column ── */}
           <div className="flex flex-col md:flex-row gap-4">
+            {/* Desktop: thumbnails sidebar + large main image */}
             <div className="hidden lg:flex lg:flex-row gap-4 w-full">
               <div className="flex flex-col gap-2 w-20">
                 {allMedia.map((media, index) => (
@@ -399,11 +399,12 @@ export const ProductDetail = () => {
               </div>
             </div>
 
+            {/* ✅ Mobile carousel - full width, no side margins */}
             <div className="lg:hidden w-full">
               <div className="relative">
                 <div
                   ref={carouselRef}
-                  className="flex overflow-x-auto scrollbar-hide carousel-snap gap-4 cursor-grab active:cursor-grabbing"
+                  className="flex overflow-x-auto scrollbar-hide carousel-snap cursor-grab active:cursor-grabbing"
                   style={{
                     WebkitOverflowScrolling: "touch",
                   }}
@@ -418,7 +419,7 @@ export const ProductDetail = () => {
                   {allMedia.map((media, index) => (
                     <div
                       key={index}
-                      className="flex-shrink-0 w-full h-[400px] rounded-2xl overflow-hidden bg-gray-100"
+                      className="flex-shrink-0 w-full h-[450px] sm:h-[500px] bg-gray-100"
                     >
                       {media.src ? (
                         media.type === "video" ? (
@@ -453,7 +454,8 @@ export const ProductDetail = () => {
                   ))}
                 </div>
 
-                <div className="flex justify-center gap-2 mt-4">
+                {/* ✅ Dot indicators with padding */}
+                <div className="flex justify-center gap-2 mt-4 px-4">
                   {allMedia.map((media, index) => (
                     <button
                       key={index}
@@ -473,16 +475,16 @@ export const ProductDetail = () => {
             </div>
           </div>
 
-          <div className="flex flex-col">
+          {/* ✅ Product info column - with padding on mobile */}
+          <div className="flex flex-col px-4 sm:px-0">
             <span className="inline-block text-sm bg-primary/10 text-primary px-3 py-1 rounded-full mb-3 w-fit">
               {product.category}
             </span>
 
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
               {product.name}
             </h1>
 
-            {/* ✅ CLICKABLE REVIEW COUNT - NO STARS */}
             <div className="mb-4">
               <button
                 onClick={scrollToHomeReviews}
@@ -496,16 +498,16 @@ export const ProductDetail = () => {
               </button>
             </div>
 
-            <p className="text-4xl font-bold text-green-600 mb-6">
+            <p className="text-3xl sm:text-4xl font-bold text-green-600 mb-6">
               ₦{product.price.toLocaleString()}
             </p>
 
             {product.description && (
               <div className="mb-6">
-                <h2 className="text-xl font-semibold text-foreground mb-2">
+                <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
                   Product Description
                 </h2>
-                <p className="text-muted-foreground leading-relaxed">
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                   {product.description}
                 </p>
               </div>
@@ -515,63 +517,64 @@ export const ProductDetail = () => {
               <label className="block text-sm font-semibold mb-3">
                 Quantity
               </label>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                 <div className="flex items-center border-2 rounded-lg">
                   <button
                     onClick={decreaseQuantity}
-                    className="p-3 hover:bg-muted transition-colors"
+                    className="p-2 sm:p-3 hover:bg-muted transition-colors"
                   >
-                    <Minus size={20} />
+                    <Minus size={18} />
                   </button>
-                  <span className="px-6 font-semibold text-lg">{quantity}</span>
+                  <span className="px-4 sm:px-6 font-semibold text-base sm:text-lg">
+                    {quantity}
+                  </span>
                   <button
                     onClick={increaseQuantity}
-                    className="p-3 hover:bg-muted transition-colors"
+                    className="p-2 sm:p-3 hover:bg-muted transition-colors"
                   >
-                    <Plus size={20} />
+                    <Plus size={18} />
                   </button>
                 </div>
-                <p className="text-muted-foreground">
+                <p className="text-sm sm:text-base text-muted-foreground">
                   Total: ₦{(product.price * quantity).toLocaleString()}
                 </p>
               </div>
             </div>
 
-            <div className="flex gap-4 mb-4">
+            <div className="flex flex-row sm:flex-row gap-3 sm:gap-4 mb-4">
               <button
                 onClick={handleAddToCart}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-4 rounded-lg transition-colors"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 sm:py-4 rounded-lg transition-colors text-sm sm:text-base"
               >
                 Add to Cart
               </button>
 
               <button
                 onClick={handleAddToCart}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-lg transition-colors"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 sm:py-4 rounded-lg transition-colors text-sm sm:text-base"
               >
                 Buy Now
               </button>
 
               <button
                 onClick={() => addToWishlist(product)}
-                className={`px-6 py-4 rounded-lg border-2 transition-colors ${
+                className={`px-4 sm:px-6 py-3 sm:py-4 rounded-lg border-2 transition-colors ${
                   isInWishlist(product.id)
                     ? "border-red-500 bg-red-50 text-red-600 hover:bg-red-100"
                     : "border-border hover:border-red-300"
                 }`}
               >
                 <Heart
-                  className={`w-6 h-6 ${
+                  className={`w-5 h-5 sm:w-6 sm:h-6 ${
                     isInWishlist(product.id) ? "text-red-500 fill-red-500" : ""
                   }`}
                 />
               </button>
             </div>
 
-            {/* ✅ ADD REVIEW BUTTON */}
             <button
               onClick={() => setShowReviewModal(true)}
-              className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
             >
               <MessageCircle size={20} />
               Add a Review
@@ -580,19 +583,19 @@ export const ProductDetail = () => {
         </div>
       </div>
 
-      {/* ✅ REVIEW MODAL */}
+      {/* Review Modal */}
       {showReviewModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl max-h-[100vh] overflow-y-auto">
+          <div className="bg-card rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                 Add Review
               </h3>
               <button
                 onClick={() => setShowReviewModal(false)}
-                className="bg-card hover:text-gray-700 border rounded-2xl w-8 h-8"
+                className="bg-card hover:text-gray-700 border rounded-2xl w-8 h-8 flex items-center justify-center"
               >
-                <X size={24} />
+                <X size={20} />
               </button>
             </div>
 
@@ -607,7 +610,7 @@ export const ProductDetail = () => {
                     customerName: e.target.value,
                   })
                 }
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
               />
 
               <input
@@ -620,7 +623,7 @@ export const ProductDetail = () => {
                     email: e.target.value,
                   })
                 }
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                 disabled={isSignedIn}
               />
 
@@ -628,7 +631,7 @@ export const ProductDetail = () => {
                 type="text"
                 placeholder="Product Name"
                 value={reviewFormData.productName}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl cursor-not-allowed"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl cursor-not-allowed text-sm sm:text-base"
                 disabled
               />
 
@@ -646,7 +649,7 @@ export const ProductDetail = () => {
                       className="focus:outline-none"
                     >
                       <Star
-                        size={32}
+                        size={28}
                         className={
                           star <= reviewFormData.rating
                             ? "fill-yellow-400 text-yellow-400"
@@ -667,13 +670,13 @@ export const ProductDetail = () => {
                     comment: e.target.value,
                   })
                 }
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl  focus:outline-none focus:ring-2 focus:ring-primary min-h-[120px] resize-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary min-h-[120px] resize-none text-sm sm:text-base"
               />
 
               <button
                 onClick={handleReviewSubmit}
                 disabled={isSubmitting}
-                className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               >
                 {isSubmitting ? "Submitting..." : "Submit Review"}
               </button>

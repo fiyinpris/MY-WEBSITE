@@ -2,45 +2,29 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "./CartSection";
 import { useWishlist } from "./WishlistSection";
-import { Heart, ShoppingCart, CheckCircle, Star } from "lucide-react";
+import { Heart } from "lucide-react";
 import headerBg from "../Images/image 9.jpg";
 import { productsAPI, reviewsAPI } from "../services/firebase";
 
-// ✅ GREEN LOADING SPINNER COMPONENT
-const LoadingSpinner = () => {
-  return (
-    <div className="fixed inset-0 bg-white/80 dark:bg-gray-900/80 z-[9999] flex items-center justify-center backdrop-blur-sm">
-      <div className="relative w-20 h-20">
-        {[...Array(12)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-2 h-6 bg-green-600 rounded-full"
-            style={{
-              left: "50%",
-              top: "50%",
-              transformOrigin: "1px -24px",
-              transform: `rotate(${i * 30}deg)`,
-              opacity: 1 - i * 0.08,
-              animation: `spin-fade 1.2s linear infinite`,
-              animationDelay: `${-1.2 + i * 0.1}s`,
-            }}
-          />
-        ))}
-      </div>
-      <style>{`
-        @keyframes spin-fade {
-          0% { opacity: 1; }
-          100% { opacity: 0.1; }
-        }
-      `}</style>
-    </div>
-  );
-};
+// ✅ Skeleton card — shown while products are loading
+const SkeletonCard = () => (
+  <div className="border p-3 md:p-4 rounded-lg shadow-md flex flex-col h-full animate-pulse">
+    {/* Image placeholder */}
+    <div className="w-full h-40 sm:h-48 rounded-md bg-gray-200 dark:bg-gray-700 mb-3" />
+    {/* Title */}
+    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2 w-3/4" />
+    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-3 w-1/2" />
+    {/* Price */}
+    <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded mb-3 w-1/3" />
+    {/* Button */}
+    <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded mt-auto" />
+  </div>
+);
 
 export const ShopSection = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const { wishlistItems, addToWishlist, isInWishlist } = useWishlist();
+  const { addToWishlist, isInWishlist } = useWishlist();
   const [sortOption, setSortOption] = useState("Default");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("ALL");
@@ -48,237 +32,94 @@ export const ShopSection = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [headerImageLoaded, setHeaderImageLoaded] = useState(false);
   const [products, setProducts] = useState([]);
-
-  // ✅ NEW: Reviews from Firebase
   const [allReviews, setAllReviews] = useState([]);
 
-  // ✅ LOADING STATE
-  const [isLoading, setIsLoading] = useState(true);
+  // ✅ Products loading is now separate from header image
+  const [isProductsLoading, setIsProductsLoading] = useState(true);
 
   const PRODUCTS_PER_PAGE = 12;
 
-  // ✅ CREATE STABLE "SHUFFLE" BASED ON PRODUCT ID
-  const createFixedMixedOrder = (productList) => {
-    return [...productList].sort((a, b) => {
+  const createFixedMixedOrder = (productList) =>
+    [...productList].sort((a, b) => {
       const hashA = (a.id.charCodeAt(0) * 9301 + 49297) % 233280;
       const hashB = (b.id.charCodeAt(0) * 9301 + 49297) % 233280;
       return hashA - hashB;
     });
-  };
 
-  // ✅ Load products from Firebase with loading state
+  // ✅ Load products independently — page shows immediately, cards show skeletons
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        setIsLoading(true);
+        setIsProductsLoading(true);
         const loadedProducts = await productsAPI.getAll();
-        const mixedProducts = createFixedMixedOrder(loadedProducts);
-        setProducts(mixedProducts);
+        setProducts(createFixedMixedOrder(loadedProducts));
       } catch (error) {
         console.error("Error loading products:", error);
       } finally {
-        setIsLoading(false);
+        setIsProductsLoading(false);
       }
     };
-
     loadProducts();
 
-    // Reload products periodically (silently, no loading spinner)
     const interval = setInterval(async () => {
       try {
-        const loadedProducts = await productsAPI.getAll();
-        const mixedProducts = createFixedMixedOrder(loadedProducts);
-        setProducts(mixedProducts);
-      } catch (error) {
-        console.error("Error reloading products:", error);
-      }
+        const p = await productsAPI.getAll();
+        setProducts(createFixedMixedOrder(p));
+      } catch {}
     }, 30000);
-
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ Load reviews from Firebase
   useEffect(() => {
     const loadReviews = async () => {
       try {
-        const loadedReviews = await reviewsAPI.getAll();
-        setAllReviews(loadedReviews || []);
-      } catch (error) {
-        console.error("Error loading reviews:", error);
+        setAllReviews((await reviewsAPI.getAll()) || []);
+      } catch {
         setAllReviews([]);
       }
     };
-
     loadReviews();
-
-    // Reload reviews periodically
     const interval = setInterval(loadReviews, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // Preload header image
+  // ✅ Header image loads silently in background — doesn't block anything
   useEffect(() => {
     const img = new Image();
     img.src = headerBg;
     img.onload = () => setHeaderImageLoaded(true);
+    // If image fails, still show (fallback gradient handles it)
+    img.onerror = () => setHeaderImageLoaded(true);
   }, []);
 
-  // ✅ Get review count for a product
-  const getProductReviewCount = (productName) => {
-    return allReviews.filter(
-      (review) =>
-        review.productName?.toLowerCase() === productName?.toLowerCase(),
-    ).length;
-  };
-
-  // ✅ Get average rating for a product
-  const getProductAverageRating = (productName) => {
-    const productReviews = allReviews.filter(
-      (review) =>
-        review.productName?.toLowerCase() === productName?.toLowerCase(),
-    );
-
-    if (productReviews.length === 0) return 0;
-
-    const totalRating = productReviews.reduce(
-      (sum, review) => sum + (review.rating || 0),
-      0,
-    );
-    return totalRating / productReviews.length;
-  };
-
-  // ✅ Scroll to home reviews section
-  const scrollToHomeReviews = () => {
-    // Navigate to home page
-    navigate("/");
-    // Wait for navigation, then scroll to reviews
-    setTimeout(() => {
-      const reviewsSection = document.querySelector(
-        ".flex.flex-col.justify-center.items-center.bg-green-200",
-      );
-      if (reviewsSection) {
-        reviewsSection.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    }, 300);
-  };
-
-  const renderStars = (rating, size = 14) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-    for (let i = 0; i < 5; i++) {
-      if (i < fullStars)
-        stars.push(
-          <Star
-            key={i}
-            size={size}
-            className="text-yellow-400 fill-yellow-400"
-          />,
-        );
-      else if (i === fullStars && hasHalfStar)
-        stars.push(
-          <div key={i} className="relative inline-block">
-            <Star size={size} className="text-gray-300" />
-            <div
-              className="absolute top-0 left-0 overflow-hidden"
-              style={{ width: "50%" }}
-            >
-              <Star size={size} className="text-yellow-400 fill-yellow-400" />
-            </div>
-          </div>,
-        );
-      else stars.push(<Star key={i} size={size} className="text-gray-300" />);
-    }
-    return stars;
-  };
-
-  // ✅ Filter products by category and price
-  let filteredProducts = products.filter((product) => {
-    const categoryMatch =
-      selectedCategory === "ALL" || product.category === selectedCategory;
-    const priceMatch = product.price <= priceRange;
-    return categoryMatch && priceMatch;
-  });
-
-  // ✅ Apply sorting - maintains mixed order by default
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    if (sortOption === "Price: Low to High") return a.price - b.price;
-    if (sortOption === "Price: High to Low") return b.price - a.price;
-    return 0;
-  });
-
-  // Pagination
-  const totalPages = Math.ceil(sortedProducts.length / PRODUCTS_PER_PAGE);
-  const startIdx = (currentPage - 1) * PRODUCTS_PER_PAGE;
-  const currentProducts = sortedProducts.slice(
-    startIdx,
-    startIdx + PRODUCTS_PER_PAGE,
-  );
-
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisible = 5;
-
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-
-    if (endPage - startPage < maxVisible - 1) {
-      startPage = Math.max(1, endPage - maxVisible + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return pages;
-  };
-
-  const pageNumbers = getPageNumbers();
-
-  const goPrev = () => {
-    setCurrentPage((p) => Math.max(1, p - 1));
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const goNext = () => {
-    setCurrentPage((p) => Math.min(totalPages, p + 1));
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const goToPage = (num) => {
-    setCurrentPage(num);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  // ✅ UPDATED: Just add to cart without notification
-  const handleAddToCart = (product) => {
-    addToCart(product);
-  };
-
-  const handleProductClick = (productId) => {
-    sessionStorage.setItem("shopScrollPosition", window.scrollY.toString());
-    navigate(`/product/${productId}`, { state: { from: "/shop" } });
-  };
-
+  // Close filter on outside click
   useEffect(() => {
-    const savedPosition = sessionStorage.getItem("shopScrollPosition");
-    if (savedPosition) {
-      setTimeout(() => {
-        window.scrollTo({
-          top: parseInt(savedPosition),
-          behavior: "instant",
-        });
-        sessionStorage.removeItem("shopScrollPosition");
-      }, 0);
-    }
-  }, []);
+    if (!showFilters) return;
+    const handleClickOutside = (e) => {
+      const sidebar = document.getElementById("sidebar");
+      const btn = document.getElementById("filter-toggle-btn");
+      if (
+        sidebar &&
+        !sidebar.contains(e.target) &&
+        btn &&
+        !btn.contains(e.target)
+      ) {
+        setShowFilters(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [showFilters]);
 
+  // Drag-resize sidebar (desktop)
   useEffect(() => {
     const divider = document.getElementById("divider");
     const sidebar = document.getElementById("sidebar");
-
     if (!divider || !sidebar) return;
-
     let isDragging = false;
     const onMouseDown = () => {
       isDragging = true;
@@ -290,21 +131,79 @@ export const ShopSection = () => {
     };
     const onMouseMove = (e) => {
       if (!isDragging) return;
-      const newWidth = e.clientX - sidebar.getBoundingClientRect().left;
-      if (newWidth >= 180 && newWidth <= 300)
-        sidebar.style.width = newWidth + "px";
+      const w = e.clientX - sidebar.getBoundingClientRect().left;
+      if (w >= 180 && w <= 300) sidebar.style.width = w + "px";
     };
-
     divider.addEventListener("mousedown", onMouseDown);
     window.addEventListener("mouseup", onMouseUp);
     window.addEventListener("mousemove", onMouseMove);
-
     return () => {
       divider.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mouseup", onMouseUp);
       window.removeEventListener("mousemove", onMouseMove);
     };
   }, []);
+
+  useEffect(() => {
+    const savedPosition = sessionStorage.getItem("shopScrollPosition");
+    if (savedPosition) {
+      setTimeout(() => {
+        window.scrollTo({ top: parseInt(savedPosition), behavior: "instant" });
+        sessionStorage.removeItem("shopScrollPosition");
+      }, 0);
+    }
+  }, []);
+
+  const handleProductClick = (productId) => {
+    sessionStorage.setItem("shopScrollPosition", window.scrollY.toString());
+    navigate(`/product/${productId}`, { state: { from: "/shop" } });
+  };
+
+  const handleAddToCart = (product) => addToCart(product);
+
+  // Filter + sort
+  const filteredProducts = products.filter((p) => {
+    const categoryMatch =
+      selectedCategory === "ALL" || p.category === selectedCategory;
+    return categoryMatch && p.price <= priceRange;
+  });
+
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    if (sortOption === "Price: Low to High") return a.price - b.price;
+    if (sortOption === "Price: High to Low") return b.price - a.price;
+    return 0;
+  });
+
+  const totalPages = Math.ceil(sortedProducts.length / PRODUCTS_PER_PAGE);
+  const startIdx = (currentPage - 1) * PRODUCTS_PER_PAGE;
+  const currentProducts = sortedProducts.slice(
+    startIdx,
+    startIdx + PRODUCTS_PER_PAGE,
+  );
+
+  const getPageNumbers = () => {
+    const maxVisible = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage < maxVisible - 1)
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    const pages = [];
+    for (let i = startPage; i <= endPage; i++) pages.push(i);
+    return pages;
+  };
+
+  const goPrev = () => {
+    setCurrentPage((p) => Math.max(1, p - 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const goNext = () => {
+    setCurrentPage((p) => Math.min(totalPages, p + 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const goToPage = (num) => {
+    setCurrentPage(num);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const categories = [
     "ALL",
@@ -317,29 +216,28 @@ export const ShopSection = () => {
     "ACCESSORIES",
     "BACKDROP",
   ];
+  const pageNumbers = getPageNumbers();
+
+  // ✅ How many skeleton cards to show while loading
+  const SKELETON_COUNT = 8;
 
   return (
     <div className="mt-12">
-      {/* ✅ LOADING SPINNER */}
-      {(isLoading || !headerImageLoaded) && <LoadingSpinner />}
-
-      {/* Hero Banner */}
+      {/* ✅ Hero Banner — always visible immediately. Image fades in when ready. */}
       <div className="relative w-full h-100 md:h-90 lg:h-90 2xl:h-400 mb-6 md:mb-8 overflow-hidden">
+        {/* Gradient fallback — always visible so banner isn't blank */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900" />
+
+        {/* Real image fades in once loaded */}
         <div
-          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-500 ${
-            headerImageLoaded ? "opacity-100" : "opacity-0"
-          }`}
+          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-700 ${headerImageLoaded ? "opacity-100" : "opacity-0"}`}
           style={{ backgroundImage: `url(${headerBg})` }}
-        ></div>
+        />
 
-        {!headerImageLoaded && (
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 animate-pulse"></div>
-        )}
-
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70" />
 
         <div className="relative h-full flex items-center justify-center px-4">
-          <div className=" split-text-container text-white drop-shadow-2xl">
+          <div className="split-text-container text-white drop-shadow-2xl">
             <span className="text-xl lg:text-7xl md:text-5xl text-part left">
               WELCOME TO&nbsp;
             </span>
@@ -352,9 +250,10 @@ export const ShopSection = () => {
 
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-4">
-          {/* Mobile Filter Button */}
+          {/* Mobile Filter Toggle */}
           <div className="lg:hidden mb-4">
             <button
+              id="filter-toggle-btn"
               onClick={() => setShowFilters(!showFilters)}
               className="w-full px-4 py-2 bg-green-400 text-white rounded-lg flex items-center justify-between gap-2"
             >
@@ -379,9 +278,7 @@ export const ShopSection = () => {
                 </span>
               </div>
               <svg
-                className={`w-4 h-4 transition-transform ${
-                  showFilters ? "rotate-180" : ""
-                }`}
+                className={`w-4 h-4 transition-transform ${showFilters ? "rotate-180" : ""}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -399,46 +296,36 @@ export const ShopSection = () => {
           {/* Sidebar */}
           <aside
             id="sidebar"
-            className={`${
-              showFilters ? "block" : "hidden"
-            } lg:block w-full lg:w-1/5 lg:min-w-[180px] lg:max-w-[300px] space-y-6 mb-6 lg:mb-0 lg:sticky top-24 h-[calc(100vh-6rem)]`}
+            className={`${showFilters ? "block" : "hidden"} lg:block w-full lg:w-1/5 lg:min-w-[180px] lg:max-w-[300px] mb-6 lg:mb-0 lg:sticky lg:top-24 lg:h-[calc(100vh-6rem)] lg:overflow-y-auto`}
           >
-            <div className="space-y-6 bg-background lg:bg-transparent p-4 lg:p-0 rounded-lg lg:rounded-none shadow-lg lg:shadow-none">
+            <div className="w-full lg:h-full bg-background lg:bg-transparent p-4 lg:p-0 rounded-lg lg:rounded-none shadow-lg lg:shadow-none inline-block lg:block">
               <div className="flex justify-between items-center lg:hidden mb-4">
                 <h5 className="font-semibold text-lg">Filters</h5>
                 <button
                   onClick={() => setShowFilters(false)}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-gray-500 hover:text-gray-700 text-xl leading-none"
                 >
                   ✕
                 </button>
               </div>
-
               <div>
                 <h5 className="font-semibold mb-2 hidden lg:block">Filters</h5>
                 <div className="space-y-4">
-                  <div>
-                    <ul className="space-y-2">
-                      {categories.map((category) => (
-                        <li
-                          key={category}
-                          className={`cursor-pointer hover:text-green-400 transition-colors ${
-                            selectedCategory === category
-                              ? "text-green-400 font-semibold"
-                              : ""
-                          }`}
-                          onClick={() => {
-                            setSelectedCategory(category);
-                            setCurrentPage(1);
-                            setShowFilters(false);
-                          }}
-                        >
-                          {category === "MICROPHONE" ? "MICROPHONES" : category}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
+                  <ul className="space-y-2">
+                    {categories.map((category) => (
+                      <li
+                        key={category}
+                        className={`cursor-pointer hover:text-green-400 transition-colors ${selectedCategory === category ? "text-green-400 font-semibold" : ""}`}
+                        onClick={() => {
+                          setSelectedCategory(category);
+                          setCurrentPage(1);
+                          setShowFilters(false);
+                        }}
+                      >
+                        {category === "MICROPHONE" ? "MICROPHONES" : category}
+                      </li>
+                    ))}
+                  </ul>
                   <div>
                     <h6 className="font-medium mb-2">Price</h6>
                     <div className="flex items-center gap-2 mb-2">
@@ -455,11 +342,7 @@ export const ShopSection = () => {
                         }}
                         className="w-full accent-green-400"
                         style={{
-                          background: `linear-gradient(to right, #4ade80 0%, #4ade80 ${
-                            ((priceRange - 10000) / (500000 - 10000)) * 100
-                          }%, #e5e7eb ${
-                            ((priceRange - 10000) / (500000 - 10000)) * 100
-                          }%, #e5e7eb 100%)`,
+                          background: `linear-gradient(to right, #4ade80 0%, #4ade80 ${((priceRange - 10000) / 490000) * 100}%, #e5e7eb ${((priceRange - 10000) / 490000) * 100}%, #e5e7eb 100%)`,
                         }}
                       />
                       <span className="text-sm">₦500K</span>
@@ -482,17 +365,18 @@ export const ShopSection = () => {
             </div>
           </aside>
 
-          {/* Divider */}
           <div
             id="divider"
             className="hidden lg:block w-1 cursor-col-resize bg-gray-400"
-          ></div>
+          />
 
-          {/* Main Products */}
+          {/* Main Products Area */}
           <main id="main" className="flex-1">
             <div className="flex justify-between items-center mb-4">
               <p className="text-sm text-gray-400">
-                {filteredProducts.length} results
+                {isProductsLoading
+                  ? "Loading..."
+                  : `${filteredProducts.length} results`}
               </p>
               <select
                 className="border rounded px-3 py-2 text-sm bg-background"
@@ -505,128 +389,107 @@ export const ShopSection = () => {
               </select>
             </div>
 
-            {/* ✅ FIXED: Product Grid with proper alignment */}
+            {/* ✅ Product grid — skeletons while loading, real cards when ready */}
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-6 mb-8">
-              {currentProducts.map((product) => {
-                const reviewCount = getProductReviewCount(product.name);
-                const avgRating = getProductAverageRating(product.name);
-
-                return (
-                  <div
-                    key={product.id}
-                    className="border p-3 md:p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col h-full"
-                  >
+              {isProductsLoading
+                ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+                    <SkeletonCard key={i} />
+                  ))
+                : currentProducts.map((product) => (
                     <div
-                      className="w-full h-40 sm:h-48 2xl:h-150 flex items-center justify-center overflow-hidden rounded-md bg-gray-200 relative cursor-pointer mb-3"
-                      onClick={() => handleProductClick(product.id)}
+                      key={product.id}
+                      className="border p-3 md:p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col h-full"
                     >
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-
-                      <button
-                        className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white shadow hover:bg-gray-100 cursor-pointer z-10"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToWishlist(product);
-                        }}
-                      >
-                        <Heart
-                          className={`w-5 h-5 ${
-                            isInWishlist(product.id)
-                              ? "text-red-500 fill-red-500"
-                              : "text-gray-400"
-                          }`}
-                        />
-                      </button>
-                    </div>
-
-                    <div className="flex flex-col flex-1">
-                      <h6
-                        className="font-semibold text-sm md:text-base cursor-pointer hover:text-green-600 mb-2 line-clamp-2 min-h-[40px]"
+                      <div
+                        className="w-full h-40 sm:h-48 2xl:h-150 flex items-center justify-center overflow-hidden rounded-md bg-gray-200 relative cursor-pointer mb-3"
                         onClick={() => handleProductClick(product.id)}
                       >
-                        {product.name}
-                      </h6>
-
-                      <p className="font-bold text-base md:text-lg text-green-600 mb-3 min-h-[28px]">
-                        ₦{product.price.toLocaleString()}
-                      </p>
-
-                      <button
-                        className="normal-button w-full py-2 text-sm md:text-base cursor-pointer mt-auto"
-                        onClick={() => handleAddToCart(product)}
-                      >
-                        Add to Cart
-                      </button>
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                        <button
+                          className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white shadow hover:bg-gray-100 cursor-pointer z-10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToWishlist(product);
+                          }}
+                        >
+                          <Heart
+                            className={`w-5 h-5 ${isInWishlist(product.id) ? "text-red-500 fill-red-500" : "text-gray-400"}`}
+                          />
+                        </button>
+                      </div>
+                      <div className="flex flex-col flex-1">
+                        <h6
+                          className="font-semibold text-sm md:text-base cursor-pointer hover:text-green-600 mb-2 line-clamp-2 min-h-[40px]"
+                          onClick={() => handleProductClick(product.id)}
+                        >
+                          {product.name}
+                        </h6>
+                        <p className="font-bold text-base md:text-lg text-green-600 mb-3 min-h-[28px]">
+                          ₦{product.price.toLocaleString()}
+                        </p>
+                        <button
+                          className="normal-button w-full py-2 text-sm md:text-base cursor-pointer mt-auto"
+                          onClick={() => handleAddToCart(product)}
+                        >
+                          Add to Cart
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  ))}
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
+            {!isProductsLoading && totalPages > 1 && (
               <div className="flex justify-center items-center mt-6 mb-8 md:mt-8 space-x-2 md:space-x-3">
                 <button
-                  className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm md:text-base cursor-pointer"
+                  className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm md:text-base"
                   onClick={goPrev}
                   disabled={currentPage === 1}
                 >
                   ←
                 </button>
-
                 {pageNumbers[0] > 1 && (
                   <>
                     <button
-                      className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer text-sm md:text-base"
+                      className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm md:text-base"
                       onClick={() => goToPage(1)}
                     >
                       1
                     </button>
                     {pageNumbers[0] > 2 && (
-                      <span className="text-gray-500 px-1 text-sm md:text-base">
-                        ...
-                      </span>
+                      <span className="text-gray-500 px-1 text-sm">...</span>
                     )}
                   </>
                 )}
-
                 {pageNumbers.map((num) => (
                   <button
                     key={num}
-                    className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg transition-colors cursor-pointer text-sm md:text-base ${
-                      num === currentPage
-                        ? "bg-green-600 text-white"
-                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                    }`}
+                    className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg transition-colors text-sm md:text-base ${num === currentPage ? "bg-green-600 text-white" : "hover:bg-gray-100 dark:hover:bg-gray-800"}`}
                     onClick={() => goToPage(num)}
                   >
                     {num}
                   </button>
                 ))}
-
                 {pageNumbers[pageNumbers.length - 1] < totalPages && (
                   <>
                     {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
-                      <span className="text-gray-500 px-1 text-sm md:text-base">
-                        ...
-                      </span>
+                      <span className="text-gray-500 px-1 text-sm">...</span>
                     )}
                     <button
-                      className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer text-sm md:text-base"
+                      className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm md:text-base"
                       onClick={() => goToPage(totalPages)}
                     >
                       {totalPages}
                     </button>
                   </>
                 )}
-
                 <button
-                  className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm md:text-base cursor-pointer"
+                  className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm md:text-base"
                   onClick={goNext}
                   disabled={currentPage === totalPages}
                 >
