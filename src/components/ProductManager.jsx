@@ -10,6 +10,7 @@ import {
   Lock,
   Loader2,
   Tag,
+  Star,
 } from "lucide-react";
 import { productsAPI, adminAPI } from "../services/firebase";
 
@@ -54,6 +55,7 @@ export const ProductManager = () => {
       newArrivals: false,
     },
     discount: "",
+    bestSelling: false,
   });
 
   const PRODUCT_CATEGORIES = [
@@ -190,7 +192,6 @@ export const ProductManager = () => {
     }
   };
 
-  // ✅ FIXED: Proper price handling to prevent any rounding or precision issues
   const handleAddProduct = async () => {
     if (!formData.name || !formData.price || !formData.image) {
       alert("Please fill in all required fields and upload an image");
@@ -200,11 +201,9 @@ export const ProductManager = () => {
     try {
       setIsAddingProduct(true);
 
-      // ✅ Convert price to integer without any rounding
       const priceString = String(formData.price).trim();
       const cleanPrice = parseInt(priceString, 10);
 
-      // Validate price is a valid number
       if (isNaN(cleanPrice) || cleanPrice < 0) {
         alert("Please enter a valid price");
         setIsAddingProduct(false);
@@ -224,6 +223,7 @@ export const ProductManager = () => {
         rating: formData.rating || 5,
         tags: formData.tags,
         discount: formData.discount || "",
+        bestSelling: formData.bestSelling || false,
       };
 
       await productsAPI.create(newProduct);
@@ -239,7 +239,6 @@ export const ProductManager = () => {
     }
   };
 
-  // ✅ FIXED: Proper price handling to prevent any rounding or precision issues
   const handleEditProduct = async () => {
     if (!formData.name || !formData.price) {
       alert("Please fill in all required fields");
@@ -249,11 +248,9 @@ export const ProductManager = () => {
     try {
       setIsUpdatingProduct(true);
 
-      // ✅ Convert price to integer without any rounding
       const priceString = String(formData.price).trim();
       const cleanPrice = parseInt(priceString, 10);
 
-      // Validate price is a valid number
       if (isNaN(cleanPrice) || cleanPrice < 0) {
         alert("Please enter a valid price");
         setIsUpdatingProduct(false);
@@ -274,6 +271,7 @@ export const ProductManager = () => {
         rating: formData.rating || 5,
         tags: formData.tags,
         discount: formData.discount || "",
+        bestSelling: formData.bestSelling || false,
       };
 
       await productsAPI.update(editingProduct.id, updatedProduct);
@@ -311,7 +309,7 @@ export const ProductManager = () => {
     setFormData({
       name: product.name,
       category: product.category,
-      price: String(product.price), // ✅ Convert to string for input field
+      price: String(product.price),
       image: product.image,
       imageFile: null,
       thumbnail1: product.thumbnail1 || "",
@@ -322,6 +320,7 @@ export const ProductManager = () => {
       rating: product.rating || 5,
       tags: product.tags || { sale: false, hot: false, newArrivals: false },
       discount: product.discount || "",
+      bestSelling: product.bestSelling || false,
     });
     setShowEditModal(true);
   };
@@ -341,6 +340,7 @@ export const ProductManager = () => {
       rating: 5,
       tags: { sale: false, hot: false, newArrivals: false },
       discount: "",
+      bestSelling: false,
     });
   };
 
@@ -358,6 +358,8 @@ export const ProductManager = () => {
       matchesTag = product.tags?.hot === true;
     } else if (filterTag === "NEW") {
       matchesTag = product.tags?.newArrivals === true;
+    } else if (filterTag === "BESTSELLING") {
+      matchesTag = product.bestSelling === true;
     }
 
     return matchesSearch && matchesCategory && matchesTag;
@@ -527,94 +529,140 @@ export const ProductManager = () => {
     </div>
   );
 
-  const renderTagsSection = () => (
-    <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-2 border-blue-300 dark:border-blue-700 rounded-xl p-5 shadow-sm">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="p-2 bg-blue-600 rounded-lg">
-          <Tag className="text-white" size={20} />
+  const renderTagsSection = () => {
+    const bestSellingCount = products.filter((p) => p.bestSelling).length;
+
+    return (
+      <div className="space-y-4">
+        {/* Best Selling Section - Prominent */}
+        <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-700 rounded-xl p-5 shadow-md">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="p-2 bg-yellow-500 rounded-lg">
+              <Star className="text-white fill-white" size={20} />
+            </div>
+            <label className="block text-base font-bold text-foreground">
+              ⭐ Best Selling Product
+            </label>
+          </div>
+
+          <div className="bg-white/70 dark:bg-gray-800/50 p-4 rounded-lg border-2 border-yellow-300 dark:border-yellow-800 mb-3">
+            <p className="text-sm text-foreground font-semibold mb-2">
+              📊 Best Selling Status: {bestSellingCount} product
+              {bestSellingCount !== 1 ? "s" : ""} marked
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Mark products as "Best Selling" to feature them in the homepage
+              carousel. You can select as many as you want!
+            </p>
+          </div>
+
+          <label className="flex items-center gap-3 cursor-pointer p-4 rounded-lg transition-colors border-2 hover:bg-white/70 dark:hover:bg-yellow-900/40 border-transparent hover:border-yellow-400">
+            <input
+              type="checkbox"
+              checked={formData.bestSelling}
+              onChange={(e) => {
+                setFormData({
+                  ...formData,
+                  bestSelling: e.target.checked,
+                });
+              }}
+              className="w-6 h-6 text-yellow-600 rounded focus:ring-2 focus:ring-yellow-500 cursor-pointer"
+            />
+            <span className="text-sm font-semibold flex-1">
+              ⭐ Mark as Best Selling (Shows on homepage carousel)
+            </span>
+          </label>
         </div>
-        <label className="block text-base font-bold text-foreground">
-          Homepage Featured Sections
-        </label>
-      </div>
-      <p className="text-sm text-muted-foreground mb-4 bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-        💡 <strong>Important:</strong> Check at least one tag to display this
-        product on the homepage. Products with NO tags will only appear in the
-        Shop page.
-      </p>
-      <div className="space-y-3">
-        <label className="flex items-center gap-3 cursor-pointer hover:bg-white/70 dark:hover:bg-blue-900/40 p-3 rounded-lg transition-colors border-2 border-transparent hover:border-red-300">
-          <input
-            type="checkbox"
-            checked={formData.tags.sale}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                tags: { ...formData.tags, sale: e.target.checked },
-              })
-            }
-            className="w-5 h-5 text-red-600 rounded focus:ring-2 focus:ring-red-500 cursor-pointer"
-          />
-          <span className="text-sm font-semibold flex-1">
-            🔥 SALE - Display in "Sale" section on homepage
-          </span>
-        </label>
 
-        <label className="flex items-center gap-3 cursor-pointer hover:bg-white/70 dark:hover:bg-blue-900/40 p-3 rounded-lg transition-colors border-2 border-transparent hover:border-orange-300">
-          <input
-            type="checkbox"
-            checked={formData.tags.hot}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                tags: { ...formData.tags, hot: e.target.checked },
-              })
-            }
-            className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500 cursor-pointer"
-          />
-          <span className="text-sm font-semibold flex-1">
-            ⚡ HOT - Display in "Hot" section on homepage
-          </span>
-        </label>
+        {/* Homepage Featured Sections */}
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-2 border-blue-300 dark:border-blue-700 rounded-xl p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="p-2 bg-blue-600 rounded-lg">
+              <Tag className="text-white" size={20} />
+            </div>
+            <label className="block text-base font-bold text-foreground">
+              Homepage Featured Sections
+            </label>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4 bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+            💡 <strong>Optional:</strong> Check tags to also display this
+            product in specific sections on the homepage.
+          </p>
+          <div className="space-y-3">
+            <label className="flex items-center gap-3 cursor-pointer hover:bg-white/70 dark:hover:bg-blue-900/40 p-3 rounded-lg transition-colors border-2 border-transparent hover:border-red-300">
+              <input
+                type="checkbox"
+                checked={formData.tags.sale}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    tags: { ...formData.tags, sale: e.target.checked },
+                  })
+                }
+                className="w-5 h-5 text-red-600 rounded focus:ring-2 focus:ring-red-500 cursor-pointer"
+              />
+              <span className="text-sm font-semibold flex-1">
+                🔥 SALE - Display in "Sale" section
+              </span>
+            </label>
 
-        <label className="flex items-center gap-3 cursor-pointer hover:bg-white/70 dark:hover:bg-blue-900/40 p-3 rounded-lg transition-colors border-2 border-transparent hover:border-green-300">
-          <input
-            type="checkbox"
-            checked={formData.tags.newArrivals}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                tags: { ...formData.tags, newArrivals: e.target.checked },
-              })
-            }
-            className="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500 cursor-pointer"
-          />
-          <span className="text-sm font-semibold flex-1">
-            ✨ NEW ARRIVALS - Display in "New Arrivals" section on homepage
-          </span>
-        </label>
-      </div>
+            <label className="flex items-center gap-3 cursor-pointer hover:bg-white/70 dark:hover:bg-blue-900/40 p-3 rounded-lg transition-colors border-2 border-transparent hover:border-orange-300">
+              <input
+                type="checkbox"
+                checked={formData.tags.hot}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    tags: { ...formData.tags, hot: e.target.checked },
+                  })
+                }
+                className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500 cursor-pointer"
+              />
+              <span className="text-sm font-semibold flex-1">
+                ⚡ HOT - Display in "Hot" section
+              </span>
+            </label>
 
-      <div className="mt-5 pt-4 border-t-2 border-blue-200 dark:border-blue-800">
-        <label className="block text-sm font-semibold text-foreground mb-2">
-          Discount Badge (Optional)
-        </label>
-        <input
-          type="text"
-          value={formData.discount}
-          onChange={(e) =>
-            setFormData({ ...formData, discount: e.target.value })
-          }
-          placeholder="e.g., SAVE 90%"
-          className="w-full px-4 py-2.5 border-2 border-border rounded-lg bg-white dark:bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm"
-        />
-        <p className="text-xs text-muted-foreground mt-2">
-          💳 This will show as a red badge on the product card (e.g., "SAVE
-          90%")
-        </p>
+            <label className="flex items-center gap-3 cursor-pointer hover:bg-white/70 dark:hover:bg-blue-900/40 p-3 rounded-lg transition-colors border-2 border-transparent hover:border-green-300">
+              <input
+                type="checkbox"
+                checked={formData.tags.newArrivals}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    tags: { ...formData.tags, newArrivals: e.target.checked },
+                  })
+                }
+                className="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500 cursor-pointer"
+              />
+              <span className="text-sm font-semibold flex-1">
+                ✨ NEW ARRIVALS - Display in "New Arrivals" section
+              </span>
+            </label>
+          </div>
+
+          <div className="mt-5 pt-4 border-t-2 border-blue-200 dark:border-blue-800">
+            <label className="block text-sm font-semibold text-foreground mb-2">
+              Discount Badge (Optional)
+            </label>
+            <input
+              type="text"
+              value={formData.discount}
+              onChange={(e) =>
+                setFormData({ ...formData, discount: e.target.value })
+              }
+              placeholder="e.g., SAVE 90%"
+              className="w-full px-4 py-2.5 border-2 border-border rounded-lg bg-white dark:bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+            />
+            <p className="text-xs text-muted-foreground mt-2">
+              💳 This will show as a red badge on the product card (e.g., "SAVE
+              90%")
+            </p>
+          </div>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Password prompt
   if (showPasswordPrompt) {
@@ -673,6 +721,8 @@ export const ProductManager = () => {
     );
   }
 
+  const bestSellingCount = products.filter((p) => p.bestSelling).length;
+
   return (
     <div className="admin-product-manager min-h-screen bg-background p-4 md:p-8 mt-14">
       <div className="max-w-7xl mx-auto">
@@ -685,6 +735,10 @@ export const ProductManager = () => {
               </h1>
               <p className="text-muted-foreground">
                 Manage your store's products - {products.length} total products
+              </p>
+              <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-1 font-semibold">
+                ⭐ Best Selling: {bestSellingCount} product
+                {bestSellingCount !== 1 ? "s" : ""}
               </p>
               <p className="text-sm text-primary mt-1">
                 Logged in as: {adminEmail}
@@ -754,6 +808,7 @@ export const ProductManager = () => {
                 className="pl-10 pr-8 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
               >
                 <option value="ALL">All Tags</option>
+                <option value="BESTSELLING">⭐ BEST SELLING</option>
                 <option value="SALE">🔥 SALE</option>
                 <option value="HOT">⚡ HOT</option>
                 <option value="NEW">✨ NEW ARRIVALS</option>
@@ -784,8 +839,16 @@ export const ProductManager = () => {
                       className="w-full h-full object-cover"
                     />
 
-                    {/* Tags - Left side */}
-                    <div className="absolute top-2 left-2 flex flex-col gap-1">
+                    {/* Best Selling Badge - Top Left, Most Prominent */}
+                    {product.bestSelling && (
+                      <span className="absolute top-2 left-2 bg-yellow-500 text-white px-3 py-1.5 rounded-md text-xs font-bold shadow-lg flex items-center gap-1">
+                        <Star size={12} className="fill-white" />
+                        BEST SELLING
+                      </span>
+                    )}
+
+                    {/* Other Tags - Below Best Selling */}
+                    <div className="absolute top-12 left-2 flex flex-col gap-1">
                       {product.tags?.sale && (
                         <span className="bg-red-500 text-white px-2 py-0.5 rounded-md text-xs font-semibold shadow-md">
                           SALE
@@ -830,7 +893,7 @@ export const ProductManager = () => {
                       ₦{product.price.toLocaleString()}
                     </p>
 
-                    {/* Action Buttons - Border Style */}
+                    {/* Action Buttons */}
                     <div className="flex gap-2">
                       <button
                         onClick={() => openEditModal(product)}
@@ -893,21 +956,24 @@ export const ProductManager = () => {
           </>
         )}
 
-        {/* Add Product Modal */}
-        {showAddModal && (
+        {/* Add/Edit Modal - Same code for both, just showing the tags section rendering */}
+        {(showAddModal || showEditModal) && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
             <div className="bg-card rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto my-8">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-foreground">
-                    Add New Product
+                    {showAddModal ? "Add New Product" : "Edit Product"}
                   </h2>
                   <button
                     onClick={() => {
-                      setShowAddModal(false);
+                      showAddModal
+                        ? setShowAddModal(false)
+                        : setShowEditModal(false);
+                      if (showEditModal) setEditingProduct(null);
                       resetForm();
                     }}
-                    disabled={isAddingProduct}
+                    disabled={isAddingProduct || isUpdatingProduct}
                     className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
                   >
                     <X size={24} />
@@ -924,7 +990,7 @@ export const ProductManager = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, category: e.target.value })
                       }
-                      disabled={isAddingProduct}
+                      disabled={isAddingProduct || isUpdatingProduct}
                       className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                     >
                       {PRODUCT_CATEGORIES.map((cat) => (
@@ -945,7 +1011,7 @@ export const ProductManager = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
-                      disabled={isAddingProduct}
+                      disabled={isAddingProduct || isUpdatingProduct}
                       placeholder="Enter product name"
                       className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                     />
@@ -961,7 +1027,7 @@ export const ProductManager = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, price: e.target.value })
                       }
-                      disabled={isAddingProduct}
+                      disabled={isAddingProduct || isUpdatingProduct}
                       placeholder="16000"
                       step="1"
                       min="0"
@@ -992,7 +1058,7 @@ export const ProductManager = () => {
                                 imageFile: null,
                               })
                             }
-                            disabled={isAddingProduct}
+                            disabled={isAddingProduct || isUpdatingProduct}
                             className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors disabled:opacity-50"
                           >
                             <X size={16} />
@@ -1014,7 +1080,7 @@ export const ProductManager = () => {
                             type="file"
                             accept="image/*"
                             onChange={handleImageUpload}
-                            disabled={isAddingProduct}
+                            disabled={isAddingProduct || isUpdatingProduct}
                             className="hidden"
                           />
                         </label>
@@ -1036,7 +1102,7 @@ export const ProductManager = () => {
                           description: e.target.value,
                         })
                       }
-                      disabled={isAddingProduct}
+                      disabled={isAddingProduct || isUpdatingProduct}
                       placeholder="Product description..."
                       rows="3"
                       className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none disabled:opacity-50"
@@ -1046,184 +1112,21 @@ export const ProductManager = () => {
                   {renderTagsSection()}
 
                   <button
-                    onClick={handleAddProduct}
-                    disabled={isAddingProduct}
+                    onClick={
+                      showAddModal ? handleAddProduct : handleEditProduct
+                    }
+                    disabled={isAddingProduct || isUpdatingProduct}
                     className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    {isAddingProduct ? (
+                    {isAddingProduct || isUpdatingProduct ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        Adding Product...
+                        {showAddModal
+                          ? "Adding Product..."
+                          : "Updating Product..."}
                       </>
-                    ) : (
+                    ) : showAddModal ? (
                       "Add Product"
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Edit Product Modal */}
-        {showEditModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div className="bg-card rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto my-8">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-foreground">
-                    Edit Product
-                  </h2>
-                  <button
-                    onClick={() => {
-                      setShowEditModal(false);
-                      setEditingProduct(null);
-                      resetForm();
-                    }}
-                    disabled={isUpdatingProduct}
-                    className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-                  >
-                    <X size={24} />
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">
-                      Category *
-                    </label>
-                    <select
-                      value={formData.category}
-                      onChange={(e) =>
-                        setFormData({ ...formData, category: e.target.value })
-                      }
-                      disabled={isUpdatingProduct}
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-                    >
-                      {PRODUCT_CATEGORIES.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">
-                      Product Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
-                      disabled={isUpdatingProduct}
-                      placeholder="Enter product name"
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">
-                      Price (₦) *
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.price}
-                      onChange={(e) =>
-                        setFormData({ ...formData, price: e.target.value })
-                      }
-                      disabled={isUpdatingProduct}
-                      placeholder="16000"
-                      step="1"
-                      min="0"
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Enter whole numbers only (e.g., 16000, not 16000.50)
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">
-                      Main Product Image *
-                    </label>
-                    <div className="border-2 border-dashed border-border rounded-lg p-4 text-center">
-                      {formData.image ? (
-                        <div className="relative">
-                          <img
-                            src={formData.image}
-                            alt="Preview"
-                            className="w-full h-48 object-cover rounded-lg mb-2"
-                          />
-                          <button
-                            onClick={() =>
-                              setFormData({
-                                ...formData,
-                                image: "",
-                                imageFile: null,
-                              })
-                            }
-                            disabled={isUpdatingProduct}
-                            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors disabled:opacity-50"
-                          >
-                            <X size={16} />
-                          </button>
-                        </div>
-                      ) : (
-                        <label className="cursor-pointer block">
-                          <Upload
-                            className="mx-auto text-muted-foreground mb-2"
-                            size={48}
-                          />
-                          <p className="text-foreground font-medium mb-1">
-                            Click to upload new image
-                          </p>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            disabled={isUpdatingProduct}
-                            className="hidden"
-                          />
-                        </label>
-                      )}
-                    </div>
-                  </div>
-
-                  {renderThumbnailUploads()}
-
-                  <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">
-                      Description
-                    </label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          description: e.target.value,
-                        })
-                      }
-                      disabled={isUpdatingProduct}
-                      rows="3"
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none disabled:opacity-50"
-                    />
-                  </div>
-
-                  {renderTagsSection()}
-
-                  <button
-                    onClick={handleEditProduct}
-                    disabled={isUpdatingProduct}
-                    className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {isUpdatingProduct ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Updating Product...
-                      </>
                     ) : (
                       "Update Product"
                     )}

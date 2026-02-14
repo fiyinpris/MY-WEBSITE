@@ -69,6 +69,7 @@ const defaultProducts = [
     rating: 4.5,
     image: Ringlight,
     badge: "Bestseller",
+    bestSelling: true,
   },
   {
     id: 2,
@@ -78,6 +79,7 @@ const defaultProducts = [
     rating: 4.6,
     image: ledLight,
     badge: "Hot",
+    bestSelling: true,
   },
   {
     id: 3,
@@ -87,6 +89,7 @@ const defaultProducts = [
     rating: 4.8,
     image: tripodStand,
     badge: "Bestseller",
+    bestSelling: true,
   },
   {
     id: 4,
@@ -96,6 +99,7 @@ const defaultProducts = [
     rating: 4.9,
     image: softbox,
     badge: "Hot",
+    bestSelling: true,
   },
   {
     id: 5,
@@ -105,6 +109,7 @@ const defaultProducts = [
     rating: 4.7,
     image: Microphone,
     badge: "New",
+    bestSelling: true,
   },
   {
     id: 6,
@@ -114,6 +119,7 @@ const defaultProducts = [
     rating: 4.5,
     image: ringlight,
     badge: "Bestseller",
+    bestSelling: true,
   },
 ];
 
@@ -122,7 +128,7 @@ export const HomeSection = () => {
   const [currentReview, setCurrentReview] = useState(0);
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [reviews, setReviews] = useState([]);
-  const [products, setProducts] = useState(defaultProducts);
+  const [products, setProducts] = useState([]);
   const [allReviews, setAllReviews] = useState([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
@@ -255,17 +261,29 @@ export const HomeSection = () => {
     };
   }, []);
 
+  // ✅ FIX: Load products once - deduplicate by id to prevent double-rendering
   useEffect(() => {
     const loadProducts = async () => {
       try {
         const firebaseProducts = await productsAPI.getAll();
         if (firebaseProducts && firebaseProducts.length > 0) {
-          setProducts(firebaseProducts);
+          // Deduplicate by id in case Firebase returns duplicates
+          const seen = new Set();
+          const unique = firebaseProducts.filter((p) => {
+            if (seen.has(p.id)) return false;
+            seen.add(p.id);
+            return true;
+          });
+          setProducts(unique);
+        } else {
+          setProducts(defaultProducts);
         }
       } catch (error) {
         console.error("Error loading products:", error);
+        setProducts(defaultProducts);
       }
     };
+
     loadProducts();
   }, []);
 
@@ -533,84 +551,81 @@ export const HomeSection = () => {
     }
   };
 
-  // ✅ FIXED: Slower infinite carousel auto-scroll
-  useEffect(() => {
-    if (isDraggingCarousel || !carouselInnerRef.current) return;
+  // ✅ AUTO-SCROLL: ping-pong (left ↔ right) using requestAnimationFrame
+  const autoScrollRef = useRef(null);
+  const isPausedRef = useRef(false);
+  const autoOffsetRef = useRef(0);
+  const scrollDirectionRef = useRef(-1); // -1 = scroll left, +1 = scroll right
+  const SCROLL_SPEED = 0.6;
 
-    const animate = () => {
-      const now = Date.now();
-      const deltaTime = now - lastTimeRef.current;
-      lastTimeRef.current = now;
-
-      // ✅ VERY SLOW: 0.04 px/ms — barely perceptible, smooth drift
-      const speed = 0.04;
-      const movement = speed * deltaTime;
-
-      setCarouselOffset((prevOffset) => {
-        const innerEl = carouselInnerRef.current;
-        if (!innerEl) return prevOffset;
-        // The inner strip is duplicated once (2 copies), so singleSetWidth = half the total
-        const singleSetWidth = innerEl.scrollWidth / 2;
-        const newOffset = prevOffset - movement;
-
-        if (Math.abs(newOffset) >= singleSetWidth) {
-          return newOffset + singleSetWidth;
-        }
-        return newOffset;
-      });
-
-      animationFrameRef.current = requestAnimationFrame(animate);
-    };
-
-    animationFrameRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [isDraggingCarousel]);
-
-  // ✅ FIXED DRAG HANDLERS
-  const handleCarouselMouseDown = (e) => {
-    setIsDraggingCarousel(true);
-    setDragStartPos(e.type === "mousedown" ? e.clientX : e.touches[0].clientX);
-    setDragCurrentPos(
-      e.type === "mousedown" ? e.clientX : e.touches[0].clientX,
+  // Helper: get clamped offset — never less than maxScroll, never more than 0
+  const getClampedOffset = (val) => {
+    if (!carouselInnerRef.current || !carouselContainerRef.current) return val;
+    const maxScroll = -(
+      carouselInnerRef.current.scrollWidth -
+      carouselContainerRef.current.offsetWidth
     );
+    return Math.min(0, Math.max(maxScroll, val));
+  };
 
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
+  useEffect(() => {
+    const step = () => {
+      if (
+        !isPausedRef.current &&
+        carouselInnerRef.current &&
+        carouselContainerRef.current
+      ) {
+        const maxScroll = -(
+          carouselInnerRef.current.scrollWidth -
+          carouselContainerRef.current.offsetWidth
+        );
+        // Only scroll if content is wider than container
+        if (maxScroll < 0) {
+          autoOffsetRef.current += scrollDirectionRef.current * SCROLL_SPEED;
+          // Clamp and reverse direction at boundaries
+          if (autoOffsetRef.current <= maxScroll) {
+            autoOffsetRef.current = maxScroll;
+            scrollDirectionRef.current = 1;
+          } else if (autoOffsetRef.current >= 0) {
+            autoOffsetRef.current = 0;
+            scrollDirectionRef.current = -1;
+          }
+          setCarouselOffset(autoOffsetRef.current);
+        }
+      }
+      autoScrollRef.current = requestAnimationFrame(step);
+    };
+    autoScrollRef.current = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(autoScrollRef.current);
+  }, []);
+
+  // ✅ DRAG HANDLERS — pause auto-scroll while dragging, clamp on both ends
+  const handleCarouselMouseDown = (e) => {
+    isPausedRef.current = true;
+    setIsDraggingCarousel(true);
+    const startX = e.type === "mousedown" ? e.clientX : e.touches[0].clientX;
+    setDragStartPos(startX);
+    setDragCurrentPos(startX);
   };
 
   const handleCarouselMouseMove = (e) => {
     if (!isDraggingCarousel) return;
     e.preventDefault();
-
     const currentX = e.type === "mousemove" ? e.clientX : e.touches[0].clientX;
     const diff = currentX - dragCurrentPos;
-
-    setCarouselOffset((prev) => {
-      const innerEl = carouselInnerRef.current;
-      if (!innerEl) return prev;
-      const singleSetWidth = innerEl.scrollWidth / 2;
-      const newOffset = prev + diff;
-
-      if (Math.abs(newOffset) >= singleSetWidth) {
-        return newOffset + singleSetWidth;
-      }
-      if (newOffset > 0) {
-        return newOffset - singleSetWidth;
-      }
-      return newOffset;
-    });
-
+    // Clamp so user can never drag past either edge
+    const clamped = getClampedOffset(autoOffsetRef.current + diff);
+    autoOffsetRef.current = clamped;
+    setCarouselOffset(clamped);
     setDragCurrentPos(currentX);
   };
 
   const handleCarouselMouseUp = () => {
     setIsDraggingCarousel(false);
-    lastTimeRef.current = Date.now();
+    // Clamp again on release in case of any overshoot
+    autoOffsetRef.current = getClampedOffset(autoOffsetRef.current);
+    setCarouselOffset(autoOffsetRef.current);
+    isPausedRef.current = false;
   };
 
   const renderStars = (rating, size = 14) => {
@@ -647,16 +662,7 @@ export const HomeSection = () => {
     <section className="relative w-full">
       {initialLoading && <LoadingSpinner />}
 
-      {/* ============================================================
-          HERO CAROUSEL
-          - Desktop/tablet (sm+): full overlay layout (original)
-          - Mobile (< sm): image top, text + button BELOW (Jan Deux style)
-      ============================================================ */}
-
-      {/* ── MOBILE HERO (< sm) ── 
-          Single block: image fills full height, text overlays at the bottom.
-          No separate black panel below. Title hidden, only subtitle + button shown.
-      ── */}
+      {/* ── MOBILE HERO (< sm) ── */}
       <div
         className="sm:hidden relative w-full overflow-hidden cursor-grab active:cursor-grabbing"
         onMouseDown={handleHeroDragStart}
@@ -666,12 +672,10 @@ export const HomeSection = () => {
         onTouchEnd={handleHeroDragEnd}
         onWheel={handleHeroWheel}
       >
-        {/* Full-height image container — taller on mobile, dots above text */}
         <div
           className="relative w-full overflow-hidden"
           style={{ height: "170vw", maxHeight: "800px", minHeight: "560px" }}
         >
-          {/* Slide images */}
           {heroSlides.map((slide, index) => (
             <div
               key={index}
@@ -686,12 +690,9 @@ export const HomeSection = () => {
             </div>
           ))}
 
-          {/* Gradient overlay — darkens bottom for readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent z-20 pointer-events-none" />
 
-          {/* All bottom content: subtitle → button → dots */}
           <div className="absolute bottom-0 left-0 right-0 z-30 flex flex-col items-center px-5 pb-6 text-center text-white">
-            {/* Subtitle + button (title hidden on mobile) */}
             {heroSlides.map((slide, index) =>
               index === currentSlide ? (
                 <div key={index} className="flex flex-col items-center">
@@ -708,7 +709,6 @@ export const HomeSection = () => {
               ) : null,
             )}
 
-            {/* Dots BELOW the button */}
             <div className="flex gap-2">
               {heroSlides.map((_, idx) => (
                 <button
@@ -726,7 +726,7 @@ export const HomeSection = () => {
         </div>
       </div>
 
-      {/* ── DESKTOP / TABLET HERO (sm+) – original layout unchanged ── */}
+      {/* ── DESKTOP / TABLET HERO (sm+) ── */}
       <div
         className="hidden sm:block relative w-full h-[75vh] md:h-[90vh] lg:h-[90vh] overflow-hidden md:mb-8 cursor-grab active:cursor-grabbing"
         onMouseDown={handleHeroDragStart}
@@ -810,7 +810,6 @@ export const HomeSection = () => {
           </div>
         ))}
 
-        {/* Navigation Arrows */}
         <button
           onClick={() =>
             setCurrentSlide(
@@ -851,7 +850,6 @@ export const HomeSection = () => {
           </svg>
         </button>
 
-        {/* Dot Indicators */}
         <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20 pointer-events-auto">
           {heroSlides.map((_, index) => (
             <button
@@ -868,9 +866,7 @@ export const HomeSection = () => {
       </div>
 
       {/* ============================================================
-          PRODUCTS SECTION - FIXED INFINITE CAROUSEL
-          ✅ Duplicated ONCE (not 3x) to prevent repeat cards
-          ✅ Speed slowed to 0.12 px/ms
+          PRODUCTS SECTION — INFINITE AUTO-SCROLL CAROUSEL
       ============================================================ */}
       <div
         ref={productsSectionRef}
@@ -883,91 +879,113 @@ export const HomeSection = () => {
       >
         <div className="max-w-[1920px] mx-auto text-center">
           <h4 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">
-            Best <span className="text-primary">Selling</span>
+            Best <span className="text-primary">Selling</span> Products
           </h4>
           <p className="text-sm md:text-base text-muted-foreground mb-10">
-            Trending, top rated and customer approved favourites you won't want
-            to miss
+            Our most popular and highly-rated products chosen by you
           </p>
 
-          <div
-            ref={carouselContainerRef}
-            className="relative overflow-hidden"
-            onMouseDown={handleCarouselMouseDown}
-            onMouseMove={handleCarouselMouseMove}
-            onMouseUp={handleCarouselMouseUp}
-            onMouseLeave={handleCarouselMouseUp}
-            onTouchStart={handleCarouselMouseDown}
-            onTouchMove={handleCarouselMouseMove}
-            onTouchEnd={handleCarouselMouseUp}
-          >
-            <div
-              ref={carouselInnerRef}
-              className="flex gap-4 md:gap-6 cursor-grab active:cursor-grabbing select-none"
-              style={{
-                transform: `translateX(${carouselOffset}px)`,
-                transition: "none",
-                touchAction: "pan-y",
-                willChange: "transform",
-              }}
-            >
-              {/* ✅ FIXED: Duplicated TWICE (2 copies) — not 3 — so cards only appear once visually */}
-              {[...products, ...products].map((product, index) => {
-                const reviewCount = getProductReviewCount(product.name);
+          {(() => {
+            // Deduplicate once
+            const seen = new Set();
+            const bestSellingProducts = products
+              .filter((p) => p.bestSelling === true)
+              .filter((p) => {
+                if (seen.has(p.id)) return false;
+                seen.add(p.id);
+                return true;
+              })
+              .slice(0, 15);
 
-                return (
-                  <div
-                    key={`${product.id}-${index}`}
-                    className="flex-shrink-0 w-[150px] lg:w-[200px] md:w-[200px] xl:w-[220px] 2xl:w-[240px] bg-card rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 group animate-fade-in-up flex flex-col"
-                    style={{
-                      animationDelay: `${(index % products.length) * 0.1}s`,
-                    }}
-                  >
-                    <div className="relative overflow-hidden h-35 sm:h-44 md:h-48 xl:h-52 2xl:h-56 bg-muted pointer-events-none">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        loading="lazy"
-                        draggable="false"
-                        className="w-full h-full object-cover group-hover:scale-110 group-hover:rotate-2 transition-all duration-700"
-                      />
-                      {product.badge && (
-                        <div className="absolute top-3 left-3 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-semibold animate-bounce-slow">
-                          {product.badge}
-                        </div>
-                      )}
-                      <button className="absolute bottom-3 right-3 bg-card p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-primary-foreground transform group-hover:rotate-12 pointer-events-auto">
-                        <ShoppingCart size={18} />
-                      </button>
+            if (bestSellingProducts.length === 0) {
+              return (
+                <div className="w-full text-center py-12">
+                  <p className="text-muted-foreground">
+                    No Best Selling products selected yet.
+                  </p>
+                </div>
+              );
+            }
+
+            const renderCard = (product, keyPrefix) => (
+              <div
+                key={`${keyPrefix}-${product.id}`}
+                className="flex-shrink-0 w-[150px] lg:w-[200px] md:w-[200px] xl:w-[220px] 2xl:w-[240px] bg-card rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 group flex flex-col"
+              >
+                <div className="relative overflow-hidden h-35 sm:h-44 md:h-48 xl:h-52 2xl:h-56 bg-muted pointer-events-none">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    loading="lazy"
+                    draggable="false"
+                    className="w-full h-full object-cover group-hover:scale-110 group-hover:rotate-2 transition-all duration-700"
+                  />
+                  {product.badge && (
+                    <div className="absolute top-3 left-3 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-semibold animate-bounce-slow">
+                      {product.badge}
                     </div>
-
-                    <div className="p-3 md:p-4 text-left flex flex-col flex-1 pointer-events-none">
-                      <h3 className="text-sm md:text-base font-bold text-foreground mb-2 line-clamp-2 min-h-[40px]">
-                        {product.name}
-                      </h3>
-
-                      <div className="flex items-center gap-2 mb-3 min-h-[28px]">
-                        <span className="text-base md:text-lg font-bold text-primary">
-                          ₦{product.price.toLocaleString()}
-                        </span>
-                      </div>
-
-                      <button className="liquid-button-product w-full font-semibold py-2 text-xs md:text-sm rounded-lg transition-colors duration-300 flex items-center justify-center gap-2 relative overflow-hidden mt-auto pointer-events-auto">
-                        <span className="relative z-10 text-white flex items-center gap-2">
-                          <ShoppingCart size={14} />
-                          Add to Cart
-                        </span>
-                      </button>
-                    </div>
+                  )}
+                  <button className="absolute bottom-3 right-3 bg-card p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-primary-foreground transform group-hover:rotate-12 pointer-events-auto">
+                    <ShoppingCart size={18} />
+                  </button>
+                </div>
+                <div className="p-3 md:p-4 text-left flex flex-col flex-1 pointer-events-none">
+                  <h3 className="text-sm md:text-base font-bold text-foreground mb-2 line-clamp-2 min-h-[40px]">
+                    {product.name}
+                  </h3>
+                  <div className="flex items-center gap-2 mb-3 min-h-[28px]">
+                    <span className="text-base md:text-lg font-bold text-primary">
+                      ₦{product.price.toLocaleString()}
+                    </span>
                   </div>
-                );
-              })}
-            </div>
-          </div>
+                  <button className="liquid-button-product w-full font-semibold py-2 text-xs md:text-sm rounded-lg transition-colors duration-300 flex items-center justify-center gap-2 relative overflow-hidden mt-auto pointer-events-auto">
+                    <span className="relative z-10 text-white flex items-center gap-2">
+                      <ShoppingCart size={14} />
+                      Add to Cart
+                    </span>
+                  </button>
+                </div>
+              </div>
+            );
+
+            return (
+              <div
+                ref={carouselContainerRef}
+                className="relative overflow-hidden"
+                onMouseEnter={() => {
+                  isPausedRef.current = true;
+                }}
+                onMouseLeave={() => {
+                  isPausedRef.current = false;
+                  setIsDraggingCarousel(false);
+                }}
+                onMouseDown={handleCarouselMouseDown}
+                onMouseMove={handleCarouselMouseMove}
+                onMouseUp={handleCarouselMouseUp}
+                onTouchStart={handleCarouselMouseDown}
+                onTouchMove={handleCarouselMouseMove}
+                onTouchEnd={handleCarouselMouseUp}
+              >
+                {/* Render original + clone for seamless infinite loop */}
+                <div
+                  ref={carouselInnerRef}
+                  className="flex gap-4 md:gap-6 cursor-grab active:cursor-grabbing select-none"
+                  style={{
+                    transform: `translateX(${carouselOffset}px)`,
+                    transition: "none",
+                    touchAction: "pan-y",
+                    willChange: "transform",
+                  }}
+                >
+                  {bestSellingProducts.map((p) => renderCard(p, "orig"))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
 
-      {/* ✅ REVIEWS SECTION WITH SCROLL ANIMATION */}
+      {/* ✅ REVIEWS SECTION */}
       <div
         ref={reviewsSectionRef}
         className={`flex flex-col justify-center items-center bg-green-200 mt-20 w-full min-h-[400px] sm:min-h-[450px] px-4 py-10 dark:text-black relative transition-all duration-1000 ${
@@ -1157,7 +1175,7 @@ export const HomeSection = () => {
         </div>
       </div>
 
-      {/* ✅ CTA SECTION WITH SCROLL ANIMATION */}
+      {/* ✅ CTA SECTION */}
       <div
         ref={ctaSectionRef}
         className={`bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-800 dark:to-gray-900 py-16 px-4 transition-all duration-1000 ${
