@@ -193,6 +193,11 @@ export const WishlistPage = () => {
     return () => window.removeEventListener("userUpdated", handleUserUpdated);
   }, []);
 
+  // ✅ SCROLL TO TOP WHEN COMPONENT MOUNTS - FIX ADDED HERE
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, []);
+
   const handleSignIn = () => {
     sessionStorage.setItem("returnTo", "/wishlist");
     navigate("/signin");

@@ -28,7 +28,7 @@ export const ProductDetail = () => {
 
   const [isDragging, setIsDragging] = useState(false);
   const [startPos, setStartPos] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
+  const [dragScrollLeft, setDragScrollLeft] = useState(0);
 
   const [reviews, setReviews] = useState([]);
   const [isSignedIn, setIsSignedIn] = useState(false);
@@ -63,14 +63,12 @@ export const ProductDetail = () => {
         setLoading(false);
       }
     };
-
     loadProduct();
   }, [id]);
 
   useEffect(() => {
     const loadReviews = async () => {
       if (!product) return;
-
       try {
         const allReviews = await reviewsAPI.getAll();
         const productReviews = allReviews.filter(
@@ -83,9 +81,7 @@ export const ProductDetail = () => {
         setReviews([]);
       }
     };
-
     loadReviews();
-
     const interval = setInterval(async () => {
       if (!product) return;
       try {
@@ -99,7 +95,6 @@ export const ProductDetail = () => {
         console.error("Error reloading reviews:", error);
       }
     }, 30000);
-
     return () => clearInterval(interval);
   }, [product]);
 
@@ -120,9 +115,20 @@ export const ProductDetail = () => {
         console.error("Error checking auth:", error);
       }
     };
-
     checkAuth();
   }, []);
+
+  // ✅ Dot sync — re-attaches after product loads so ref is valid
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
+    const handleScroll = () => {
+      const index = Math.round(carousel.scrollLeft / carousel.offsetWidth);
+      setSelectedMedia(index);
+    };
+    carousel.addEventListener("scroll", handleScroll, { passive: true });
+    return () => carousel.removeEventListener("scroll", handleScroll);
+  }, [product]);
 
   const handleAddToCart = () => {
     if (product) {
@@ -148,7 +154,6 @@ export const ProductDetail = () => {
       navigate("/signin");
       return;
     }
-
     if (
       !reviewFormData.customerName ||
       !reviewFormData.email ||
@@ -158,7 +163,6 @@ export const ProductDetail = () => {
       alert("Please fill in all fields");
       return;
     }
-
     setIsSubmitting(true);
     try {
       const newReview = {
@@ -170,16 +174,13 @@ export const ProductDetail = () => {
         date: new Date().toISOString().split("T")[0],
         verified: true,
       };
-
       await reviewsAPI.create(newReview);
-
       const allReviews = await reviewsAPI.getAll();
       const productReviews = allReviews.filter(
         (review) =>
           review.productName.toLowerCase() === product.name.toLowerCase(),
       );
       setReviews(productReviews);
-
       setReviewFormData({
         customerName: "",
         email: userEmail,
@@ -209,11 +210,11 @@ export const ProductDetail = () => {
     }, 300);
   };
 
+  // ✅ Scroll to media and update dot
   const scrollToMedia = (index) => {
     if (carouselRef.current) {
-      const scrollAmount = carouselRef.current.offsetWidth * index;
       carouselRef.current.scrollTo({
-        left: scrollAmount,
+        left: carouselRef.current.offsetWidth * index,
         behavior: "smooth",
       });
     }
@@ -224,7 +225,7 @@ export const ProductDetail = () => {
     setIsDragging(true);
     const pos = e.type === "mousedown" ? e.pageX : e.touches[0].pageX;
     setStartPos(pos - carouselRef.current.offsetLeft);
-    setScrollLeft(carouselRef.current.scrollLeft);
+    setDragScrollLeft(carouselRef.current.scrollLeft);
   };
 
   const handleDragMove = (e) => {
@@ -233,27 +234,10 @@ export const ProductDetail = () => {
     const pos = e.type === "mousemove" ? e.pageX : e.touches[0].pageX;
     const x = pos - carouselRef.current.offsetLeft;
     const walk = (x - startPos) * 2;
-    carouselRef.current.scrollLeft = scrollLeft - walk;
+    carouselRef.current.scrollLeft = dragScrollLeft - walk;
   };
 
-  const handleDragEnd = () => {
-    setIsDragging(false);
-  };
-
-  useEffect(() => {
-    const carousel = carouselRef.current;
-    if (!carousel) return;
-
-    const handleScroll = () => {
-      const scrollLeft = carousel.scrollLeft;
-      const itemWidth = carousel.offsetWidth;
-      const index = Math.round(scrollLeft / itemWidth);
-      setSelectedMedia(index);
-    };
-
-    carousel.addEventListener("scroll", handleScroll);
-    return () => carousel.removeEventListener("scroll", handleScroll);
-  }, []);
+  const handleDragEnd = () => setIsDragging(false);
 
   if (loading) {
     return (
@@ -291,27 +275,17 @@ export const ProductDetail = () => {
   ];
 
   return (
-    // ✅ Remove padding on mobile (px-0), add padding for larger screens
-    <div className="min-h-screen bg-background py-6 sm:py-12 mt-10 px-0 sm:px-6 lg:px-14">
+    // ✅ NO horizontal padding at all on mobile — added inside per section
+    <div className="min-h-screen bg-background pt-6 pb-12 mt-10">
       <style>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .carousel-snap {
-          scroll-snap-type: x mandatory;
-          scroll-behavior: smooth;
-        }
-        .carousel-snap > * {
-          scroll-snap-align: start;
-        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .carousel-snap { scroll-snap-type: x mandatory; }
+        .carousel-snap > * { scroll-snap-align: start; flex-shrink: 0; }
       `}</style>
 
-      {/* ✅ Back button with padding only on mobile */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-0">
+      {/* Back button — padded */}
+      <div className="px-4 sm:px-6 lg:px-14 max-w-7xl mx-auto">
         <button
           onClick={handleBackClick}
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
@@ -324,9 +298,9 @@ export const ProductDetail = () => {
       <div className="max-w-7xl mx-auto">
         <div className="grid md:grid-cols-2 gap-6 lg:gap-12 mb-12">
           {/* ── Media column ── */}
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Desktop: thumbnails sidebar + large main image */}
-            <div className="hidden lg:flex lg:flex-row gap-4 w-full">
+          <div>
+            {/* ✅ Desktop: thumbnails + large image (padded normally) */}
+            <div className="hidden lg:flex flex-row gap-4 px-6 lg:px-14">
               <div className="flex flex-col gap-2 w-20">
                 {allMedia.map((media, index) => (
                   <div
@@ -370,7 +344,6 @@ export const ProductDetail = () => {
                   </div>
                 ))}
               </div>
-
               <div className="flex-1">
                 <div className="w-full h-[500px] rounded-2xl overflow-hidden bg-gray-100">
                   {allMedia[selectedMedia].src ? (
@@ -399,84 +372,79 @@ export const ProductDetail = () => {
               </div>
             </div>
 
-            {/* ✅ Mobile carousel - full width, no side margins */}
-            <div className="lg:hidden w-full">
-              <div className="relative">
-                <div
-                  ref={carouselRef}
-                  className="flex overflow-x-auto scrollbar-hide carousel-snap cursor-grab active:cursor-grabbing"
-                  style={{
-                    WebkitOverflowScrolling: "touch",
-                  }}
-                  onMouseDown={handleDragStart}
-                  onMouseMove={handleDragMove}
-                  onMouseUp={handleDragEnd}
-                  onMouseLeave={handleDragEnd}
-                  onTouchStart={handleDragStart}
-                  onTouchMove={handleDragMove}
-                  onTouchEnd={handleDragEnd}
-                >
-                  {allMedia.map((media, index) => (
-                    <div
-                      key={index}
-                      className="flex-shrink-0 w-full h-[450px] sm:h-[500px] bg-gray-100"
-                    >
-                      {media.src ? (
-                        media.type === "video" ? (
-                          <video
-                            src={media.src}
-                            controls
-                            className="w-full h-full object-cover pointer-events-none"
-                            draggable="false"
-                          />
-                        ) : (
-                          <img
-                            src={media.src}
-                            alt={`${product.name} - ${media.label}`}
-                            className="w-full h-full object-cover pointer-events-none"
-                            draggable="false"
-                          />
-                        )
+            {/* ✅ Mobile carousel — truly full width, zero side gaps */}
+            <div className="lg:hidden">
+              <div
+                ref={carouselRef}
+                className="flex overflow-x-auto scrollbar-hide carousel-snap cursor-grab active:cursor-grabbing"
+                style={{ WebkitOverflowScrolling: "touch", width: "100vw" }}
+                onMouseDown={handleDragStart}
+                onMouseMove={handleDragMove}
+                onMouseUp={handleDragEnd}
+                onMouseLeave={handleDragEnd}
+                onTouchStart={handleDragStart}
+                onTouchMove={handleDragMove}
+                onTouchEnd={handleDragEnd}
+              >
+                {allMedia.map((media, index) => (
+                  <div
+                    key={index}
+                    className="h-[380px] sm:h-[460px] bg-gray-100"
+                    style={{ width: "100vw", minWidth: "100vw" }}
+                  >
+                    {media.src ? (
+                      media.type === "video" ? (
+                        <video
+                          src={media.src}
+                          controls
+                          className="w-full h-full object-cover pointer-events-none"
+                          draggable="false"
+                        />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="text-center">
-                            <div className="text-6xl mb-2">
-                              {media.type === "video" ? "🎥" : "📷"}
-                            </div>
-                            <p className="text-gray-400">{media.label}</p>
-                            <p className="text-xs text-gray-400 mt-1">
-                              Not uploaded yet
-                            </p>
+                        <img
+                          src={media.src}
+                          alt={`${product.name} - ${media.label}`}
+                          className="w-full h-full object-cover pointer-events-none"
+                          draggable="false"
+                        />
+                      )
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="text-6xl mb-2">
+                            {media.type === "video" ? "🎥" : "📷"}
                           </div>
+                          <p className="text-gray-400">{media.label}</p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            Not uploaded yet
+                          </p>
                         </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
 
-                {/* ✅ Dot indicators with padding */}
-                <div className="flex justify-center gap-2 mt-4 px-4">
-                  {allMedia.map((media, index) => (
-                    <button
-                      key={index}
-                      onClick={() => scrollToMedia(index)}
-                      className={`h-2 rounded-full transition-all ${
-                        selectedMedia === index
-                          ? "bg-primary w-8"
-                          : media.src
-                            ? "bg-gray-400 w-2"
-                            : "bg-gray-300 w-2"
-                      }`}
-                      aria-label={`Go to ${media.label}`}
-                    />
-                  ))}
-                </div>
+              {/* ✅ Dot indicators — synced via scroll event */}
+              <div className="flex justify-center gap-2 mt-3">
+                {allMedia.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => scrollToMedia(index)}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      selectedMedia === index
+                        ? "bg-primary w-8"
+                        : "bg-gray-400 w-2"
+                    }`}
+                    aria-label={`Go to image ${index + 1}`}
+                  />
+                ))}
               </div>
             </div>
           </div>
 
-          {/* ✅ Product info column - with padding on mobile */}
-          <div className="flex flex-col px-4 sm:px-0">
+          {/* ✅ Product info — padded on mobile */}
+          <div className="flex flex-col px-4 sm:px-6 lg:px-0 lg:pr-14">
             <span className="inline-block text-sm bg-primary/10 text-primary px-3 py-1 rounded-full mb-3 w-fit">
               {product.category}
             </span>
@@ -541,21 +509,19 @@ export const ProductDetail = () => {
               </div>
             </div>
 
-            <div className="flex flex-row sm:flex-row gap-3 sm:gap-4 mb-4">
+            <div className="flex flex-row gap-3 sm:gap-4 mb-4">
               <button
                 onClick={handleAddToCart}
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 sm:py-4 rounded-lg transition-colors text-sm sm:text-base"
               >
                 Add to Cart
               </button>
-
               <button
                 onClick={handleAddToCart}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 sm:py-4 rounded-lg transition-colors text-sm sm:text-base"
               >
                 Buy Now
               </button>
-
               <button
                 onClick={() => addToWishlist(product)}
                 className={`px-4 sm:px-6 py-3 sm:py-4 rounded-lg border-2 transition-colors ${
@@ -612,7 +578,6 @@ export const ProductDetail = () => {
                 }
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
               />
-
               <input
                 type="email"
                 placeholder="Your Email"
@@ -626,7 +591,6 @@ export const ProductDetail = () => {
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                 disabled={isSignedIn}
               />
-
               <input
                 type="text"
                 placeholder="Product Name"

@@ -9,14 +9,10 @@ import { productsAPI, reviewsAPI } from "../services/firebase";
 // ✅ Skeleton card — shown while products are loading
 const SkeletonCard = () => (
   <div className="border p-3 md:p-4 rounded-lg shadow-md flex flex-col h-full animate-pulse">
-    {/* Image placeholder */}
     <div className="w-full h-40 sm:h-48 rounded-md bg-gray-200 dark:bg-gray-700 mb-3" />
-    {/* Title */}
     <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2 w-3/4" />
     <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-3 w-1/2" />
-    {/* Price */}
     <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded mb-3 w-1/3" />
-    {/* Button */}
     <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded mt-auto" />
   </div>
 );
@@ -33,8 +29,6 @@ export const ShopSection = () => {
   const [headerImageLoaded, setHeaderImageLoaded] = useState(false);
   const [products, setProducts] = useState([]);
   const [allReviews, setAllReviews] = useState([]);
-
-  // ✅ Products loading is now separate from header image
   const [isProductsLoading, setIsProductsLoading] = useState(true);
 
   const PRODUCTS_PER_PAGE = 12;
@@ -46,7 +40,6 @@ export const ShopSection = () => {
       return hashA - hashB;
     });
 
-  // ✅ Load products independently — page shows immediately, cards show skeletons
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -83,16 +76,13 @@ export const ShopSection = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ Header image loads silently in background — doesn't block anything
   useEffect(() => {
     const img = new Image();
     img.src = headerBg;
     img.onload = () => setHeaderImageLoaded(true);
-    // If image fails, still show (fallback gradient handles it)
     img.onerror = () => setHeaderImageLoaded(true);
   }, []);
 
-  // Close filter on outside click
   useEffect(() => {
     if (!showFilters) return;
     const handleClickOutside = (e) => {
@@ -115,7 +105,6 @@ export const ShopSection = () => {
     };
   }, [showFilters]);
 
-  // Drag-resize sidebar (desktop)
   useEffect(() => {
     const divider = document.getElementById("divider");
     const sidebar = document.getElementById("sidebar");
@@ -144,6 +133,7 @@ export const ShopSection = () => {
     };
   }, []);
 
+  // ✅ FIXED: Scroll to top when component mounts, except when returning from product detail
   useEffect(() => {
     const savedPosition = sessionStorage.getItem("shopScrollPosition");
     if (savedPosition) {
@@ -151,6 +141,9 @@ export const ShopSection = () => {
         window.scrollTo({ top: parseInt(savedPosition), behavior: "instant" });
         sessionStorage.removeItem("shopScrollPosition");
       }, 0);
+    } else {
+      // Scroll to top when navigating to shop section from anywhere else
+      window.scrollTo({ top: 0, behavior: "instant" });
     }
   }, []);
 
@@ -161,7 +154,6 @@ export const ShopSection = () => {
 
   const handleAddToCart = (product) => addToCart(product);
 
-  // Filter + sort
   const filteredProducts = products.filter((p) => {
     const categoryMatch =
       selectedCategory === "ALL" || p.category === selectedCategory;
@@ -217,25 +209,18 @@ export const ShopSection = () => {
     "BACKDROP",
   ];
   const pageNumbers = getPageNumbers();
-
-  // ✅ How many skeleton cards to show while loading
   const SKELETON_COUNT = 8;
 
   return (
     <div className="mt-12">
-      {/* ✅ Hero Banner — always visible immediately. Image fades in when ready. */}
+      {/* Hero Banner */}
       <div className="relative w-full h-100 md:h-90 lg:h-90 2xl:h-400 mb-6 md:mb-8 overflow-hidden">
-        {/* Gradient fallback — always visible so banner isn't blank */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900" />
-
-        {/* Real image fades in once loaded */}
         <div
           className={`absolute inset-0 bg-cover bg-center transition-opacity duration-700 ${headerImageLoaded ? "opacity-100" : "opacity-0"}`}
           style={{ backgroundImage: `url(${headerBg})` }}
         />
-
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70" />
-
         <div className="relative h-full flex items-center justify-center px-4">
           <div className="split-text-container text-white drop-shadow-2xl">
             <span className="text-xl lg:text-7xl md:text-5xl text-part left">
@@ -293,11 +278,20 @@ export const ShopSection = () => {
             </button>
           </div>
 
-          {/* Sidebar */}
+          {/* ✅ Sidebar — scrollbar fully hidden */}
           <aside
             id="sidebar"
             className={`${showFilters ? "block" : "hidden"} lg:block w-full lg:w-1/5 lg:min-w-[180px] lg:max-w-[300px] mb-6 lg:mb-0 lg:sticky lg:top-24 lg:h-[calc(100vh-6rem)] lg:overflow-y-auto`}
+            style={{
+              scrollbarWidth: "none" /* Firefox */,
+              msOverflowStyle: "none" /* IE/Edge */,
+            }}
           >
+            {/* Hide WebKit scrollbar via inline style trick */}
+            <style>{`
+              #sidebar::-webkit-scrollbar { display: none; }
+            `}</style>
+
             <div className="w-full lg:h-full bg-background lg:bg-transparent p-4 lg:p-0 rounded-lg lg:rounded-none shadow-lg lg:shadow-none inline-block lg:block">
               <div className="flex justify-between items-center lg:hidden mb-4">
                 <h5 className="font-semibold text-lg">Filters</h5>
@@ -308,14 +302,20 @@ export const ShopSection = () => {
                   ✕
                 </button>
               </div>
+
               <div>
                 <h5 className="font-semibold mb-2 hidden lg:block">Filters</h5>
-                <div className="space-y-4">
-                  <ul className="space-y-2">
+                <div className="space-y-0">
+                  {/* ✅ Each category has its own bottom border */}
+                  <ul className="space-y-0">
                     {categories.map((category) => (
                       <li
                         key={category}
-                        className={`cursor-pointer hover:text-green-400 transition-colors ${selectedCategory === category ? "text-green-400 font-semibold" : ""}`}
+                        className={`cursor-pointer hover:text-green-400 transition-colors py-2 border-b border-gray-300 dark:border-gray-600 ${
+                          selectedCategory === category
+                            ? "text-green-400 font-semibold"
+                            : ""
+                        }`}
                         onClick={() => {
                           setSelectedCategory(category);
                           setCurrentPage(1);
@@ -326,7 +326,9 @@ export const ShopSection = () => {
                       </li>
                     ))}
                   </ul>
-                  <div>
+
+                  {/* ✅ Divider between categories and price */}
+                  <div className="pt-4">
                     <h6 className="font-medium mb-2">Price</h6>
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-sm">₦10K</span>
@@ -389,7 +391,7 @@ export const ShopSection = () => {
               </select>
             </div>
 
-            {/* ✅ Product grid — skeletons while loading, real cards when ready */}
+            {/* Product grid */}
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-6 mb-8">
               {isProductsLoading
                 ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
@@ -469,7 +471,11 @@ export const ShopSection = () => {
                 {pageNumbers.map((num) => (
                   <button
                     key={num}
-                    className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg transition-colors text-sm md:text-base ${num === currentPage ? "bg-green-600 text-white" : "hover:bg-gray-100 dark:hover:bg-gray-800"}`}
+                    className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg transition-colors text-sm md:text-base ${
+                      num === currentPage
+                        ? "bg-green-600 text-white"
+                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                    }`}
                     onClick={() => goToPage(num)}
                   >
                     {num}

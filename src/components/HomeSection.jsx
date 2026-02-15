@@ -409,8 +409,11 @@ export const HomeSection = () => {
     }
   };
 
+  const ADMIN_EMAIL = "fiyinolaleke@gmail.com";
+
   const handleDeleteReview = async (reviewId, reviewEmail) => {
-    if (reviewEmail !== userEmail) {
+    const isAdmin = userEmail === ADMIN_EMAIL;
+    if (reviewEmail !== userEmail && !isAdmin) {
       alert("You can only delete your own reviews");
       return;
     }
@@ -1045,20 +1048,26 @@ export const HomeSection = () => {
               Product: {reviews[currentReview].productName}
             </p>
 
-            {isSignedIn && reviews[currentReview].email === userEmail && (
-              <button
-                onClick={() =>
-                  handleDeleteReview(
-                    reviews[currentReview].id,
-                    reviews[currentReview].email,
-                  )
-                }
-                className="mt-4 p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors mx-auto"
-                title="Delete my review"
-              >
-                <Trash2 size={18} />
-              </button>
-            )}
+            {isSignedIn &&
+              (reviews[currentReview].email === userEmail ||
+                userEmail === "fiyinolaleke@gmail.com") && (
+                <button
+                  onClick={() =>
+                    handleDeleteReview(
+                      reviews[currentReview].id,
+                      reviews[currentReview].email,
+                    )
+                  }
+                  className="mt-4 p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors mx-auto"
+                  title={
+                    userEmail === "fiyinolaleke@gmail.com"
+                      ? "Delete review (Admin)"
+                      : "Delete my review"
+                  }
+                >
+                  <Trash2 size={18} />
+                </button>
+              )}
 
             <button
               onClick={handleNextReview}

@@ -55,6 +55,11 @@ export const ContactSection = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // ✅ SCROLL TO TOP WHEN COMPONENT MOUNTS - FIX ADDED HERE
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, []);
+
   const handleChange = (e) => {
     setFormData({
       ...formData,

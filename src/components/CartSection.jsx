@@ -967,7 +967,7 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
   );
 };
 
-// ✅ Cart Page — with sign-in gate
+// ✅ Cart Page — with sign-in gate and SCROLL TO TOP FIX
 export const CartPage = () => {
   const { cartItems, removeFromCart, updateQuantity, totalItems, showToast } =
     useCart();
@@ -980,6 +980,11 @@ export const CartPage = () => {
 
   // ✅ Sign-in modal state
   const [showSignInModal, setShowSignInModal] = useState(false);
+
+  // ✅ SCROLL TO TOP WHEN COMPONENT MOUNTS - FIX ADDED HERE
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, []);
 
   const calculateTotals = () => {
     try {
@@ -1063,7 +1068,7 @@ export const CartPage = () => {
   const handleStartShopping = () => {
     setIsNavigating(true);
     setTimeout(() => {
-      window.location.href = "/products";
+      window.location.href = "/shop";
     }, 1500);
   };
 

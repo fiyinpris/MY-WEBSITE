@@ -23,6 +23,11 @@ export const SearchSection = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const PRODUCTS_PER_PAGE = 16; // 4x4 grid
 
+  // ✅ Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, []);
+
   // Reset to page 1 when search query changes
   useEffect(() => {
     setCurrentPage(1);
@@ -191,7 +196,7 @@ export const SearchSection = () => {
           </div>
         )}
 
-        {/* Product Results Grid - 4x4 on large screens */}
+        {/* Product Results Grid - 4x4 on large screens with reduced card height */}
         {showResults && (
           <div className="space-y-8">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -228,34 +233,34 @@ export const SearchSection = () => {
                     </button>
                   </div>
 
-                  {/* Product Details */}
-                  <div className="p-3 sm:p-4">
-                    {/* Product Name */}
-                    <h3 className="text-xs sm:text-sm md:text-base font-bold text-foreground mb-2 line-clamp-2 min-h-[2.5rem] sm:min-h-[3rem]">
+                  {/* Product Details - Reduced padding and spacing on large screens */}
+                  <div className="p-3 sm:p-4 lg:p-3">
+                    {/* Product Name - Reduced height on large screens */}
+                    <h3 className="text-xs sm:text-sm md:text-base lg:text-sm font-bold text-foreground mb-2 lg:mb-1.5 line-clamp-2 min-h-[2.5rem] sm:min-h-[3rem] lg:min-h-[2.5rem]">
                       {product.name}
                     </h3>
 
-                    {/* Category Badge */}
+                    {/* Category Badge - Reduced padding on large screens */}
                     {product.category && (
-                      <span className="inline-block text-[10px] sm:text-xs bg-primary/10 text-primary px-2 py-1 rounded-md mb-2 sm:mb-3">
+                      <span className="inline-block text-[10px] sm:text-xs bg-primary/10 text-primary px-2 py-1 lg:py-0.5 rounded-md mb-2 sm:mb-3 lg:mb-2">
                         {product.category}
                       </span>
                     )}
 
-                    {/* Price */}
-                    <div className="flex items-center justify-between mb-2 sm:mb-3">
-                      <span className="text-sm sm:text-base md:text-lg font-bold text-primary">
+                    {/* Price - Reduced margin on large screens */}
+                    <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-2">
+                      <span className="text-sm sm:text-base md:text-lg lg:text-base font-bold text-primary">
                         ₦{product.price.toLocaleString()}
                       </span>
                     </div>
 
-                    {/* Add to Cart Button */}
+                    {/* Add to Cart Button - Reduced padding on large screens */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleAddToCart(product);
                       }}
-                      className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-2 sm:py-2.5 rounded-lg transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
+                      className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-2 sm:py-2.5 lg:py-2 rounded-lg transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
                     >
                       <ShoppingCart size={14} className="sm:w-4 sm:h-4" />
                       <span className="hidden sm:inline">Add to Cart</span>

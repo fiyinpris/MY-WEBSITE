@@ -222,6 +222,11 @@ export const ProductSection = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // ✅ Scroll to top when ProductSection component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, []);
+
   const nextSlide = () =>
     setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length);
 
@@ -347,6 +352,29 @@ export const ProductSection = () => {
       const productsSection = document.querySelector(".grid");
       if (productsSection) {
         const offset = 100;
+        const bodyRect = document.body.getBoundingClientRect().top;
+        const elementRect = productsSection.getBoundingClientRect().top;
+        const elementPosition = elementRect - bodyRect;
+        const offsetPosition = elementPosition - offset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth",
+        });
+      }
+    }, 100);
+  };
+
+  // ✅ NEW: Handle tab click with scroll to products section
+  const handleTabClick = (tabName) => {
+    setActiveTab(tabName);
+    setSelectedCategory("All");
+
+    // Scroll to products grid section
+    setTimeout(() => {
+      const productsSection = document.querySelector(".grid");
+      if (productsSection) {
+        const offset = 150; // Offset for fixed header/tabs
         const bodyRect = document.body.getBoundingClientRect().top;
         const elementRect = productsSection.getBoundingClientRect().top;
         const elementPosition = elementRect - bodyRect;
@@ -549,10 +577,7 @@ export const ProductSection = () => {
             {tabs.map((tab) => (
               <button
                 key={tab.name}
-                onClick={() => {
-                  setActiveTab(tab.name);
-                  setSelectedCategory("All");
-                }}
+                onClick={() => handleTabClick(tab.name)}
                 className={`px-4 sm:px-5 lg:px-6 py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap transition-all duration-300 border-2 ${
                   activeTab === tab.name
                     ? "bg-green-600 text-white border-green-600"
