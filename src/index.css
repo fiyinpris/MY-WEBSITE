@@ -203,7 +203,6 @@ body::before {
   opacity: 1;
 }
 
-/* Remove the morphing animation */
 @keyframes morphGradient {
   0%,
   100% {
@@ -221,10 +220,9 @@ body::before {
   background: rgba(255, 255, 255, 0.05);
   animation: floatBubble linear infinite;
   pointer-events: none;
-  display: none; /* Hidden by default on mobile */
+  display: none;
 }
 
-/* Only show bubbles on larger screens */
 @media (min-width: 768px) {
   .bubble {
     display: block;
@@ -287,10 +285,9 @@ body::before {
   bottom: 0;
   left: 0;
   z-index: -1;
-  display: none; /* Hidden by default on mobile */
+  display: none;
 }
 
-/* Only show waves on larger screens */
 @media (min-width: 768px) {
   .wave {
     display: block;
@@ -368,6 +365,7 @@ body::before {
 #divider:hover {
   background-color: hsl(var(--primary));
 }
+
 /* 3D SOCIAL MEDIA BUTTONS */
 .social-3d-button {
   position: relative;
@@ -421,7 +419,6 @@ body::before {
   opacity: 0.2;
 }
 
-/* Different colors for each social media */
 .instagram-btn span {
   background: linear-gradient(
     45deg,
@@ -437,7 +434,6 @@ body::before {
   background: #25d366;
 }
 
-/* Dark mode adjustments */
 :root.dark .social-3d-button span {
   background: hsl(var(--primary));
 }
@@ -456,6 +452,7 @@ body::before {
 :root.dark .whatsapp-btn span {
   background: #25d366;
 }
+
 /* SPLIT TEXT ANIMATION */
 .split-text-container {
   display: flex;
@@ -519,14 +516,13 @@ body::before {
     transform: translateX(0);
   }
 }
+
 @keyframes scroll-mobile {
   0% {
     transform: translateX(0);
   }
   100% {
-    transform: translateX(
-      calc(-164px * 8)
-    ); /* 160px card + 16px gap (4 * 4px) */
+    transform: translateX(calc(-164px * 8));
   }
 }
 
@@ -537,12 +533,13 @@ body::before {
 .hover\:pause-scroll:hover {
   animation-play-state: paused;
 }
+
 .mobile-menu a,
 .mobile-menu Link {
   text-decoration: none !important;
   border-bottom: none !important;
 }
-/* Fade In Animation */
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -576,20 +573,14 @@ div::-webkit-scrollbar-thumb {
 div::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
 .shadow-notification {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); /* soft shadow */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
+
 .navbar {
   position: relative;
   z-index: 50;
-}
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 @keyframes slideInRight {
@@ -634,6 +625,7 @@ div::-webkit-scrollbar-thumb:hover {
   animation: bouncyPeriod 1s ease-out;
   transform-origin: center bottom;
 }
+
 @keyframes liquidFill {
   0% {
     transform: translateY(100%) scale(1.5);
@@ -741,4 +733,12 @@ div::-webkit-scrollbar-thumb:hover {
 .liquid-button-modal:active,
 .liquid-button-send:active {
   transform: scale(0.95);
+}
+
+
+.category-item {
+  border-bottom-color: #d1d5db !important; 
+}
+:root.dark .category-item {
+  border-bottom-color: #4b5563 !important; 
 }

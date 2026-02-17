@@ -26,7 +26,6 @@ export const ProductDetail = () => {
   const [selectedMedia, setSelectedMedia] = useState(0);
   const carouselRef = useRef(null);
 
-  // ✅ REMOVED: Complex drag state - let native scroll handle it
   const [reviews, setReviews] = useState([]);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
@@ -40,6 +39,38 @@ export const ProductDetail = () => {
     rating: 5,
     comment: "",
   });
+
+  // ✅ Lock body scroll when modal is open — prevents page enlarging on mobile keyboard
+  useEffect(() => {
+    if (showReviewModal) {
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+      document.body.style.overflow = "hidden";
+      document.body.style.width = "100%";
+    } else {
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.overflow = "";
+      document.body.style.width = "";
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || "0") * -1);
+      }
+    }
+    return () => {
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.overflow = "";
+      document.body.style.width = "";
+    };
+  }, [showReviewModal]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
@@ -115,14 +146,13 @@ export const ProductDetail = () => {
     checkAuth();
   }, []);
 
-  // ✅ IMPROVED: Smooth scroll snap sync with debounce
+  // ✅ Smooth scroll snap sync with debounce
   useEffect(() => {
     const carousel = carouselRef.current;
     if (!carousel) return;
 
     let scrollTimeout;
     const handleScroll = () => {
-      // Debounce to avoid excessive updates during fast scroll
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(() => {
         const index = Math.round(carousel.scrollLeft / carousel.offsetWidth);
@@ -217,7 +247,6 @@ export const ProductDetail = () => {
     }, 300);
   };
 
-  // ✅ IMPROVED: Smooth programmatic scroll
   const scrollToMedia = (index) => {
     if (carouselRef.current) {
       carouselRef.current.scrollTo({
@@ -266,29 +295,17 @@ export const ProductDetail = () => {
   return (
     <div className="min-h-screen bg-background pt-6 pb-12 mt-10">
       <style>{`
-        /* Hide scrollbar but keep functionality */
-        .scrollbar-hide::-webkit-scrollbar { 
-          display: none; 
-        }
-        .scrollbar-hide { 
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        
-        /* ✅ IMPROVED: Better scroll snap behavior */
-        .carousel-snap { 
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .carousel-snap {
           scroll-snap-type: x mandatory;
           scroll-behavior: smooth;
           -webkit-overflow-scrolling: touch;
+          overscroll-behavior-x: contain;
         }
-        .carousel-snap > * { 
+        .carousel-snap > * {
           scroll-snap-align: center;
           scroll-snap-stop: always;
-        }
-        
-        /* ✅ Prevent janky momentum on iOS */
-        .carousel-snap {
-          overscroll-behavior-x: contain;
         }
       `}</style>
 
@@ -380,7 +397,7 @@ export const ProductDetail = () => {
               </div>
             </div>
 
-            {/* ✅ IMPROVED: Mobile carousel - native smooth scroll */}
+            {/* Mobile carousel */}
             <div className="lg:hidden">
               <div
                 ref={carouselRef}
@@ -430,7 +447,7 @@ export const ProductDetail = () => {
                 ))}
               </div>
 
-              {/* ✅ Dot indicators */}
+              {/* Dot indicators */}
               <div className="flex justify-center gap-2 mt-4 px-4">
                 {allMedia.map((_, index) => (
                   <button
@@ -554,10 +571,18 @@ export const ProductDetail = () => {
         </div>
       </div>
 
-      {/* Review Modal */}
+      {/* ✅ FIXED Review Modal — touch-none on overlay, body scroll locked */}
       {showReviewModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 touch-none"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowReviewModal(false);
+          }}
+        >
+          <div
+            className="bg-card rounded-t-2xl sm:rounded-2xl p-6 sm:p-8 w-full sm:max-w-md shadow-2xl max-h-[90vh] overflow-y-auto touch-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                 Add Review

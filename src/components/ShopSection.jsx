@@ -133,7 +133,6 @@ export const ShopSection = () => {
     };
   }, []);
 
-  // ✅ FIXED: Scroll to top when component mounts, except when returning from product detail
   useEffect(() => {
     const savedPosition = sessionStorage.getItem("shopScrollPosition");
     if (savedPosition) {
@@ -142,7 +141,6 @@ export const ShopSection = () => {
         sessionStorage.removeItem("shopScrollPosition");
       }, 0);
     } else {
-      // Scroll to top when navigating to shop section from anywhere else
       window.scrollTo({ top: 0, behavior: "instant" });
     }
   }, []);
@@ -278,16 +276,15 @@ export const ShopSection = () => {
             </button>
           </div>
 
-          {/* ✅ Sidebar — scrollbar fully hidden */}
+          {/* Sidebar */}
           <aside
             id="sidebar"
             className={`${showFilters ? "block" : "hidden"} lg:block w-full lg:w-1/5 lg:min-w-[180px] lg:max-w-[300px] mb-6 lg:mb-0 lg:sticky lg:top-24 lg:h-[calc(100vh-6rem)] lg:overflow-y-auto`}
             style={{
-              scrollbarWidth: "none" /* Firefox */,
-              msOverflowStyle: "none" /* IE/Edge */,
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
             }}
           >
-            {/* Hide WebKit scrollbar via inline style trick */}
             <style>{`
               #sidebar::-webkit-scrollbar { display: none; }
             `}</style>
@@ -310,7 +307,7 @@ export const ShopSection = () => {
                     {categories.map((category) => (
                       <li
                         key={category}
-                        className={`cursor-pointer hover:text-green-400 transition-colors py-2 border-b border-gray-200 dark:border-gray-700 ${
+                        className={`category-item cursor-pointer hover:text-green-400 transition-colors py-2 border-b ${
                           selectedCategory === category
                             ? "text-green-400 font-semibold"
                             : ""
@@ -326,7 +323,7 @@ export const ShopSection = () => {
                     ))}
                   </ul>
 
-                  {/* ✅ Divider between categories and price */}
+                  {/* Price filter */}
                   <div className="pt-4">
                     <h6 className="font-medium mb-2">Price</h6>
                     <div className="flex items-center gap-2 mb-2">
