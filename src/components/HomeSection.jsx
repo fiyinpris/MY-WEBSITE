@@ -729,9 +729,9 @@ export const HomeSection = () => {
         </div>
       </div>
 
-      {/* ── DESKTOP / TABLET HERO (sm+) ── */}
+      {/* ── DESKTOP / TABLET HERO (sm+) ── FIXED FOR 2XL */}
       <div
-        className="hidden sm:block relative w-full h-[75vh] md:h-[90vh] lg:h-[90vh] overflow-hidden md:mb-8 cursor-grab active:cursor-grabbing"
+        className="hidden sm:block relative w-full h-[75vh] md:h-[90vh] lg:h-[90vh] 2xl:h-[85vh] overflow-hidden md:mb-8 cursor-grab active:cursor-grabbing"
         onMouseDown={handleHeroDragStart}
         onMouseUp={handleHeroDragEnd}
         onMouseLeave={() => setIsDragging(false)}
@@ -758,11 +758,11 @@ export const HomeSection = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
 
-            <div className="relative h-full flex items-center justify-center px-4 sm:px-6 md:px-8 pointer-events-none">
-              <div className="text-center text-white drop-shadow-2xl max-w-5xl w-full">
+            <div className="relative h-full flex items-center justify-center px-4 sm:px-6 md:px-8 2xl:px-16 pointer-events-none">
+              <div className="text-center text-white drop-shadow-2xl max-w-5xl 2xl:max-w-7xl w-full">
                 <h1
                   className={cn(
-                    "text-4xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-6xl font-bold leading-tight mb-4 md:mb-6 transition-all duration-1000 ease-out",
+                    "text-4xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-bold leading-tight mb-4 md:mb-6 2xl:mb-10 transition-all duration-1000 ease-out",
                     index === currentSlide
                       ? "opacity-100 scale-100"
                       : "opacity-0 scale-150",
@@ -776,7 +776,7 @@ export const HomeSection = () => {
 
                 <p
                   className={cn(
-                    "text-sm sm:text-base md:text-lg lg:text-xl text-white/90 leading-relaxed mb-6 md:mb-8 px-2 transition-all duration-1000 ease-out",
+                    "text-sm sm:text-base md:text-lg lg:text-xl 2xl:text-3xl text-white/90 leading-relaxed mb-6 md:mb-8 2xl:mb-12 px-2 transition-all duration-1000 ease-out",
                     index === currentSlide
                       ? "opacity-100 translate-y-0"
                       : "opacity-0 translate-y-20",
@@ -791,7 +791,7 @@ export const HomeSection = () => {
                 <button
                   onClick={() => handleButtonClick(slide.action)}
                   className={cn(
-                    "group inline-flex items-center gap-0 border border-white text-white text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase px-10 py-3 hover:bg-white hover:text-black transition-all duration-300 cursor-pointer pointer-events-auto",
+                    "group inline-flex items-center gap-0 border border-white text-white text-xs sm:text-sm 2xl:text-xl font-semibold tracking-[0.2em] uppercase px-10 2xl:px-16 py-3 2xl:py-6 hover:bg-white hover:text-black transition-all duration-300 cursor-pointer pointer-events-auto",
                     index === currentSlide
                       ? "opacity-100 translate-y-0"
                       : "opacity-0 -translate-y-10",
@@ -805,7 +805,7 @@ export const HomeSection = () => {
                   {slide.buttonText}
                   <ArrowRight
                     size={16}
-                    className="opacity-0 w-0 overflow-hidden transition-all duration-300 group-hover:opacity-100 group-hover:w-5 group-hover:ml-2"
+                    className="opacity-0 w-0 overflow-hidden transition-all duration-300 group-hover:opacity-100 group-hover:w-5 group-hover:ml-2 2xl:group-hover:w-7"
                   />
                 </button>
               </div>
@@ -819,7 +819,7 @@ export const HomeSection = () => {
               (currentSlide - 1 + heroSlides.length) % heroSlides.length,
             )
           }
-          className="absolute left-2 sm:left-4 md:left-1 lg:left-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 transition-all duration-300 z-20 pointer-events-auto"
+          className="absolute left-2 sm:left-4 md:left-1 lg:left-2 2xl:left-8 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 2xl:p-4 transition-all duration-300 z-20 pointer-events-auto"
         >
           <svg
             width="20"
@@ -828,7 +828,7 @@ export const HomeSection = () => {
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            className="sm:w-6 sm:h-6"
+            className="sm:w-6 sm:h-6 2xl:w-8 2xl:h-8"
           >
             <path d="M15 18l-6-6 6-6" />
           </svg>
@@ -838,7 +838,7 @@ export const HomeSection = () => {
           onClick={() =>
             setCurrentSlide((currentSlide + 1) % heroSlides.length)
           }
-          className="absolute right-2 sm:right-4 md:right-1 lg:right-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 transition-all duration-300 z-20 pointer-events-auto"
+          className="absolute right-2 sm:right-4 md:right-1 lg:right-2 2xl:right-8 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 sm:p-3 2xl:p-4 transition-all duration-300 z-20 pointer-events-auto"
         >
           <svg
             width="20"
@@ -847,21 +847,21 @@ export const HomeSection = () => {
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            className="sm:w-6 sm:h-6"
+            className="sm:w-6 sm:h-6 2xl:w-8 2xl:h-8"
           >
             <path d="M9 18l6-6-6-6" />
           </svg>
         </button>
 
-        <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20 pointer-events-auto">
+        <div className="absolute bottom-4 sm:bottom-6 2xl:bottom-8 left-1/2 -translate-x-1/2 flex gap-2 2xl:gap-3 z-20 pointer-events-auto">
           {heroSlides.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
               className={`${
                 currentSlide === index
-                  ? "bg-white w-6 sm:w-8 h-1.5 sm:h-2 rounded-full transition-all duration-300"
-                  : "bg-white/50 w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full transition-all duration-300 hover:bg-white/75"
+                  ? "bg-white w-6 sm:w-8 2xl:w-10 h-1.5 sm:h-2 2xl:h-2.5 rounded-full transition-all duration-300"
+                  : "bg-white/50 w-1.5 sm:w-2 2xl:w-2.5 h-1.5 sm:h-2 2xl:h-2.5 rounded-full transition-all duration-300 hover:bg-white/75"
               }`}
             />
           ))}
@@ -869,11 +869,11 @@ export const HomeSection = () => {
       </div>
 
       {/* ============================================================
-          PRODUCTS SECTION — INFINITE AUTO-SCROLL CAROUSEL
+          PRODUCTS SECTION — INFINITE AUTO-SCROLL CAROUSEL (FIXED FOR 2XL)
       ============================================================ */}
       <div
         ref={productsSectionRef}
-        className={`mt-12 p-4 overflow-hidden transition-all duration-1000 ${
+        className={`mt-12 2xl:mt-16 p-4 2xl:p-6 overflow-hidden transition-all duration-1000 ${
           productsVisible
             ? "opacity-100 translate-y-0"
             : "opacity-0 translate-y-20"
@@ -881,10 +881,10 @@ export const HomeSection = () => {
         id="products"
       >
         <div className="max-w-[1920px] mx-auto text-center">
-          <h4 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">
+          <h4 className="text-2xl md:text-3xl 2xl:text-5xl font-bold mb-2 2xl:mb-4 text-foreground">
             Best <span className="text-primary">Selling</span> Products
           </h4>
-          <p className="text-sm md:text-base text-muted-foreground mb-10">
+          <p className="text-sm md:text-base 2xl:text-xl text-muted-foreground mb-10 2xl:mb-14">
             Our most popular and highly-rated products chosen by you
           </p>
 
@@ -902,8 +902,8 @@ export const HomeSection = () => {
 
             if (bestSellingProducts.length === 0) {
               return (
-                <div className="w-full text-center py-12">
-                  <p className="text-muted-foreground">
+                <div className="w-full text-center py-12 2xl:py-16">
+                  <p className="text-muted-foreground 2xl:text-lg">
                     No Best Selling products selected yet.
                   </p>
                 </div>
@@ -913,9 +913,9 @@ export const HomeSection = () => {
             const renderCard = (product, keyPrefix) => (
               <div
                 key={`${keyPrefix}-${product.id}`}
-                className="flex-shrink-0 w-[150px] lg:w-[200px] md:w-[200px] xl:w-[220px] 2xl:w-[240px] bg-card rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 group flex flex-col"
+                className="flex-shrink-0 w-[150px] sm:w-[180px] md:w-[200px] lg:w-[220px] xl:w-[240px] 2xl:w-[300px] bg-card rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 group flex flex-col"
               >
-                <div className="relative overflow-hidden h-35 sm:h-44 md:h-48 xl:h-52 2xl:h-56 bg-muted pointer-events-none">
+                <div className="relative overflow-hidden h-35 sm:h-44 md:h-48 xl:h-52 2xl:h-64 bg-muted pointer-events-none">
                   <img
                     src={product.image}
                     alt={product.name}
@@ -924,26 +924,26 @@ export const HomeSection = () => {
                     className="w-full h-full object-cover group-hover:scale-110 group-hover:rotate-2 transition-all duration-700"
                   />
                   {product.badge && (
-                    <div className="absolute top-3 left-3 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-semibold animate-bounce-slow">
+                    <div className="absolute top-3 2xl:top-4 left-3 2xl:left-4 bg-red-600 text-white px-2 2xl:px-3 py-1 2xl:py-1.5 rounded-full text-xs 2xl:text-sm font-semibold animate-bounce-slow">
                       {product.badge}
                     </div>
                   )}
-                  <button className="absolute bottom-3 right-3 bg-card p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-primary-foreground transform group-hover:rotate-12 pointer-events-auto">
-                    <ShoppingCart size={18} />
+                  <button className="absolute bottom-3 2xl:bottom-4 right-3 2xl:right-4 bg-card p-2 2xl:p-2.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-primary-foreground transform group-hover:rotate-12 pointer-events-auto">
+                    <ShoppingCart size={18} className="2xl:w-5 2xl:h-5" />
                   </button>
                 </div>
-                <div className="p-3 md:p-4 text-left flex flex-col flex-1 pointer-events-none">
-                  <h3 className="text-sm md:text-base font-bold text-foreground mb-2 line-clamp-2 min-h-[40px]">
+                <div className="p-3 md:p-4 2xl:p-6 text-left flex flex-col flex-1 pointer-events-none">
+                  <h3 className="text-sm md:text-base 2xl:text-xl font-bold text-foreground mb-2 2xl:mb-3 line-clamp-2 min-h-[40px] 2xl:min-h-[56px]">
                     {product.name}
                   </h3>
-                  <div className="flex items-center gap-2 mb-3 min-h-[28px]">
-                    <span className="text-base md:text-lg font-bold text-primary">
+                  <div className="flex items-center gap-2 mb-3 2xl:mb-4 min-h-[28px] 2xl:min-h-[36px]">
+                    <span className="text-base md:text-lg 2xl:text-2xl font-bold text-primary">
                       ₦{product.price.toLocaleString()}
                     </span>
                   </div>
-                  <button className="liquid-button-product w-full font-semibold py-2 text-xs md:text-sm rounded-lg transition-colors duration-300 flex items-center justify-center gap-2 relative overflow-hidden mt-auto pointer-events-auto">
+                  <button className="liquid-button-product w-full font-semibold py-2 2xl:py-3 text-xs md:text-sm 2xl:text-lg rounded-lg transition-colors duration-300 flex items-center justify-center gap-2 relative overflow-hidden mt-auto pointer-events-auto">
                     <span className="relative z-10 text-white flex items-center gap-2">
-                      <ShoppingCart size={14} />
+                      <ShoppingCart size={14} className="2xl:w-5 2xl:h-5" />
                       Add to Cart
                     </span>
                   </button>
@@ -972,7 +972,7 @@ export const HomeSection = () => {
                 {/* Render original + clone for seamless infinite loop */}
                 <div
                   ref={carouselInnerRef}
-                  className="flex gap-4 md:gap-6 cursor-grab active:cursor-grabbing select-none"
+                  className="flex gap-4 md:gap-6 2xl:gap-8 cursor-grab active:cursor-grabbing select-none"
                   style={{
                     transform: `translateX(${carouselOffset}px)`,
                     transition: "none",
@@ -988,63 +988,65 @@ export const HomeSection = () => {
         </div>
       </div>
 
-      {/* ✅ REVIEWS SECTION */}
+      {/* ✅ REVIEWS SECTION (FIXED FOR 2XL) */}
       <div
         ref={reviewsSectionRef}
-        className={`flex flex-col justify-center items-center bg-green-200 mt-20 w-full min-h-[400px] sm:min-h-[450px] px-4 py-10 dark:text-black relative transition-all duration-1000 ${
+        className={`flex flex-col justify-center items-center bg-green-200 mt-20 2xl:mt-24 w-full min-h-[400px] sm:min-h-[450px] 2xl:min-h-[500px] px-4 2xl:px-8 py-10 2xl:py-14 dark:text-black relative transition-all duration-1000 ${
           reviewsVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
         }`}
       >
-        <div className="flex items-center justify-center gap-3 w-full max-w-4xl mb-6">
-          <p className="font-bold text-2xl sm:text-3xl">
+        <div className="flex items-center justify-center gap-3 w-full max-w-4xl 2xl:max-w-5xl mb-6 2xl:mb-8">
+          <p className="font-bold text-2xl sm:text-3xl 2xl:text-5xl">
             What Our Customer says
           </p>
         </div>
 
         {reviews.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">💬</div>
-            <h3 className="text-2xl font-bold mb-2">No Reviews Yet</h3>
-            <p className="text-gray-600 mb-6">
+          <div className="text-center py-12 2xl:py-16">
+            <div className="text-6xl 2xl:text-7xl mb-4 2xl:mb-6">💬</div>
+            <h3 className="text-2xl 2xl:text-3xl font-bold mb-2 2xl:mb-3">
+              No Reviews Yet
+            </h3>
+            <p className="text-gray-600 2xl:text-lg mb-6 2xl:mb-8">
               Be the first to share your experience on the product detail page!
             </p>
           </div>
         ) : (
-          <div className="relative border bg-white p-6 sm:p-8 shadow-md w-full sm:w-4/5 md:w-[600px] mt-10 border-transparent flex flex-col items-center rounded-xl">
+          <div className="relative border bg-white p-6 sm:p-8 2xl:p-10 shadow-md w-full sm:w-4/5 md:w-[600px] 2xl:w-[700px] mt-10 2xl:mt-12 border-transparent flex flex-col items-center rounded-xl">
             <button
               onClick={handlePrevReview}
-              className="hidden sm:flex absolute left-[-4rem] top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full p-2 sm:p-3 hover:bg-primary/90 transition"
+              className="hidden sm:flex absolute left-[-4rem] 2xl:left-[-5rem] top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full p-2 sm:p-3 2xl:p-4 hover:bg-primary/90 transition"
             >
-              <ArrowBigLeft size={20} />
+              <ArrowBigLeft size={20} className="2xl:w-6 2xl:h-6" />
             </button>
 
-            <div className="flex justify-center -mt-16 mb-8">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl sm:text-4xl font-bold shadow-lg border-4 border-white">
+            <div className="flex justify-center -mt-16 2xl:-mt-20 mb-8 2xl:mb-10">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 2xl:w-28 2xl:h-28 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl sm:text-4xl 2xl:text-5xl font-bold shadow-lg border-4 2xl:border-6 border-white">
                 {getEmailInitial(reviews[currentReview].email)}
               </div>
             </div>
 
-            <div className="flex items-center gap-1 mb-3">
+            <div className="flex items-center gap-1 2xl:gap-1.5 mb-3 2xl:mb-4">
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
                   size={20}
                   className={
                     i < reviews[currentReview].rating
-                      ? "fill-yellow-400 text-yellow-400"
-                      : "fill-gray-300 text-gray-300"
+                      ? "fill-yellow-400 text-yellow-400 2xl:w-6 2xl:h-6"
+                      : "fill-gray-300 text-gray-300 2xl:w-6 2xl:h-6"
                   }
                 />
               ))}
             </div>
 
-            <p className="text-center text-sm sm:text-base mb-2 px-2">
+            <p className="text-center text-sm sm:text-base 2xl:text-xl mb-2 2xl:mb-3 px-2">
               {reviews[currentReview].comment}
             </p>
-            <p className="font-semibold mt-2 text-primary text-sm sm:text-base">
+            <p className="font-semibold mt-2 2xl:mt-3 text-primary text-sm sm:text-base 2xl:text-xl">
               - {reviews[currentReview].customerName}
             </p>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs 2xl:text-base text-gray-600 mt-1 2xl:mt-2">
               Product: {reviews[currentReview].productName}
             </p>
 
@@ -1058,22 +1060,22 @@ export const HomeSection = () => {
                       reviews[currentReview].email,
                     )
                   }
-                  className="mt-4 p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors mx-auto"
+                  className="mt-4 2xl:mt-5 p-2 2xl:p-2.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors mx-auto"
                   title={
                     userEmail === "fiyinolaleke@gmail.com"
                       ? "Delete review (Admin)"
                       : "Delete my review"
                   }
                 >
-                  <Trash2 size={18} />
+                  <Trash2 size={18} className="2xl:w-5 2xl:h-5" />
                 </button>
               )}
 
             <button
               onClick={handleNextReview}
-              className="hidden sm:flex absolute right-[-4rem] top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full p-2 sm:p-3 hover:bg-primary/90 transition"
+              className="hidden sm:flex absolute right-[-4rem] 2xl:right-[-5rem] top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full p-2 sm:p-3 2xl:p-4 hover:bg-primary/90 transition"
             >
-              <ArrowBigRight size={20} />
+              <ArrowBigRight size={20} className="2xl:w-6 2xl:h-6" />
             </button>
 
             <div className="flex sm:hidden justify-center gap-6 mt-6">
@@ -1094,24 +1096,24 @@ export const HomeSection = () => {
         )}
       </div>
 
-      {/* ✅ CONTACT SECTION */}
+      {/* ✅ CONTACT SECTION (FIXED FOR 2XL) */}
       <div
         ref={contactSectionRef}
         id="contact-section"
-        className="flex flex-col lg:flex-row justify-center items-center gap-8 bg-white py-16 px-4 md:px-0 lg:px-12 dark:bg-background overflow-hidden"
+        className="flex flex-col lg:flex-row justify-center items-center gap-8 2xl:gap-12 bg-white py-16 2xl:py-20 px-4 md:px-0 lg:px-12 2xl:px-20 dark:bg-background overflow-hidden"
       >
-        <div className="text-center lg:text-left max-w-md px-4 md:px-8 lg:px-0">
-          <h4 className="text-3xl sm:text-4xl font-bold text-primary mb-8">
+        <div className="text-center lg:text-left max-w-md 2xl:max-w-lg px-4 md:px-8 lg:px-0">
+          <h4 className="text-3xl sm:text-4xl 2xl:text-6xl font-bold text-primary mb-8 2xl:mb-10">
             Contact Us
           </h4>
-          <p className="text-muted-foreground text-base leading-relaxed">
+          <p className="text-muted-foreground text-base 2xl:text-xl leading-relaxed">
             Have a question, idea, or feedback about our lighting products? We'd
             love to hear from you!
           </p>
         </div>
 
-        <div className="w-full md:w-full lg:max-w-lg bg-white dark:bg-background sm:shadow-lg sm:border sm:rounded-2xl sm:p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="w-full md:w-full lg:max-w-lg 2xl:max-w-2xl bg-white dark:bg-background sm:shadow-lg sm:border sm:rounded-2xl sm:p-8 2xl:p-10">
+          <form onSubmit={handleSubmit} className="space-y-6 2xl:space-y-7">
             <input type="hidden" name="to_name" value="Fiyinfoluwa" />
             <input
               type="hidden"
@@ -1119,7 +1121,7 @@ export const HomeSection = () => {
               value={new Date().toLocaleString()}
             />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 2xl:gap-7">
               <input
                 type="text"
                 id="name"
@@ -1129,7 +1131,7 @@ export const HomeSection = () => {
                   setFormData({ ...formData, name: e.target.value })
                 }
                 placeholder="Your Name"
-                className="w-full px-5 py-3 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60"
+                className="w-full px-5 2xl:px-7 py-3 2xl:py-5 border border-border rounded-lg text-foreground 2xl:text-xl focus:outline-none focus:ring-2 focus:ring-primary/60"
                 required
               />
               <input
@@ -1141,7 +1143,7 @@ export const HomeSection = () => {
                   setFormData({ ...formData, email: e.target.value })
                 }
                 placeholder="Your Email"
-                className="w-full px-5 py-3 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60"
+                className="w-full px-5 2xl:px-7 py-3 2xl:py-5 border border-border rounded-lg text-foreground 2xl:text-xl focus:outline-none focus:ring-2 focus:ring-primary/60"
                 required
               />
             </div>
@@ -1155,7 +1157,7 @@ export const HomeSection = () => {
                 setFormData({ ...formData, contactnumber: e.target.value })
               }
               placeholder="Phone Number"
-              className="w-full px-5 py-3 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60"
+              className="w-full px-5 2xl:px-7 py-3 2xl:py-5 border border-border rounded-lg text-foreground 2xl:text-xl focus:outline-none focus:ring-2 focus:ring-primary/60"
             />
 
             <textarea
@@ -1166,43 +1168,43 @@ export const HomeSection = () => {
                 setFormData({ ...formData, message: e.target.value })
               }
               placeholder="Your Message"
-              className="w-full border-border resize-none px-5 py-3 border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60 min-h-[150px]"
+              className="w-full border-border resize-none px-5 2xl:px-7 py-3 2xl:py-5 border rounded-lg text-foreground 2xl:text-xl focus:outline-none focus:ring-2 focus:ring-primary/60 min-h-[150px] 2xl:min-h-[200px]"
               required
             />
 
             <button
               type="submit"
               disabled={isSending}
-              className="liquid-button-send w-full font-semibold py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70 relative overflow-hidden"
+              className="liquid-button-send w-full font-semibold py-3 2xl:py-5 2xl:text-xl rounded-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70 relative overflow-hidden"
             >
               <span className="relative z-10 text-white flex items-center gap-2">
                 {isSending ? "Sending..." : "Send Message"}
-                {!isSending && <Send size={16} />}
+                {!isSending && <Send size={16} className="2xl:w-6 2xl:h-6" />}
               </span>
             </button>
           </form>
         </div>
       </div>
 
-      {/* ✅ CTA SECTION */}
+      {/* ✅ CTA SECTION (FIXED FOR 2XL) */}
       <div
         ref={ctaSectionRef}
-        className={`bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-800 dark:to-gray-900 py-16 px-4 transition-all duration-1000 ${
+        className={`bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-800 dark:to-gray-900 py-16 2xl:py-20 px-4 2xl:px-8 transition-all duration-1000 ${
           ctaVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
         }`}
       >
-        <div className="max-w-4xl mx-auto text-center">
-          <h3 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
+        <div className="max-w-4xl 2xl:max-w-5xl mx-auto text-center">
+          <h3 className="text-3xl md:text-4xl 2xl:text-6xl font-bold text-gray-900 dark:text-white mb-6 2xl:mb-8">
             Ready to Elevate Your Content?
           </h3>
-          <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg 2xl:text-2xl text-gray-600 dark:text-gray-300 mb-8 2xl:mb-10 max-w-2xl 2xl:max-w-3xl mx-auto">
             Join thousands of creators who trust us for professional lighting
             equipment. Get exclusive deals, expert tips, and priority support.
           </p>
-          <div className="flex flex-row sm:flex-row gap-4 justify-center items-center">
+          <div className="flex flex-row sm:flex-row gap-4 2xl:gap-6 justify-center items-center">
             <button
               onClick={() => (window.location.href = "/shop")}
-              className="px-3 py-3 lg:px-8 lg:py-4 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              className="px-3 py-3 lg:px-8 lg:py-4 2xl:px-12 2xl:py-6 2xl:text-xl bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
             >
               Browse Products
             </button>
@@ -1214,7 +1216,7 @@ export const HomeSection = () => {
                   contactSection.scrollIntoView({ behavior: "smooth" });
                 }
               }}
-              className="px-3 py-3 lg:px-8 lg:py-4 bg-white text-primary border-2 border-primary rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 shadow-lg"
+              className="px-3 py-3 lg:px-8 lg:py-4 2xl:px-12 2xl:py-6 2xl:text-xl bg-white text-primary border-2 border-primary rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 shadow-lg"
             >
               Get in Touch
             </button>

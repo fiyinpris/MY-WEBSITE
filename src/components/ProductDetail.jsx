@@ -26,10 +26,7 @@ export const ProductDetail = () => {
   const [selectedMedia, setSelectedMedia] = useState(0);
   const carouselRef = useRef(null);
 
-  const [isDragging, setIsDragging] = useState(false);
-  const [startPos, setStartPos] = useState(0);
-  const [dragScrollLeft, setDragScrollLeft] = useState(0);
-
+  // ✅ REMOVED: Complex drag state - let native scroll handle it
   const [reviews, setReviews] = useState([]);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
@@ -118,16 +115,26 @@ export const ProductDetail = () => {
     checkAuth();
   }, []);
 
-  // ✅ Dot sync — re-attaches after product loads so ref is valid
+  // ✅ IMPROVED: Smooth scroll snap sync with debounce
   useEffect(() => {
     const carousel = carouselRef.current;
     if (!carousel) return;
+
+    let scrollTimeout;
     const handleScroll = () => {
-      const index = Math.round(carousel.scrollLeft / carousel.offsetWidth);
-      setSelectedMedia(index);
+      // Debounce to avoid excessive updates during fast scroll
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const index = Math.round(carousel.scrollLeft / carousel.offsetWidth);
+        setSelectedMedia(index);
+      }, 50);
     };
+
     carousel.addEventListener("scroll", handleScroll, { passive: true });
-    return () => carousel.removeEventListener("scroll", handleScroll);
+    return () => {
+      carousel.removeEventListener("scroll", handleScroll);
+      clearTimeout(scrollTimeout);
+    };
   }, [product]);
 
   const handleAddToCart = () => {
@@ -210,34 +217,16 @@ export const ProductDetail = () => {
     }, 300);
   };
 
-  // ✅ Scroll to media and update dot
+  // ✅ IMPROVED: Smooth programmatic scroll
   const scrollToMedia = (index) => {
     if (carouselRef.current) {
       carouselRef.current.scrollTo({
         left: carouselRef.current.offsetWidth * index,
         behavior: "smooth",
       });
+      setSelectedMedia(index);
     }
-    setSelectedMedia(index);
   };
-
-  const handleDragStart = (e) => {
-    setIsDragging(true);
-    const pos = e.type === "mousedown" ? e.pageX : e.touches[0].pageX;
-    setStartPos(pos - carouselRef.current.offsetLeft);
-    setDragScrollLeft(carouselRef.current.scrollLeft);
-  };
-
-  const handleDragMove = (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const pos = e.type === "mousemove" ? e.pageX : e.touches[0].pageX;
-    const x = pos - carouselRef.current.offsetLeft;
-    const walk = (x - startPos) * 2;
-    carouselRef.current.scrollLeft = dragScrollLeft - walk;
-  };
-
-  const handleDragEnd = () => setIsDragging(false);
 
   if (loading) {
     return (
@@ -275,16 +264,35 @@ export const ProductDetail = () => {
   ];
 
   return (
-    // ✅ NO horizontal padding at all on mobile — added inside per section
     <div className="min-h-screen bg-background pt-6 pb-12 mt-10">
       <style>{`
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .carousel-snap { scroll-snap-type: x mandatory; }
-        .carousel-snap > * { scroll-snap-align: start; flex-shrink: 0; }
+        /* Hide scrollbar but keep functionality */
+        .scrollbar-hide::-webkit-scrollbar { 
+          display: none; 
+        }
+        .scrollbar-hide { 
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        
+        /* ✅ IMPROVED: Better scroll snap behavior */
+        .carousel-snap { 
+          scroll-snap-type: x mandatory;
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch;
+        }
+        .carousel-snap > * { 
+          scroll-snap-align: center;
+          scroll-snap-stop: always;
+        }
+        
+        /* ✅ Prevent janky momentum on iOS */
+        .carousel-snap {
+          overscroll-behavior-x: contain;
+        }
       `}</style>
 
-      {/* Back button — padded */}
+      {/* Back button */}
       <div className="px-4 sm:px-6 lg:px-14 max-w-7xl mx-auto">
         <button
           onClick={handleBackClick}
@@ -299,7 +307,7 @@ export const ProductDetail = () => {
         <div className="grid md:grid-cols-2 gap-6 lg:gap-12 mb-12">
           {/* ── Media column ── */}
           <div>
-            {/* ✅ Desktop: thumbnails + large image (padded normally) */}
+            {/* Desktop view */}
             <div className="hidden lg:flex flex-row gap-4 px-6 lg:px-14">
               <div className="flex flex-col gap-2 w-20">
                 {allMedia.map((media, index) => (
@@ -372,39 +380,36 @@ export const ProductDetail = () => {
               </div>
             </div>
 
-            {/* ✅ Mobile carousel — truly full width, zero side gaps */}
+            {/* ✅ IMPROVED: Mobile carousel - native smooth scroll */}
             <div className="lg:hidden">
               <div
                 ref={carouselRef}
-                className="flex overflow-x-auto scrollbar-hide carousel-snap cursor-grab active:cursor-grabbing"
-                style={{ WebkitOverflowScrolling: "touch", width: "100vw" }}
-                onMouseDown={handleDragStart}
-                onMouseMove={handleDragMove}
-                onMouseUp={handleDragEnd}
-                onMouseLeave={handleDragEnd}
-                onTouchStart={handleDragStart}
-                onTouchMove={handleDragMove}
-                onTouchEnd={handleDragEnd}
+                className="flex overflow-x-auto scrollbar-hide carousel-snap"
+                style={{
+                  width: "100vw",
+                  WebkitOverflowScrolling: "touch",
+                  scrollPaddingLeft: "0px",
+                }}
               >
                 {allMedia.map((media, index) => (
                   <div
                     key={index}
-                    className="h-[380px] sm:h-[460px] bg-gray-100"
-                    style={{ width: "100vw", minWidth: "100vw" }}
+                    className="h-[380px] sm:h-[460px] bg-gray-100 flex-shrink-0"
+                    style={{ width: "100vw" }}
                   >
                     {media.src ? (
                       media.type === "video" ? (
                         <video
                           src={media.src}
                           controls
-                          className="w-full h-full object-cover pointer-events-none"
-                          draggable="false"
+                          playsInline
+                          className="w-full h-full object-cover"
                         />
                       ) : (
                         <img
                           src={media.src}
                           alt={`${product.name} - ${media.label}`}
-                          className="w-full h-full object-cover pointer-events-none"
+                          className="w-full h-full object-cover"
                           draggable="false"
                         />
                       )
@@ -425,8 +430,8 @@ export const ProductDetail = () => {
                 ))}
               </div>
 
-              {/* ✅ Dot indicators — synced via scroll event */}
-              <div className="flex justify-center gap-2 mt-3">
+              {/* ✅ Dot indicators */}
+              <div className="flex justify-center gap-2 mt-4 px-4">
                 {allMedia.map((_, index) => (
                   <button
                     key={index}
@@ -443,7 +448,7 @@ export const ProductDetail = () => {
             </div>
           </div>
 
-          {/* ✅ Product info — padded on mobile */}
+          {/* Product info */}
           <div className="flex flex-col px-4 sm:px-6 lg:px-0 lg:pr-14">
             <span className="inline-block text-sm bg-primary/10 text-primary px-3 py-1 rounded-full mb-3 w-fit">
               {product.category}

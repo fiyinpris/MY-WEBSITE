@@ -306,12 +306,11 @@ export const ShopSection = () => {
               <div>
                 <h5 className="font-semibold mb-2 hidden lg:block">Filters</h5>
                 <div className="space-y-0">
-                  {/* ✅ Each category has its own bottom border */}
                   <ul className="space-y-0">
                     {categories.map((category) => (
                       <li
                         key={category}
-                        className={`cursor-pointer hover:text-green-400 transition-colors py-2 border-b border-gray-300 dark:border-gray-600 ${
+                        className={`cursor-pointer hover:text-green-400 transition-colors py-2 border-b border-gray-200 dark:border-gray-700 ${
                           selectedCategory === category
                             ? "text-green-400 font-semibold"
                             : ""
@@ -353,7 +352,7 @@ export const ShopSection = () => {
                       Max: ₦{priceRange.toLocaleString()}
                     </div>
                     <button
-                      className="px-3 py-1 border rounded text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                      className="px-3 py-1 border rounded text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors lg:mb-10"
                       onClick={() => {
                         setPriceRange(500000);
                         setCurrentPage(1);
