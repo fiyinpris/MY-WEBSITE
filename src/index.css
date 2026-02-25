@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap");
+
 @import "tailwindcss";
 
 @theme {
@@ -79,6 +81,7 @@
   }
 
   body {
+    font-family: "Lora", Georgia, serif;
     color: hsl(var(--foreground));
     background-color: hsl(var(--background));
     transition:
@@ -89,6 +92,15 @@
     padding: 0;
     position: relative;
     min-height: 100vh;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Playfair Display", Georgia, serif;
   }
 
   #root {
@@ -158,6 +170,7 @@
   border-radius: 9999px;
   background-color: hsl(var(--primary) / 0.9);
   color: hsl(var(--primary-foreground));
+  font-family: "Lora", Georgia, serif;
   font-weight: 500;
   transition: all 0.3s ease;
 }
@@ -457,6 +470,7 @@ body::before {
 .split-text-container {
   display: flex;
   justify-content: center;
+  font-family: "Playfair Display", Georgia, serif;
   font-size: 1.4rem;
   font-weight: bold;
   text-transform: uppercase;
@@ -735,10 +749,9 @@ div::-webkit-scrollbar-thumb:hover {
   transform: scale(0.95);
 }
 
-
 .category-item {
-  border-bottom-color: #d1d5db !important; 
+  border-bottom-color: #d1d5db !important;
 }
 :root.dark .category-item {
-  border-bottom-color: #4b5563 !important; 
+  border-bottom-color: #4b5563 !important;
 }

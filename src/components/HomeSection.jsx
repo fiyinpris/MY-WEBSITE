@@ -731,7 +731,7 @@ export const HomeSection = () => {
 
       {/* ── DESKTOP / TABLET HERO (sm+) ── FIXED FOR 2XL */}
       <div
-        className="hidden sm:block relative w-full h-[75vh] md:h-[90vh] lg:h-[90vh] 2xl:h-[85vh] overflow-hidden md:mb-8 cursor-grab active:cursor-grabbing"
+        className="hidden sm:block relative w-full h-[75vh] md:h-[90vh] lg:h-[98vh] 2xl:h-[85vh] overflow-hidden md:mb-8 cursor-grab active:cursor-grabbing"
         onMouseDown={handleHeroDragStart}
         onMouseUp={handleHeroDragEnd}
         onMouseLeave={() => setIsDragging(false)}
@@ -1204,7 +1204,7 @@ export const HomeSection = () => {
           <div className="flex flex-row sm:flex-row gap-4 2xl:gap-6 justify-center items-center">
             <button
               onClick={() => (window.location.href = "/shop")}
-              className="px-3 py-3 lg:px-8 lg:py-4 2xl:px-12 2xl:py-6 2xl:text-xl bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              className="px-3 py-3 lg:px-8 lg:py-4 2xl:px-12 2xl:py-6 2xl:text-xl bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 cursor-pointer"
             >
               Browse Products
             </button>
@@ -1216,7 +1216,7 @@ export const HomeSection = () => {
                   contactSection.scrollIntoView({ behavior: "smooth" });
                 }
               }}
-              className="px-3 py-3 lg:px-8 lg:py-4 2xl:px-12 2xl:py-6 2xl:text-xl bg-white text-primary border-2 border-primary rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 shadow-lg"
+              className="px-3 py-3 lg:px-8 lg:py-4 2xl:px-12 2xl:py-6 2xl:text-xl bg-white text-primary border border-primary rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 shadow-lg cursor-pointer"
             >
               Get in Touch
             </button>
