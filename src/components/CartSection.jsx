@@ -1274,7 +1274,7 @@ export const CartPage = () => {
                 <p className="text-xs sm:text-sm text-center text-foreground/60 mb-4 sm:mb-6">
                   Estimated Delivery by{" "}
                   <span className="font-semibold text-foreground">
-                    25 December, 2025
+                    2 to 5 days
                   </span>
                 </p>
                 <div className="border-t border-border pt-4 sm:pt-6">
