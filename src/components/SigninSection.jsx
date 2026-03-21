@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { Eye, EyeOff } from "lucide-react";
 
-// Helper to parse Google JWT credential
 function parseJwt(token) {
   const base64Url = token.split(".")[1];
   const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
@@ -25,6 +24,8 @@ export const SigninSection = () => {
   const [userName, setUserName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  // ✅ Newsletter checkbox state
+  const [subscribeNewsletter, setSubscribeNewsletter] = useState(true);
 
   useEffect(() => {
     emailjs.init("aYMxHd4D49CBiJT-X");
@@ -32,9 +33,7 @@ export const SigninSection = () => {
   }, []);
 
   useEffect(() => {
-    if (step === 5) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+    if (step === 5) window.scrollTo({ top: 0, behavior: "smooth" });
   }, [step]);
 
   const loadGoogleOneTap = () => {
@@ -73,39 +72,33 @@ export const SigninSection = () => {
       setLoading(true);
       setError("");
       const userObject = parseJwt(response.credential);
-
-      // ✅ FIX: Use the actual name from Google, never fall back to "User"
       const googleName =
         userObject.name ||
         userObject.given_name ||
         (userObject.given_name && userObject.family_name
           ? `${userObject.given_name} ${userObject.family_name}`
           : null);
-
       const userData = {
-        name: googleName || "", // Empty string means NavBar shows "Not available", not "User"
+        name: googleName || "",
         email: userObject.email || "",
         phone: "",
       };
-
       const users = getRegisteredUsers();
       let existingUser = users.find(
         (u) => u.email?.toLowerCase() === userData.email.toLowerCase(),
       );
-
       if (!existingUser) {
         users.push({
           ...userData,
           password: `google_${Math.random().toString(36).slice(-8)}Aa1`,
+          newsletter: subscribeNewsletter,
         });
         saveRegisteredUsers(users);
         setIsExistingUser(false);
       } else {
-        // ✅ FIX: If existing user has a real name stored, use that
         userData.name = existingUser.name || userData.name;
         setIsExistingUser(true);
       }
-
       localStorage.setItem("user", JSON.stringify(userData));
       window.dispatchEvent(new Event("userUpdated"));
       setStep(5);
@@ -122,10 +115,8 @@ export const SigninSection = () => {
     const users = localStorage.getItem("registeredUsers");
     return users ? JSON.parse(users) : [];
   };
-
-  const saveRegisteredUsers = (users) => {
+  const saveRegisteredUsers = (users) =>
     localStorage.setItem("registeredUsers", JSON.stringify(users));
-  };
 
   const validateEmailOrPhone = (input) => {
     const emailRegex = /\S+@\S+\.\S+/;
@@ -144,14 +135,12 @@ export const SigninSection = () => {
   };
 
   const handleContinue = () => {
-    if (!validateEmailOrPhone(email)) {
+    if (!validateEmailOrPhone(email))
       return setError("Please enter a valid email address or phone number");
-    }
     setError("");
     const existingUser = checkUserExists(email);
     if (existingUser) {
       setIsExistingUser(true);
-      // ✅ FIX: Pre-fill userName from existing user record for display
       if (existingUser.name) setUserName(existingUser.name);
       setStep(3);
     } else {
@@ -166,7 +155,6 @@ export const SigninSection = () => {
     setGeneratedOtp(otpCode);
     const isPhone =
       /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/.test(email);
-
     if (isPhone) {
       alert(`Demo: OTP sent to ${email}\nYour OTP is: ${otpCode}`);
       setLoading(false);
@@ -201,17 +189,13 @@ export const SigninSection = () => {
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-    if (value && index < 3) {
-      const nextInput = document.getElementById(`otp-${index + 1}`);
-      if (nextInput) nextInput.focus();
-    }
+    if (value && index < 3)
+      document.getElementById(`otp-${index + 1}`)?.focus();
   };
 
   const handleVerifyOtp = () => {
-    const enteredOtp = otp.join("");
-    if (enteredOtp !== generatedOtp) {
+    if (otp.join("") !== generatedOtp)
       return setError("Invalid verification code. Please try again.");
-    }
     setError("");
     setStep(4);
   };
@@ -227,7 +211,7 @@ export const SigninSection = () => {
       return "Password must contain at least one number (0-9)";
     if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password))
       return "Password must contain at least one special character (!@#$%^&*...)";
-    const commonPasswords = [
+    const common = [
       "password",
       "qwerty",
       "123456",
@@ -236,34 +220,36 @@ export const SigninSection = () => {
       "admin",
       "lightstore",
     ];
-    if (commonPasswords.some((p) => password.toLowerCase().includes(p)))
-      return "Password is too common or predictable. Please choose something unique.";
+    if (common.some((p) => password.toLowerCase().includes(p)))
+      return "Password is too common. Please choose something unique.";
     return null;
   };
 
   const handleCreatePassword = () => {
-    if (!userName || userName.trim().length === 0) {
+    if (!userName || userName.trim().length === 0)
       return setError("Please enter your full name.");
-    }
     const passwordError = validatePassword(password);
     if (passwordError) return setError(passwordError);
-    if (password !== confirmPassword) {
-      return setError(
-        "Passwords do not match. Please make sure both passwords are the same.",
-      );
-    }
-
+    if (password !== confirmPassword)
+      return setError("Passwords do not match.");
     const users = getRegisteredUsers();
     const isPhone =
       /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/.test(email);
     const newUser = isPhone
-      ? { name: userName.trim(), phone: email, password }
-      : { name: userName.trim(), email, password };
-
+      ? {
+          name: userName.trim(),
+          phone: email,
+          password,
+          newsletter: subscribeNewsletter,
+        }
+      : {
+          name: userName.trim(),
+          email,
+          password,
+          newsletter: subscribeNewsletter,
+        };
     users.push(newUser);
     saveRegisteredUsers(users);
-
-    // ✅ FIX: Always store the actual name the user typed
     localStorage.setItem(
       "user",
       JSON.stringify({
@@ -272,23 +258,19 @@ export const SigninSection = () => {
         phone: isPhone ? email : "",
       }),
     );
-
     window.dispatchEvent(new Event("userUpdated"));
     setStep(5);
     setTimeout(() => navigate("/"), 2000);
   };
 
   const handlePasswordLogin = () => {
-    if (!password) {
-      return setError("Please enter your password");
-    }
+    if (!password) return setError("Please enter your password");
     const users = getRegisteredUsers();
     const user = users.find(
       (u) =>
         u.email?.toLowerCase() === email.toLowerCase() || u.phone === email,
     );
     if (user && user.password === password) {
-      // ✅ FIX: Store the stored name, not a fallback "User"
       localStorage.setItem(
         "user",
         JSON.stringify({
@@ -313,7 +295,6 @@ export const SigninSection = () => {
     setGeneratedOtp(resetCode);
     const isPhone =
       /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/.test(email);
-
     if (isPhone) {
       alert(`Demo: Reset code sent to ${email}\nYour code is: ${resetCode}`);
       setLoading(false);
@@ -351,9 +332,7 @@ export const SigninSection = () => {
     e.stopPropagation();
     setError("");
     if (!window.google) {
-      setError(
-        "Google Sign-In is loading, please wait a moment and try again.",
-      );
+      setError("Google Sign-In is loading, please wait a moment.");
       return;
     }
     try {
@@ -385,7 +364,6 @@ export const SigninSection = () => {
     );
   };
 
-  // Shared social login buttons
   const SocialButtons = () => (
     <div className="text-center">
       <div className="flex items-center gap-4 mb-4">
@@ -438,6 +416,49 @@ export const SigninSection = () => {
     </div>
   );
 
+  // ✅ Reusable newsletter checkbox component
+  const NewsletterCheckbox = () => (
+    <label className="flex items-start gap-3 cursor-pointer group select-none">
+      <div className="relative mt-0.5 shrink-0">
+        <input
+          type="checkbox"
+          checked={subscribeNewsletter}
+          onChange={(e) => setSubscribeNewsletter(e.target.checked)}
+          className="sr-only"
+        />
+        <div
+          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+            subscribeNewsletter
+              ? "bg-green-600 border-green-600"
+              : "border-border bg-background group-hover:border-green-500"
+          }`}
+        >
+          {subscribeNewsletter && (
+            <svg
+              className="w-3 h-3 text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={3}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          )}
+        </div>
+      </div>
+      <span className="text-sm text-foreground/60 group-hover:text-foreground/80 transition-colors leading-snug">
+        Yes, sign me up for{" "}
+        <span className="font-semibold text-green-800 ">my.LIGHTSTORE</span>{" "}
+        newsletter & marketing updates{" "}
+        <span className="text-foreground/40">(optional)</span>
+      </span>
+    </label>
+  );
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 lg:py-12 lg:px-4">
       <div className="relative w-full max-w-lg">
@@ -461,7 +482,6 @@ export const SigninSection = () => {
                     placeholder="Enter your full name"
                     value={userName}
                     onChange={(e) => setUserName(e.target.value)}
-                    // ✅ FIX: autocomplete="name" prevents password manager interference
                     autoComplete="name"
                     className="w-full px-4 py-3 border border-border bg-background text-foreground rounded focus:outline-none focus:border-primary transition-colors"
                   />
@@ -475,12 +495,15 @@ export const SigninSection = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleContinue()}
-                    // ✅ FIX: autocomplete="email" not "username" — prevents passkey trigger
                     autoComplete="email"
                     className="w-full px-4 py-3 border border-border bg-background text-foreground rounded focus:outline-none focus:border-primary transition-colors"
                     placeholder="Enter your email or phone"
                   />
                 </div>
+
+                {/* ✅ Newsletter checkbox on signup */}
+                <NewsletterCheckbox />
+
                 {error && (
                   <p className="text-red-500 text-sm text-center">{error}</p>
                 )}
@@ -531,9 +554,8 @@ export const SigninSection = () => {
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     autoComplete="one-time-code"
                     onKeyDown={(e) => {
-                      if (e.key === "Backspace" && !otp[index] && index > 0) {
+                      if (e.key === "Backspace" && !otp[index] && index > 0)
                         document.getElementById(`otp-${index - 1}`)?.focus();
-                      }
                       if (e.key === "Enter" && otp.join("").length === 4)
                         handleVerifyOtp();
                     }}
@@ -573,7 +595,6 @@ export const SigninSection = () => {
           )}
 
           {/* STEP 3: PASSWORD LOGIN (EXISTING USERS) */}
-          {/* ✅ FIX: Removed ALL biometric/fingerprint logic — no more passkey popups */}
           {step === 3 && isExistingUser && (
             <>
               <h1 className="text-2xl font-semibold text-center text-foreground mb-2">
@@ -598,7 +619,6 @@ export const SigninSection = () => {
                   </label>
                   <div className="relative">
                     <input
-                      // ✅ FIX: Use "current-password" so Chrome fills quietly without passkey dialog
                       autoComplete="current-password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter password"
@@ -612,7 +632,7 @@ export const SigninSection = () => {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/60 hover:text-foreground transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/60 hover:text-foreground"
                     >
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
@@ -686,14 +706,13 @@ export const SigninSection = () => {
                       placeholder="Enter password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      // ✅ FIX: new-password avoids Chrome trying to autofill with passkey
                       autoComplete="new-password"
                       className="w-full px-4 py-3 pr-12 border-2 border-border bg-background text-foreground rounded focus:outline-none focus:border-primary transition-colors"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/60 hover:text-foreground transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/60 hover:text-foreground"
                     >
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
@@ -720,7 +739,7 @@ export const SigninSection = () => {
                       onClick={() =>
                         setShowConfirmPassword(!showConfirmPassword)
                       }
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/60 hover:text-foreground transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/60 hover:text-foreground"
                     >
                       {showConfirmPassword ? (
                         <EyeOff size={20} />
@@ -744,57 +763,28 @@ export const SigninSection = () => {
                   <p className="font-medium text-foreground mb-2">
                     Password Requirements:
                   </p>
-                  <p
-                    className={
-                      password.length >= 10
-                        ? "text-green-600"
-                        : "text-foreground/60"
-                    }
-                  >
-                    {password.length >= 10 ? "✓" : "•"} At least 10 characters
-                  </p>
-                  <p
-                    className={
-                      /[A-Z]/.test(password)
-                        ? "text-green-600"
-                        : "text-foreground/60"
-                    }
-                  >
-                    {/[A-Z]/.test(password) ? "✓" : "•"} One uppercase letter
-                    (A-Z)
-                  </p>
-                  <p
-                    className={
-                      /[a-z]/.test(password)
-                        ? "text-green-600"
-                        : "text-foreground/60"
-                    }
-                  >
-                    {/[a-z]/.test(password) ? "✓" : "•"} One lowercase letter
-                    (a-z)
-                  </p>
-                  <p
-                    className={
-                      /[0-9]/.test(password)
-                        ? "text-green-600"
-                        : "text-foreground/60"
-                    }
-                  >
-                    {/[0-9]/.test(password) ? "✓" : "•"} One number (0-9)
-                  </p>
-                  <p
-                    className={
-                      /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
-                        ? "text-green-600"
-                        : "text-foreground/60"
-                    }
-                  >
-                    {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
-                      ? "✓"
-                      : "•"}{" "}
-                    One special character (!@#$%^&*...)
-                  </p>
+                  {[
+                    [password.length >= 10, "At least 10 characters"],
+                    [/[A-Z]/.test(password), "One uppercase letter (A-Z)"],
+                    [/[a-z]/.test(password), "One lowercase letter (a-z)"],
+                    [/[0-9]/.test(password), "One number (0-9)"],
+                    [
+                      /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+                      "One special character (!@#$%^&*...)",
+                    ],
+                  ].map(([met, label]) => (
+                    <p
+                      key={label}
+                      className={met ? "text-green-600" : "text-foreground/60"}
+                    >
+                      {met ? "✓" : "•"} {label}
+                    </p>
+                  ))}
                 </div>
+
+                {/* ✅ Newsletter checkbox on account creation too */}
+                <NewsletterCheckbox />
+
                 {error && (
                   <p className="text-red-500 text-sm text-center">{error}</p>
                 )}
@@ -844,6 +834,11 @@ export const SigninSection = () => {
                 <p className="text-foreground/60 text-lg">
                   Welcome {isExistingUser ? "back" : "to my.LIGHTSTORE"}!
                 </p>
+                {!isExistingUser && subscribeNewsletter && (
+                  <p className="text-green-600 text-sm mt-2">
+                    ✓ You're subscribed to our newsletter
+                  </p>
+                )}
               </div>
               <button
                 onClick={handleGetStarted}
@@ -878,11 +873,10 @@ export const SigninSection = () => {
                     autoComplete="one-time-code"
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Backspace" && !otp[index] && index > 0) {
+                      if (e.key === "Backspace" && !otp[index] && index > 0)
                         document
                           .getElementById(`reset-otp-${index - 1}`)
                           ?.focus();
-                      }
                       if (e.key === "Enter" && otp.join("").length === 4) {
                         if (otp.join("") === generatedOtp) {
                           setStep(7);
@@ -1006,56 +1000,23 @@ export const SigninSection = () => {
                   <p className="font-medium text-foreground mb-2">
                     Password Requirements:
                   </p>
-                  <p
-                    className={
-                      password.length >= 10
-                        ? "text-green-600"
-                        : "text-foreground/60"
-                    }
-                  >
-                    {password.length >= 10 ? "✓" : "•"} At least 10 characters
-                  </p>
-                  <p
-                    className={
-                      /[A-Z]/.test(password)
-                        ? "text-green-600"
-                        : "text-foreground/60"
-                    }
-                  >
-                    {/[A-Z]/.test(password) ? "✓" : "•"} One uppercase letter
-                    (A-Z)
-                  </p>
-                  <p
-                    className={
-                      /[a-z]/.test(password)
-                        ? "text-green-600"
-                        : "text-foreground/60"
-                    }
-                  >
-                    {/[a-z]/.test(password) ? "✓" : "•"} One lowercase letter
-                    (a-z)
-                  </p>
-                  <p
-                    className={
-                      /[0-9]/.test(password)
-                        ? "text-green-600"
-                        : "text-foreground/60"
-                    }
-                  >
-                    {/[0-9]/.test(password) ? "✓" : "•"} One number (0-9)
-                  </p>
-                  <p
-                    className={
-                      /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
-                        ? "text-green-600"
-                        : "text-foreground/60"
-                    }
-                  >
-                    {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
-                      ? "✓"
-                      : "•"}{" "}
-                    One special character (!@#$%^&*...)
-                  </p>
+                  {[
+                    [password.length >= 10, "At least 10 characters"],
+                    [/[A-Z]/.test(password), "One uppercase letter (A-Z)"],
+                    [/[a-z]/.test(password), "One lowercase letter (a-z)"],
+                    [/[0-9]/.test(password), "One number (0-9)"],
+                    [
+                      /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+                      "One special character (!@#$%^&*...)",
+                    ],
+                  ].map(([met, label]) => (
+                    <p
+                      key={label}
+                      className={met ? "text-green-600" : "text-foreground/60"}
+                    >
+                      {met ? "✓" : "•"} {label}
+                    </p>
+                  ))}
                 </div>
                 {error && (
                   <p className="text-red-500 text-sm text-center">{error}</p>
@@ -1082,9 +1043,7 @@ export const SigninSection = () => {
                       saveRegisteredUsers(users);
                       setStep(5);
                       setTimeout(() => navigate("/"), 2000);
-                    } else {
-                      setError("User not found");
-                    }
+                    } else setError("User not found");
                   }}
                   disabled={
                     !password ||

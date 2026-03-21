@@ -370,6 +370,45 @@ const DeliverySelector = ({ value, onChange, state }) => {
 };
 
 // ── STEP 2: Checkout Form ─────────────────────────────────────────────────────
+const AUTO_COMPLETE_MAP = {
+  fullName: "name",
+  email: "email",
+  phone: "tel",
+  address: "street-address",
+  city: "address-level2",
+};
+
+const Field = ({
+  label,
+  name,
+  type = "text",
+  placeholder,
+  required,
+  form,
+  errors,
+  onChange,
+}) => (
+  <div>
+    <label className="block text-xs sm:text-sm font-medium text-foreground/70 mb-2">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <input
+      type={type}
+      name={name}
+      id={`field-${name}`}
+      value={form[name]}
+      onChange={onChange}
+      placeholder={placeholder}
+      autoComplete={AUTO_COMPLETE_MAP[name] || "off"}
+      className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+      style={{ fontSize: "16px" }}
+    />
+    {errors[name] && (
+      <p className="text-red-500 text-xs mt-1">{errors[name]}</p>
+    )}
+  </div>
+);
+
 const CheckoutPage = ({ onNext, onBack }) => {
   const { cartItems, showToast } = useCart();
   const [form, setForm] = useState({
@@ -463,26 +502,6 @@ const CheckoutPage = ({ onNext, onBack }) => {
     if (errors[name]) setErrors((p) => ({ ...p, [name]: "" }));
   };
 
-  const Field = ({ label, name, type = "text", placeholder, required }) => (
-    <div>
-      <label className="block text-xs sm:text-sm font-medium text-foreground/70 mb-2">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      <input
-        type={type}
-        name={name}
-        value={form[name]}
-        onChange={handleChange}
-        placeholder={placeholder}
-        className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-        style={{ fontSize: "16px" }}
-      />
-      {errors[name] && (
-        <p className="text-red-500 text-xs mt-1">{errors[name]}</p>
-      )}
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 pt-16 sm:pt-20 pb-16 px-4">
       <div className="max-w-6xl mx-auto mt-2">
@@ -505,6 +524,9 @@ const CheckoutPage = ({ onNext, onBack }) => {
                   name="fullName"
                   placeholder="Your full name"
                   required
+                  form={form}
+                  errors={errors}
+                  onChange={handleChange}
                 />
                 <div className="grid sm:grid-cols-2 gap-4">
                   <Field
@@ -513,6 +535,9 @@ const CheckoutPage = ({ onNext, onBack }) => {
                     type="email"
                     placeholder="your@email.com"
                     required
+                    form={form}
+                    errors={errors}
+                    onChange={handleChange}
                   />
                   <Field
                     label="Phone"
@@ -520,6 +545,9 @@ const CheckoutPage = ({ onNext, onBack }) => {
                     type="tel"
                     placeholder="080XXXXXXXX"
                     required
+                    form={form}
+                    errors={errors}
+                    onChange={handleChange}
                   />
                 </div>
                 <Field
@@ -527,6 +555,9 @@ const CheckoutPage = ({ onNext, onBack }) => {
                   name="address"
                   placeholder="Street address"
                   required
+                  form={form}
+                  errors={errors}
+                  onChange={handleChange}
                 />
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
@@ -705,121 +736,183 @@ const ConfirmPage = ({ shippingInfo, onPay, onBack }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 pt-16 sm:pt-20 pb-16 px-4">
-      <div className="max-w-xl mx-auto mt-2">
+      <div className="max-w-6xl mx-auto mt-2">
         <Steps current="Confirm" />
         <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-6">
           Review Your Order
         </h1>
 
-        {/* Items */}
-        <div className="bg-card rounded-xl shadow-lg border border-border mb-4 overflow-hidden">
-          <div className="px-4 py-3 bg-foreground/5 border-b border-border">
-            <h2 className="font-bold text-foreground text-sm">Items Ordered</h2>
-          </div>
-          {cartItems.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center gap-3 p-4 border-b border-border last:border-0"
-            >
-              <img
-                src={item.image || item.img}
-                alt={item.name}
-                className="w-14 h-14 object-cover rounded-lg shrink-0"
-                onError={(e) => {
-                  e.target.src = "https://via.placeholder.com/56?text=?";
-                }}
-              />
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-foreground text-sm truncate">
-                  {item.name}
-                </p>
-                <p className="text-xs text-foreground/50 mt-0.5">
-                  Qty: {item.quantity} × ₦{item.price.toLocaleString()}
-                </p>
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* LEFT: Items + Delivery Details */}
+          <div className="lg:col-span-2 space-y-4">
+            {/* Items Ordered */}
+            <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
+              <div className="px-4 py-3 bg-foreground/5 border-b border-border">
+                <h2 className="font-bold text-foreground text-sm">
+                  Items Ordered
+                </h2>
               </div>
-              <p className="font-bold text-foreground text-sm shrink-0">
-                ₦{(item.price * item.quantity).toLocaleString()}
+              {cartItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-4 p-4 border-b border-border last:border-0"
+                >
+                  <img
+                    src={item.image || item.img}
+                    alt={item.name}
+                    className="w-16 h-16 object-cover rounded-lg shrink-0"
+                    onError={(e) => {
+                      e.target.src = "https://via.placeholder.com/64?text=?";
+                    }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-foreground text-sm truncate">
+                      {item.name}
+                    </p>
+                    <p className="text-xs text-foreground/50 mt-1">
+                      Qty: {item.quantity} × ₦{item.price.toLocaleString()}
+                    </p>
+                    {item.description && (
+                      <p className="text-xs text-foreground/40 mt-0.5 line-clamp-1">
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
+                  <p className="font-bold text-foreground text-sm shrink-0">
+                    ₦{(item.price * item.quantity).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Delivery Details */}
+            <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
+              <div className="px-4 py-3 bg-foreground/5 border-b border-border flex items-center justify-between">
+                <h2 className="font-bold text-foreground text-sm">
+                  Delivery Details
+                </h2>
+                <button
+                  onClick={onBack}
+                  className="text-xs text-primary hover:underline font-medium"
+                >
+                  Edit
+                </button>
+              </div>
+              <div className="p-4 grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+                {[
+                  ["Name", shippingInfo?.fullName],
+                  ["Email", shippingInfo?.email],
+                  ["Phone", shippingInfo?.phone],
+                  ["State", shippingInfo?.state],
+                  [
+                    "Address",
+                    `${shippingInfo?.address}${shippingInfo?.city ? ", " + shippingInfo?.city : ""}`,
+                  ],
+                  [
+                    "Method",
+                    shippingInfo?.deliveryType === "doorstep"
+                      ? "Doorstep Delivery"
+                      : "Park Pickup",
+                  ],
+                ].map(([l, v]) => (
+                  <div key={l}>
+                    <p className="text-foreground/40 text-xs mb-0.5">{l}</p>
+                    <p className="text-foreground font-medium">{v}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Action buttons — visible on mobile only, sticky on desktop via sidebar */}
+            <div className="flex flex-col sm:flex-row gap-3 lg:hidden">
+              <button
+                onClick={onBack}
+                className="w-full sm:w-auto sm:px-6 py-3 border-2 border-border text-foreground font-medium rounded-lg hover:bg-background/50 text-sm"
+              >
+                ← Edit Details
+              </button>
+              <button
+                onClick={onPay}
+                className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 rounded-lg text-sm shadow-lg flex items-center justify-center gap-2"
+              >
+                <Shield className="w-4 h-4" /> Pay ₦{total.toLocaleString()} Now
+              </button>
+            </div>
+          </div>
+
+          {/* RIGHT: Order Summary sticky sidebar */}
+          <div>
+            <div className="bg-card rounded-xl p-4 sm:p-5 shadow-lg border border-border lg:sticky lg:top-24 space-y-4">
+              <h2 className="text-base font-bold text-foreground">
+                Order Summary
+              </h2>
+
+              {/* Mini item list */}
+              <div className="space-y-2">
+                {cartItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex justify-between text-sm gap-2"
+                  >
+                    <span className="text-foreground/70 truncate">
+                      {item.name} ×{item.quantity}
+                    </span>
+                    <span className="font-medium text-foreground shrink-0">
+                      ₦{(item.price * item.quantity).toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t border-border pt-3 space-y-2 text-sm">
+                <div className="flex justify-between text-foreground/70">
+                  <span>Subtotal</span>
+                  <span className="font-medium text-foreground">
+                    ₦{subtotal.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between text-foreground/70">
+                  <span>
+                    {shippingInfo?.deliveryType === "doorstep"
+                      ? "Doorstep"
+                      : "Park Pickup"}{" "}
+                    · {shippingInfo?.state}
+                  </span>
+                  <span className="font-medium text-foreground">
+                    ₦{deliveryFee.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between font-bold text-base text-foreground border-t border-border pt-2">
+                  <span>Total</span>
+                  <span className="text-green-600">
+                    ₦{total.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Pay button — desktop only */}
+              <div className="hidden lg:flex flex-col gap-3 pt-1">
+                <button
+                  onClick={onPay}
+                  className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 rounded-lg text-sm shadow-lg flex items-center justify-center gap-2"
+                >
+                  <Shield className="w-4 h-4" /> Pay ₦{total.toLocaleString()}{" "}
+                  Now
+                </button>
+                <button
+                  onClick={onBack}
+                  className="w-full py-2.5 border-2 border-border text-foreground font-medium rounded-lg hover:bg-background/50 text-sm"
+                >
+                  ← Edit Details
+                </button>
+              </div>
+
+              <p className="text-center text-xs text-foreground/40 flex items-center justify-center gap-1">
+                <Shield className="w-3 h-3" /> Secured by Paystack
               </p>
             </div>
-          ))}
-        </div>
-
-        {/* Totals */}
-        <div className="bg-card rounded-xl shadow-lg border border-border mb-4 p-4">
-          <h2 className="font-bold text-foreground text-sm mb-3">
-            Payment Breakdown
-          </h2>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between text-foreground/70">
-              <span>Subtotal</span>
-              <span>₦{subtotal.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between text-foreground/70">
-              <span>
-                {shippingInfo?.deliveryType === "doorstep"
-                  ? "Doorstep Delivery"
-                  : "Park Pickup"}{" "}
-                · {shippingInfo?.state}
-              </span>
-              <span>₦{deliveryFee.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between font-bold text-base text-foreground border-t border-border pt-2">
-              <span>Total</span>
-              <span className="text-green-600">₦{total.toLocaleString()}</span>
-            </div>
           </div>
         </div>
-
-        {/* Shipping */}
-        <div className="bg-card rounded-xl shadow-lg border border-border mb-6 overflow-hidden">
-          <div className="px-4 py-3 bg-foreground/5 border-b border-border">
-            <h2 className="font-bold text-foreground text-sm">
-              Delivery Details
-            </h2>
-          </div>
-          <div className="p-4 space-y-2 text-sm">
-            {[
-              ["Name", shippingInfo?.fullName],
-              ["Email", shippingInfo?.email],
-              ["Phone", shippingInfo?.phone],
-              [
-                "Address",
-                `${shippingInfo?.address}${shippingInfo?.city ? ", " + shippingInfo?.city : ""}, ${shippingInfo?.state}`,
-              ],
-              [
-                "Method",
-                shippingInfo?.deliveryType === "doorstep"
-                  ? "Doorstep Delivery"
-                  : "Park Pickup",
-              ],
-            ].map(([l, v]) => (
-              <div key={l} className="flex justify-between gap-4">
-                <span className="text-foreground/50 shrink-0">{l}</span>
-                <span className="text-foreground font-medium text-right">
-                  {v}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={onBack}
-            className="w-full sm:w-auto sm:px-6 py-3 border-2 border-border text-foreground font-medium rounded-lg hover:bg-background/50 text-sm"
-          >
-            ← Edit Details
-          </button>
-          <button
-            onClick={onPay}
-            className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 rounded-lg text-sm shadow-lg flex items-center justify-center gap-2"
-          >
-            <Shield className="w-4 h-4" /> Pay ₦{total.toLocaleString()} Now
-          </button>
-        </div>
-        <p className="text-center text-xs text-foreground/40 mt-4 flex items-center justify-center gap-1">
-          <Shield className="w-3 h-3" /> Payment secured by Paystack
-        </p>
       </div>
     </div>
   );
