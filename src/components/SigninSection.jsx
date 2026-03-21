@@ -24,8 +24,8 @@ export const SigninSection = () => {
   const [userName, setUserName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  // ✅ Newsletter checkbox state
   const [subscribeNewsletter, setSubscribeNewsletter] = useState(true);
+  const [countdown, setCountdown] = useState(4);
 
   useEffect(() => {
     emailjs.init("aYMxHd4D49CBiJT-X");
@@ -33,7 +33,15 @@ export const SigninSection = () => {
   }, []);
 
   useEffect(() => {
-    if (step === 5) window.scrollTo({ top: 0, behavior: "smooth" });
+    if (step === 5) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setCountdown(4);
+      const iv = setInterval(
+        () => setCountdown((c) => (c > 0 ? c - 1 : 0)),
+        1000,
+      );
+      return () => clearInterval(iv);
+    }
   }, [step]);
 
   const loadGoogleOneTap = () => {
@@ -67,6 +75,19 @@ export const SigninSection = () => {
     }
   };
 
+  const sendWelcomeEmail = async (name, userEmail) => {
+    try {
+      await emailjs.send("service_f8jpcjv", "template_welcome", {
+        to_name: name,
+        to_email: userEmail,
+        store_name: "my.LIGHTSTORE",
+        shop_url: window.location.origin + "/shop",
+      });
+    } catch (err) {
+      console.warn("Welcome email failed:", err);
+    }
+  };
+
   const handleGoogleOneTapResponse = (response) => {
     try {
       setLoading(true);
@@ -95,6 +116,7 @@ export const SigninSection = () => {
         });
         saveRegisteredUsers(users);
         setIsExistingUser(false);
+        sendWelcomeEmail(userData.name, userData.email);
       } else {
         userData.name = existingUser.name || userData.name;
         setIsExistingUser(true);
@@ -102,7 +124,7 @@ export const SigninSection = () => {
       localStorage.setItem("user", JSON.stringify(userData));
       window.dispatchEvent(new Event("userUpdated"));
       setStep(5);
-      setTimeout(() => navigate("/"), 2000);
+      setTimeout(() => navigate("/"), 4000);
       setLoading(false);
     } catch (error) {
       console.error("Google Sign-In Error:", error);
@@ -170,7 +192,7 @@ export const SigninSection = () => {
         setLoading(false);
         setStep(2);
         setTimer(60);
-      } catch (error) {
+      } catch {
         setLoading(false);
         setError("Failed to send OTP. Please try again.");
       }
@@ -225,7 +247,7 @@ export const SigninSection = () => {
     return null;
   };
 
-  const handleCreatePassword = () => {
+  const handleCreatePassword = async () => {
     if (!userName || userName.trim().length === 0)
       return setError("Please enter your full name.");
     const passwordError = validatePassword(password);
@@ -259,8 +281,9 @@ export const SigninSection = () => {
       }),
     );
     window.dispatchEvent(new Event("userUpdated"));
+    if (!isPhone) sendWelcomeEmail(userName.trim(), email);
     setStep(5);
-    setTimeout(() => navigate("/"), 2000);
+    setTimeout(() => navigate("/"), 4000);
   };
 
   const handlePasswordLogin = () => {
@@ -281,7 +304,7 @@ export const SigninSection = () => {
       );
       window.dispatchEvent(new Event("userUpdated"));
       setStep(5);
-      setTimeout(() => navigate("/"), 2000);
+      setTimeout(() => navigate("/"), 4000);
     } else {
       setError(
         "Wrong password. Try again or click 'Forgot Password?' to reset it.",
@@ -318,7 +341,7 @@ export const SigninSection = () => {
         setPassword("");
         setConfirmPassword("");
         setError("");
-      } catch (error) {
+      } catch {
         setLoading(false);
         setError("Failed to send reset code. Please try again.");
       }
@@ -351,7 +374,7 @@ export const SigninSection = () => {
             document.body.removeChild(tempDiv);
         }, 1000);
       }, 100);
-    } catch (error) {
+    } catch {
       setError("Failed to open Google Sign-In. Please try again.");
     }
   };
@@ -416,7 +439,6 @@ export const SigninSection = () => {
     </div>
   );
 
-  // ✅ Reusable newsletter checkbox component
   const NewsletterCheckbox = () => (
     <label className="flex items-start gap-3 cursor-pointer group select-none">
       <div className="relative mt-0.5 shrink-0">
@@ -427,11 +449,7 @@ export const SigninSection = () => {
           className="sr-only"
         />
         <div
-          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-            subscribeNewsletter
-              ? "bg-green-600 border-green-600"
-              : "border-border bg-background group-hover:border-green-500"
-          }`}
+          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${subscribeNewsletter ? "bg-green-600 border-green-600" : "border-border bg-background group-hover:border-green-500"}`}
         >
           {subscribeNewsletter && (
             <svg
@@ -452,18 +470,40 @@ export const SigninSection = () => {
       </div>
       <span className="text-sm text-foreground/60 group-hover:text-foreground/80 transition-colors leading-snug">
         Yes, sign me up for{" "}
-        <span className="font-semibold text-green-800 ">my.LIGHTSTORE</span>{" "}
+        <span className="font-semibold text-green-800">my.LIGHTSTORE</span>{" "}
         newsletter & marketing updates{" "}
         <span className="text-foreground/40">(optional)</span>
       </span>
     </label>
   );
 
+  // ✅ Keyframe animations scoped with ls- prefix to avoid conflicts
+  const successCSS = `
+    @keyframes ls-rise{from{opacity:0;transform:translateY(30px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+    @keyframes ls-orbit1{from{transform:rotate(0deg) translateX(54px) rotate(0deg)}to{transform:rotate(360deg) translateX(54px) rotate(-360deg)}}
+    @keyframes ls-orbit2{from{transform:rotate(120deg) translateX(70px) rotate(-120deg)}to{transform:rotate(480deg) translateX(70px) rotate(-480deg)}}
+    @keyframes ls-orbit3{from{transform:rotate(240deg) translateX(44px) rotate(-240deg)}to{transform:rotate(600deg) translateX(44px) rotate(-600deg)}}
+    @keyframes ls-draw{from{stroke-dashoffset:180}to{stroke-dashoffset:0}}
+    @keyframes ls-drain{from{stroke-dashoffset:0}to{stroke-dashoffset:226}}
+    @keyframes ls-tagIn{from{opacity:0;transform:scale(0.7) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    .ls-rise{animation:ls-rise 0.5s ease both}
+    .ls-rise-1{animation:ls-rise 0.5s ease both 0.3s;opacity:0}
+    .ls-rise-2{animation:ls-rise 0.4s ease both 1.1s;opacity:0}
+    .ls-orbit1{animation:ls-orbit1 3.2s linear infinite;width:0;height:0}
+    .ls-orbit2{animation:ls-orbit2 5s linear infinite;width:0;height:0}
+    .ls-orbit3{animation:ls-orbit3 2.4s linear infinite;width:0;height:0}
+    .ls-draw{animation:ls-draw 0.5s ease forwards 0.4s}
+    .ls-drain{animation:ls-drain 4s linear forwards 0.6s;transform-origin:80px 80px;transform:rotate(-90deg)}
+    .ls-tag1{animation:ls-tagIn 0.3s ease both 0.7s;opacity:0}
+    .ls-tag2{animation:ls-tagIn 0.3s ease both 0.85s;opacity:0}
+    .ls-tag3{animation:ls-tagIn 0.3s ease both 1.0s;opacity:0}
+  `;
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 lg:py-12 lg:px-4">
       <div className="relative w-full max-w-lg">
         <div className="px-5 lg:px-8 py-12">
-          {/* STEP 1: EMAIL/PHONE INPUT */}
+          {/* ────── STEP 1: Email / phone ────── */}
           {step === 1 && (
             <>
               <h1 className="text-2xl font-semibold text-center text-foreground mb-2">
@@ -496,14 +536,11 @@ export const SigninSection = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleContinue()}
                     autoComplete="email"
-                    className="w-full px-4 py-3 border border-border bg-background text-foreground rounded focus:outline-none focus:border-primary transition-colors"
                     placeholder="Enter your email or phone"
+                    className="w-full px-4 py-3 border border-border bg-background text-foreground rounded focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
-
-                {/* ✅ Newsletter checkbox on signup */}
                 <NewsletterCheckbox />
-
                 {error && (
                   <p className="text-red-500 text-sm text-center">{error}</p>
                 )}
@@ -530,7 +567,7 @@ export const SigninSection = () => {
             </>
           )}
 
-          {/* STEP 2: OTP VERIFICATION */}
+          {/* ────── STEP 2: OTP ────── */}
           {step === 2 && (
             <>
               <h1 className="text-2xl font-semibold text-center text-foreground mb-2">
@@ -573,7 +610,7 @@ export const SigninSection = () => {
               >
                 Submit
               </button>
-              <p className="text-center text-foreground/60 text-sm mb-2">
+              <p className="text-center text-foreground/60 text-sm">
                 Didn't receive the verification code?{" "}
                 {timer > 0 ? (
                   <span>
@@ -594,7 +631,7 @@ export const SigninSection = () => {
             </>
           )}
 
-          {/* STEP 3: PASSWORD LOGIN (EXISTING USERS) */}
+          {/* ────── STEP 3: Password login ────── */}
           {step === 3 && isExistingUser && (
             <>
               <h1 className="text-2xl font-semibold text-center text-foreground mb-2">
@@ -664,7 +701,7 @@ export const SigninSection = () => {
             </>
           )}
 
-          {/* STEP 4: CREATE PASSWORD (NEW USERS) */}
+          {/* ────── STEP 4: Create password ────── */}
           {step === 4 && (
             <>
               <h1 className="text-2xl font-semibold text-center text-foreground mb-2">
@@ -781,10 +818,7 @@ export const SigninSection = () => {
                     </p>
                   ))}
                 </div>
-
-                {/* ✅ Newsletter checkbox on account creation too */}
                 <NewsletterCheckbox />
-
                 {error && (
                   <p className="text-red-500 text-sm text-center">{error}</p>
                 )}
@@ -805,51 +839,233 @@ export const SigninSection = () => {
             </>
           )}
 
-          {/* STEP 5: SUCCESS */}
+          {/* ────── STEP 5: ✅ UNIQUE SUCCESS SCREEN ────── */}
           {step === 5 && (
-            <div className="text-center space-y-6">
-              <div className="flex justify-center">
-                <div className="w-24 h-24 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-12 h-12 text-green-600 dark:text-green-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+            <div className="flex flex-col items-center text-center">
+              <style>{successCSS}</style>
+
+              {/* Orbiting solar system + checkmark */}
+              <div
+                className="ls-rise"
+                style={{
+                  position: "relative",
+                  width: 160,
+                  height: 160,
+                  marginBottom: "2rem",
+                }}
+              >
+                {/* SVG circle + checkmark + draining ring */}
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <svg width="160" height="160" viewBox="0 0 160 160">
+                    <circle
+                      cx="80"
+                      cy="80"
+                      r="36"
+                      fill="#EAF3DE"
+                      stroke="#639922"
+                      strokeWidth="1"
+                    />
                     <path
+                      d="M62 80 L75 93 L100 68"
+                      fill="none"
+                      stroke="#3B6D11"
+                      strokeWidth="3"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
+                      strokeDasharray="180"
+                      strokeDashoffset="180"
+                      className="ls-draw"
+                    />
+                    <circle
+                      cx="80"
+                      cy="80"
+                      r="36"
+                      fill="none"
+                      stroke="#639922"
+                      strokeWidth="2.5"
+                      strokeDasharray="226"
+                      strokeDashoffset="0"
+                      className="ls-drain"
+                      opacity="0.5"
                     />
                   </svg>
                 </div>
+                {/* Orbit 1 — fast small dot */}
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <div className="ls-orbit1">
+                    <div
+                      style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: "50%",
+                        background: "#C0DD97",
+                        marginLeft: -5,
+                        marginTop: -5,
+                      }}
+                    />
+                  </div>
+                </div>
+                {/* Orbit 2 — slow large dot */}
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <div className="ls-orbit2">
+                    <div
+                      style={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: "50%",
+                        background: "#97C459",
+                        marginLeft: -3.5,
+                        marginTop: -3.5,
+                      }}
+                    />
+                  </div>
+                </div>
+                {/* Orbit 3 — medium inner dot */}
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <div className="ls-orbit3">
+                    <div
+                      style={{
+                        width: 5,
+                        height: 5,
+                        borderRadius: "50%",
+                        background: "#639922",
+                        marginLeft: -2.5,
+                        marginTop: -2.5,
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-foreground mb-3">
-                  {isExistingUser
-                    ? "Login Successful!"
-                    : "Account Created Successfully!"}
-                </h1>
-                <p className="text-foreground/60 text-lg">
-                  Welcome {isExistingUser ? "back" : "to my.LIGHTSTORE"}!
+
+              {/* Heading */}
+              <div className="ls-rise-1 w-full">
+                <p
+                  className="text-green-600 mb-2"
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 500,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Access granted
                 </p>
-                {!isExistingUser && subscribeNewsletter && (
-                  <p className="text-green-600 text-sm mt-2">
-                    ✓ You're subscribed to our newsletter
-                  </p>
-                )}
+                <h1 className="text-3xl font-medium text-foreground mb-2">
+                  You're in, {userName ? userName.split(" ")[0] : "there"}
+                </h1>
+                <p className="text-foreground/60 text-base mb-7">
+                  my.LIGHTSTORE is ready for you
+                </p>
               </div>
-              <button
-                onClick={handleGetStarted}
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-4 font-semibold text-lg transition-colors rounded-lg mt-8"
-              >
-                Get Started
-              </button>
+
+              {/* Staggered pill tags */}
+              <div className="flex gap-2 flex-wrap justify-center mb-7">
+                <div className="ls-tag1 bg-muted border border-border rounded-full px-3.5 py-1.5 text-sm text-foreground/60 flex items-center gap-1.5">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <circle
+                      cx="6"
+                      cy="6"
+                      r="5"
+                      stroke="#639922"
+                      strokeWidth="1.5"
+                    />
+                    <path
+                      d="M4 6l1.5 1.5L8 4"
+                      stroke="#639922"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  Verified account
+                </div>
+                <div className="ls-tag2 bg-muted border border-border rounded-full px-3.5 py-1.5 text-sm text-foreground/60 flex items-center gap-1.5">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <rect
+                      x="1.5"
+                      y="3"
+                      width="9"
+                      height="7"
+                      rx="1.5"
+                      stroke="#378ADD"
+                      strokeWidth="1.5"
+                    />
+                    <path
+                      d="M4 3V2.5a2 2 0 014 0V3"
+                      stroke="#378ADD"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  Secure session
+                </div>
+                <div className="ls-tag3 bg-muted border border-border rounded-full px-3.5 py-1.5 text-sm text-foreground/60 flex items-center gap-1.5">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path
+                      d="M6 1l1.2 3.6H11L8.4 6.8l1 3.2L6 8.1 2.6 10l1-3.2L1 4.6h3.8L6 1z"
+                      stroke="#BA7517"
+                      strokeWidth="1.2"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  7-day remember me
+                </div>
+              </div>
+
+              {/* Countdown bar + CTA */}
+              <div className="ls-rise-2 w-full border-t border-border pt-6">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-sm text-foreground/40">
+                    Redirecting automatically
+                  </span>
+                  <span className="text-sm font-medium text-green-600">
+                    {countdown}s
+                  </span>
+                </div>
+                <button
+                  onClick={handleGetStarted}
+                  className="w-full bg-green-700 hover:bg-green-800 text-white py-3.5 font-medium text-base rounded-xl transition-colors"
+                >
+                  Go to my store
+                </button>
+                <p className="text-xs text-foreground/30 mt-3">{email}</p>
+              </div>
             </div>
           )}
 
-          {/* STEP 6: VERIFY RESET CODE */}
+          {/* ────── STEP 6: Verify reset code ────── */}
           {step === 6 && (
             <>
               <h1 className="text-2xl font-semibold text-center text-foreground mb-2">
@@ -923,7 +1139,7 @@ export const SigninSection = () => {
             </>
           )}
 
-          {/* STEP 7: SET NEW PASSWORD */}
+          {/* ────── STEP 7: Set new password ────── */}
           {step === 7 && (
             <>
               <h1 className="text-2xl font-semibold text-center text-foreground mb-2">
@@ -1042,7 +1258,7 @@ export const SigninSection = () => {
                       users[userIndex].password = password;
                       saveRegisteredUsers(users);
                       setStep(5);
-                      setTimeout(() => navigate("/"), 2000);
+                      setTimeout(() => navigate("/"), 4000);
                     } else setError("User not found");
                   }}
                   disabled={
