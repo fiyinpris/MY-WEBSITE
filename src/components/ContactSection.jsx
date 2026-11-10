@@ -1,285 +1,234 @@
-import { useState, useEffect } from "react";
-import { Mail, Phone, MapPin, Send } from "lucide-react";
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Mail, Phone, MapPin, Send, Instagram, MessageCircle, CheckCircle2, AlertCircle, ArrowUpRight } from "lucide-react";
+import { PageHeader } from "./ui/PageHeader";
+import { Reveal } from "./ui/Reveal";
+import { Spinner } from "./ui/Spinner";
+import { cn } from "../lib/utils";
+import { STORE_CONTACT, sendContactMessage } from "../lib/contact";
 
-// ✅ GREEN LOADING SPINNER COMPONENT
-const LoadingSpinner = () => {
-  return (
-    <div className="fixed inset-0 bg-white/80 dark:bg-gray-900/80 z-[9999] flex items-center justify-center backdrop-blur-sm">
-      <div className="relative w-20 h-20">
-        {[...Array(12)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-2 h-6 bg-green-600 rounded-full"
-            style={{
-              left: "50%",
-              top: "50%",
-              transformOrigin: "1px -24px",
-              transform: `rotate(${i * 30}deg)`,
-              opacity: 1 - i * 0.08,
-              animation: `spin-fade 1.2s linear infinite`,
-              animationDelay: `${-1.2 + i * 0.1}s`,
-            }}
-          />
-        ))}
-      </div>
-      <style>{`
-        @keyframes spin-fade {
-          0% { opacity: 1; }
-          100% { opacity: 0.1; }
-        }
-      `}</style>
-    </div>
-  );
-};
+const channels = [
+  {
+    icon: MessageCircle,
+    label: "WhatsApp",
+    value: STORE_CONTACT.whatsappDisplay,
+    href: STORE_CONTACT.whatsappHref,
+    note: "Chat with our team",
+  },
+  { icon: Phone, label: "Phone", value: STORE_CONTACT.phoneDisplay, href: STORE_CONTACT.phoneHref, note: "Customer support" },
+  { icon: Mail, label: "Email", value: STORE_CONTACT.email, href: `mailto:${STORE_CONTACT.email}`, note: "Write to us anytime" },
+  {
+    icon: Instagram,
+    label: "Instagram",
+    value: STORE_CONTACT.instagramHandle,
+    href: STORE_CONTACT.instagramHref,
+    note: "See setups & new arrivals",
+  },
+];
+
+const emptyForm = { fullName: "", email: "", phone: "", message: "" };
 
 export const ContactSection = () => {
-  const [formData, setFormData] = useState({
-    fullName: "",
-    company: "",
-    email: "",
-    phone: "",
-    message: "",
-  });
+  const [formData, setFormData] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [status, setStatus] = useState(null); // { type, text }
 
-  // ✅ LOADING STATE FOR PAGE
-  const [isLoading, setIsLoading] = useState(true);
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  // ✅ Hide loading spinner after component mounts
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 800);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // ✅ SCROLL TO TOP WHEN COMPONENT MOUNTS - FIX ADDED HERE
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" });
-  }, []);
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setStatus(null);
+    if (!formData.fullName.trim() || !formData.email.trim() || !formData.message.trim()) {
+      setStatus({ type: "error", text: "Please fill in your name, email and message." });
+      return;
+    }
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      setStatus({ type: "error", text: "Please enter a valid email address." });
+      return;
+    }
     setLoading(true);
-
-    setTimeout(() => {
-      setLoading(false);
-      setSuccess(true);
-      setFormData({
-        fullName: "",
-        company: "",
-        email: "",
-        phone: "",
-        message: "",
+    try {
+      await sendContactMessage({
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        message: formData.message,
       });
-
-      setTimeout(() => setSuccess(false), 3000);
-    }, 1500);
+      setStatus({ type: "success", text: "Message sent successfully! We'll get back to you soon." });
+      setFormData(emptyForm);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setStatus({
+        type: "error",
+        text: `We couldn't send your message. Please try again or email ${STORE_CONTACT.email}.`,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 py-28 lg:py-20 lg:px-4">
-      {/* ✅ LOADING SPINNER */}
-      {isLoading && <LoadingSpinner />}
+    <div className="pb-20">
+      <PageHeader
+        crumbs={[{ label: "Contact" }]}
+        title={
+          <>
+            Let's get in <span className="font-display font-normal italic text-primary">touch</span>
+          </>
+        }
+        description="Not sure what you need? The team at my.LIGHTSTORE will be happy to listen and suggest the setup that best matches your needs."
+      />
 
-      <div className="w-full max-w-6xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
-          {/* Left Side - Contact Info */}
-          <div className="text-foreground space-y-8 px-7 lg:px-3 lg:pt-12">
-            <div>
-              <h1 className="text-4xl md:text-5xl lg:text-left text-center font-bold mb-4">
-                Contact Us
-              </h1>
-              <p className="text-lg text-foreground/80 leading-relaxed">
-                Not sure what you need? The team at my.LIGHTSTORE will be happy
-                to listen to you and suggest solutions that best match your
-                needs.
-              </p>
-            </div>
-
-            {/* Contact Details */}
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="bg-primary/10 p-3 rounded-lg">
-                  <Mail className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-1">Email</h3>
-                  <a
-                    href="mailto:support@mylightstore.com"
-                    className="text-foreground/70 hover:text-primary transition-colors"
-                  >
-                    support@mylightstore.com
-                  </a>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="bg-primary/10 p-3 rounded-lg">
-                  <Phone className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-1">Phone</h3>
-                  <a
-                    href="tel:+234-813-542-4926"
-                    className="text-foreground/70 hover:text-primary transition-colors"
-                  >
-                    Support: +234-813-542-4926
-                  </a>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="bg-primary/10 p-3 rounded-lg">
-                  <MapPin className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-1">Location</h3>
-                  <p className="text-foreground/70">
-                    Osogbo, Osun State,
-                    <br />
-                    Nigeria
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Decorative Pattern */}
-            <div className="hidden lg:block">
-              <svg
-                className="w-64 h-64 opacity-10"
-                viewBox="0 0 200 200"
-                fill="none"
-              >
-                <circle
-                  cx="100"
-                  cy="100"
-                  r="80"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-                <circle
-                  cx="100"
-                  cy="100"
-                  r="60"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-                <circle
-                  cx="100"
-                  cy="100"
-                  r="40"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-              </svg>
-            </div>
+      <div className="container-page grid gap-10 lg:grid-cols-12 lg:gap-14">
+        {/* Channels */}
+        <Reveal className="min-w-0 lg:col-span-5">
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            {channels.map(({ icon: Icon, label, value, href, note }) => (
+              <li key={label} className="min-w-0">
+                <a
+                  href={href}
+                  target={href.startsWith("http") ? "_blank" : undefined}
+                  rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
+                  className="surface-card group flex items-center gap-4 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-card sm:p-5"
+                >
+                  <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+                    <Icon size={20} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {label}
+                    </span>
+                    <span className="block truncate font-semibold text-foreground">{value}</span>
+                    <span className="block text-xs text-muted-foreground">{note}</span>
+                  </span>
+                  <ArrowUpRight
+                    size={18}
+                    className="shrink-0 text-muted-foreground transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground"
+                  />
+                </a>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-3 flex items-center gap-4 rounded-[1.25rem] border border-dashed p-5">
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-muted text-foreground/70">
+              <MapPin size={20} />
+            </span>
+            <span>
+              <span className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Location</span>
+              <span className="block font-semibold text-foreground">{STORE_CONTACT.location}</span>
+              <span className="block text-xs text-muted-foreground">Delivering to all 36 states + FCT</span>
+            </span>
           </div>
+        </Reveal>
 
-          {/* Right Side - Contact Form */}
-          <div className="w-full max-w-3xl bg-card rounded-2xl shadow-2xl p-6 sm:p-8 lg:p-10 border border-border relative overflow-hidden mx-auto">
-            {/* Decorative circles */}
-            <div className="absolute top-0 right-0 w-32 h-32 opacity-7 pointer-events-none">
-              <svg
-                viewBox="0 0 100 100"
-                fill="currentColor"
-                className="w-full h-full"
-              >
-                <circle cx="80" cy="20" r="50" />
-              </svg>
-            </div>
+        {/* Form */}
+        <Reveal className="min-w-0 lg:col-span-7" delay={0.1}>
+          <div className="surface-card p-6 sm:p-8 lg:p-10">
+            <h2 className="text-2xl font-bold text-foreground">We'd love to hear from you</h2>
+            <p className="mt-1.5 text-muted-foreground">Send us a message and we'll get back to you shortly.</p>
 
-            <div className="relative z-10">
-              <h2 className="text-2xl font-bold text-foreground mb-2">
-                We'd love to hear from you!
-              </h2>
-              <p className="text-foreground/60 mb-6">Let's get in touch</p>
-
-              {success && (
-                <div className="mb-6 bg-green-100 border border-green-500 text-green-700 px-4 py-3 rounded-lg">
-                  Message sent successfully! We'll get back to you soon.
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-5">
+              <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">
-                    Full Name
+                  <label htmlFor="contact-name" className="field-label">
+                    Full name
                   </label>
                   <input
+                    id="contact-name"
                     type="text"
                     name="fullName"
+                    autoComplete="name"
                     value={formData.fullName}
                     onChange={handleChange}
-                    placeholder="Your Name"
+                    placeholder="Your name"
                     required
-                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                    className="input"
                   />
                 </div>
-
-                {/* Email */}
                 <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">
+                  <label htmlFor="contact-email" className="field-label">
                     Email
                   </label>
                   <input
+                    id="contact-email"
                     type="email"
                     name="email"
+                    autoComplete="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="Email"
+                    placeholder="you@example.com"
                     required
-                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                    className="input"
                   />
                 </div>
+              </div>
+              <div>
+                <label htmlFor="contact-phone" className="field-label">
+                  Phone <span className="font-normal text-muted-foreground">(optional)</span>
+                </label>
+                <input
+                  id="contact-phone"
+                  type="tel"
+                  name="phone"
+                  autoComplete="tel"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="080X XXX XXXX"
+                  className="input"
+                />
+              </div>
+              <div>
+                <label htmlFor="contact-message" className="field-label">
+                  Your message
+                </label>
+                <textarea
+                  id="contact-message"
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  placeholder="Leave us a message here…"
+                  required
+                  rows={6}
+                  className="input min-h-[160px]"
+                />
+              </div>
 
-                {/* Message */}
-                <div>
-                  <label className="block text-sm font-medium text-foreground/70 mb-2">
-                    Your Message
-                  </label>
-                  <textarea
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    placeholder="Leave us a message here..."
-                    required
-                    rows={5}
-                    className="w-full px-5 py-3 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/60 bg-background resize-none"
-                  ></textarea>
-                </div>
+              <AnimatePresence>
+                {status && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    role={status.type === "error" ? "alert" : "status"}
+                    className={cn(
+                      "flex items-start gap-2 rounded-xl px-4 py-3 text-sm font-medium",
+                      status.type === "success" ? "bg-primary-soft text-primary" : "bg-danger/10 text-danger",
+                    )}
+                  >
+                    {status.type === "success" ? (
+                      <CheckCircle2 size={18} className="mt-px shrink-0" />
+                    ) : (
+                      <AlertCircle size={18} className="mt-px shrink-0" />
+                    )}
+                    {status.text}
+                  </motion.p>
+                )}
+              </AnimatePresence>
 
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3.5 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Send size={18} />
-                      Send Message
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
+              <button type="submit" disabled={loading} className="btn btn-primary btn-lg w-full">
+                {loading ? (
+                  <>
+                    <Spinner size={18} /> Sending…
+                  </>
+                ) : (
+                  <>
+                    <Send size={17} /> Send message
+                  </>
+                )}
+              </button>
+            </form>
           </div>
-        </div>
+        </Reveal>
       </div>
     </div>
   );
