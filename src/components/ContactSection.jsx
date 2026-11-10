@@ -4,8 +4,37 @@ import { Mail, Phone, MapPin, Send, Instagram, MessageCircle, CheckCircle2, Aler
 import { PageHeader } from "./ui/PageHeader";
 import { Reveal } from "./ui/Reveal";
 import { Spinner } from "./ui/Spinner";
+import { Faq } from "./ui/Faq";
 import { cn } from "../lib/utils";
 import { STORE_CONTACT, sendContactMessage } from "../lib/contact";
+
+// Answers reflect how the store actually works (checkout, delivery fees, Paystack).
+const faqs = [
+  {
+    q: "Do you deliver nationwide?",
+    a: "Yes — we deliver to all 36 states and the FCT. At checkout you can choose doorstep delivery or pick up your order at the nearest park.",
+  },
+  {
+    q: "How much does delivery cost?",
+    a: "Park pickup is ₦3,500 and doorstep delivery is ₦5,500. The exact fee is shown at checkout as soon as you select your state.",
+  },
+  {
+    q: "How long will my order take?",
+    a: "Estimated delivery is 2–5 days, depending on your location.",
+  },
+  {
+    q: "How can I pay?",
+    a: "All payments are processed securely by Paystack. You can pay with your card, bank transfer, your bank, USSD, OPay or Zap.",
+  },
+  {
+    q: "Do I need an account to order?",
+    a: "Yes, please sign in before checking out — it only takes a minute, and your cart is saved while you sign in.",
+  },
+  {
+    q: "Can you help me choose the right gear?",
+    a: "Absolutely. Send us a message on WhatsApp or through the form above, tell us what you're creating, and we'll recommend a setup that fits.",
+  },
+];
 
 const channels = [
   {
@@ -230,6 +259,22 @@ export const ContactSection = () => {
           </div>
         </Reveal>
       </div>
+
+      {/* FAQ */}
+      <section className="container-page mt-20 grid gap-10 lg:grid-cols-12 lg:gap-14" aria-labelledby="faq-heading">
+        <Reveal className="lg:col-span-4">
+          <p className="eyebrow mb-3">FAQ</p>
+          <h2 id="faq-heading" className="text-[1.75rem] font-bold sm:text-4xl">
+            Questions, <span className="font-display font-normal italic text-primary">answered</span>
+          </h2>
+          <p className="mt-4 text-muted-foreground">
+            Quick answers about delivery, payment and ordering. Can't find what you need? Just message us.
+          </p>
+        </Reveal>
+        <Reveal className="min-w-0 lg:col-span-8" delay={0.1}>
+          <Faq items={faqs} />
+        </Reveal>
+      </section>
     </div>
   );
 };

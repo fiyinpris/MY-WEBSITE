@@ -111,43 +111,47 @@
 }
 
 @layer base {
+  /* Beige + burgundy palette, with a warm camel-gold accent */
   :root {
-    --background: 40 20% 98%;
-    --surface: 40 18% 95.5%;
-    --foreground: 160 18% 9%;
-    --card: 0 0% 100%;
-    --muted: 40 14% 93.5%;
-    --muted-foreground: 160 5% 38%;
-    --primary: 151 64% 30%;
-    --primary-hover: 152 66% 23%;
-    --primary-foreground: 0 0% 100%;
-    --primary-soft: 148 40% 93%;
-    --accent: 38 90% 58%;
-    --border: 40 10% 87%;
-    --ink: 160 22% 8%;
-    --ink-foreground: 40 20% 96%;
-    --danger: 0 72% 50%;
-    --shadow-color: 160 30% 10%;
+    --background: 36 42% 95.5%; /* warm beige */
+    --surface: 33 38% 91%; /* deeper sand beige for alternating sections */
+    --foreground: 345 22% 14%; /* soft espresso text */
+    --card: 38 60% 98.5%; /* soft cream */
+    --muted: 33 32% 90%;
+    --muted-foreground: 345 8% 38%;
+    --primary: 349 38% 44%; /* balanced rosewood burgundy */
+    --primary-hover: 349 41% 38%;
+    --primary-deep: 349 45% 31%;
+    --primary-foreground: 38 60% 98%;
+    --primary-soft: 350 38% 94%; /* blush */
+    --accent: 34 58% 55%; /* camel gold */
+    --border: 32 26% 84%;
+    --ink: 345 19% 18%; /* mauve-espresso for footer & feature panels */
+    --ink-foreground: 36 42% 94%;
+    --danger: 4 76% 48%;
+    --shadow-color: 345 18% 22%;
     --nav-height: 4rem;
     color-scheme: light;
   }
 
   :root.dark {
-    --background: 160 14% 5.5%;
-    --surface: 160 12% 8%;
-    --foreground: 40 16% 94%;
-    --card: 160 11% 9.5%;
-    --muted: 160 9% 14%;
-    --muted-foreground: 40 6% 64%;
-    --primary: 151 55% 40%;
-    --primary-hover: 151 58% 46%;
-    --primary-foreground: 0 0% 100%;
-    --primary-soft: 152 35% 14%;
-    --accent: 38 90% 61%;
-    --border: 160 8% 17%;
-    --ink: 160 16% 10%;
-    --ink-foreground: 40 20% 96%;
-    --danger: 0 72% 58%;
+    /* Dark mode: charcoal with a hint of burgundy warmth, rose-burgundy accent */
+    --background: 345 8% 8.5%;
+    --surface: 345 7% 10.5%;
+    --foreground: 36 30% 92%;
+    --card: 345 7% 12%;
+    --muted: 345 6% 17%;
+    --muted-foreground: 30 10% 67%;
+    --primary: 349 44% 62%; /* moderate rose-burgundy */
+    --primary-hover: 349 48% 68%;
+    --primary-deep: 349 52% 76%;
+    --primary-foreground: 345 30% 10%;
+    --primary-soft: 349 20% 14%;
+    --accent: 35 60% 64%;
+    --border: 345 6% 21%;
+    --ink: 345 9% 11%;
+    --ink-foreground: 36 42% 94%;
+    --danger: 4 72% 58%;
     --shadow-color: 0 0% 0%;
     color-scheme: dark;
   }
@@ -184,21 +188,6 @@
     transition:
       color 0.4s ease,
       background-color 0.4s ease;
-  }
-
-  /* The store's soft green wash, kept very light behind every page */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -2;
-    pointer-events: none;
-    background: linear-gradient(
-      to bottom right,
-      hsl(var(--primary) / 0.08) 0%,
-      hsl(var(--background)) 50%,
-      hsl(var(--primary) / 0.05) 100%
-    );
   }
 
   h1,
@@ -360,7 +349,7 @@
     height: 150%;
     z-index: -1;
     border-radius: 45% 45% 0 0;
-    background: linear-gradient(135deg, hsl(var(--primary-hover)) 0%, hsl(152 70% 17%) 100%);
+    background: linear-gradient(135deg, hsl(var(--primary-hover)) 0%, hsl(var(--primary-deep)) 100%);
     transform: translateY(105%);
     transition:
       transform 0.6s var(--ease-spring),
@@ -446,10 +435,10 @@
 
   .btn-light {
     background-color: #fff;
-    color: hsl(160 22% 8%);
+    color: hsl(345 32% 12%);
   }
   .btn-light:hover:not(:disabled) {
-    background-color: hsl(40 20% 92%);
+    background-color: hsl(36 42% 91%);
   }
   .btn-glass {
     background-color: hsl(0 0% 100% / 0.12);
@@ -591,7 +580,7 @@
   select.input {
     appearance: none;
     padding-right: 2.5rem;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23889089' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239a7f78' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.875rem center;
   }
@@ -658,68 +647,25 @@
     scroll-snap-align: start;
   }
 
+  /* Fine film-grain texture for dark panels (sits behind the content) */
+  .grain {
+    isolation: isolate;
+  }
+  .grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.14;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
   /* Soft fade on the edges of the auto-scrolling carousel */
   .edge-fade {
     -webkit-mask-image: linear-gradient(to right, transparent 0, #000 5%, #000 95%, transparent 100%);
     mask-image: linear-gradient(to right, transparent 0, #000 5%, #000 95%, transparent 100%);
-  }
-}
-
-/* ==========================================================================
-   BACKGROUND WAVES (the store's original animated waves, tinted green)
-   ========================================================================== */
-.waves {
-  position: fixed;
-  inset-inline: 0;
-  bottom: 0;
-  height: 14em;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: -1;
-  display: none;
-}
-@media (min-width: 768px) {
-  .waves {
-    display: block;
-  }
-}
-.wave {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 200%;
-  height: 12em;
-  border-radius: 200% 200% 0 0;
-  background: hsl(var(--primary) / 0.045);
-  animation: wave 15s -5s linear infinite;
-  transform: translate3d(0, 0, 0);
-}
-.wave:nth-of-type(2) {
-  bottom: -1.25em;
-  background: hsl(var(--primary) / 0.035);
-  animation: wave 20s linear reverse infinite;
-}
-.wave:nth-of-type(3) {
-  bottom: -2.5em;
-  background: hsl(var(--primary) / 0.03);
-  animation: wave 25s -1s reverse infinite;
-}
-:root.dark .wave {
-  background: hsl(0 0% 100% / 0.022);
-}
-@keyframes wave {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-25%);
-  }
-  50% {
-    transform: translateX(-50%);
-  }
-  75% {
-    transform: translateX(-25%);
   }
 }
 

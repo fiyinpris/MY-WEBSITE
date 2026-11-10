@@ -224,7 +224,7 @@ export const ProductSection = () => {
               />
             </motion.div>
           </AnimatePresence>
-          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/85 via-black/40 to-black/10 md:bg-gradient-to-r md:from-black/80 md:via-black/45 md:to-transparent" />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-ink/85 via-ink/40 to-ink/10 md:bg-gradient-to-r md:from-ink/80 md:via-ink/45 md:to-transparent" />
 
           <div className="flex h-full flex-col justify-end overflow-hidden p-6 pb-20 sm:p-10 sm:pb-24 md:justify-center lg:p-14">
             <AnimatePresence mode="wait">

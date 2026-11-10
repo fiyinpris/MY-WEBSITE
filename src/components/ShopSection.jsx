@@ -234,7 +234,7 @@ export const ShopSection = () => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ opacity: { duration: 0.8 }, scale: { duration: 8, ease: "easeOut" } }}
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-black/70 via-black/55 to-black/75" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-ink/70 via-ink/55 to-ink/75" />
         <div aria-hidden="true" className="absolute -left-16 -top-16 -z-10 size-72 rounded-full bg-primary/25 blur-[90px] animate-float-slow" />
 
         <div className="px-4 text-center text-white">

@@ -545,7 +545,7 @@ export const SigninSection = () => {
   return (
     <div className="grid min-h-[calc(100dvh-var(--nav-height))] lg:grid-cols-2">
       {/* Brand panel */}
-      <aside className="relative hidden overflow-hidden bg-ink lg:block">
+      <aside className="grain relative hidden overflow-hidden bg-ink lg:block">
         <motion.img
           src={sideImage}
           alt=""
@@ -554,7 +554,7 @@ export const SigninSection = () => {
           animate={{ scale: 1 }}
           transition={{ duration: 12, ease: "easeOut" }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/30 to-ink/10" />
         <div className="relative flex h-full flex-col justify-between p-12 xl:p-16">
           <Logo tone="light" />
           <motion.div

@@ -192,8 +192,8 @@ const Hero = ({ onAction }) => {
         </AnimatePresence>
 
         {/* Legibility gradients */}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/85 via-black/35 to-black/10 lg:bg-gradient-to-r lg:from-black/80 lg:via-black/45 lg:to-black/0" />
-        <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-t from-black/50 to-transparent" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-ink/85 via-ink/35 to-ink/10 lg:bg-gradient-to-r lg:from-ink/80 lg:via-ink/45 lg:to-ink/0" />
+        <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-t from-ink/50 to-transparent" />
 
         {/* Copy */}
         <div className="flex h-full flex-col justify-end p-6 pb-24 sm:p-10 sm:pb-28 lg:justify-center lg:p-16 lg:pb-16">
@@ -541,7 +541,7 @@ export const HomeSection = () => {
                           onError={handleImageError}
                           className="absolute inset-0 size-full object-cover transition-transform duration-[1200ms] ease-[var(--ease-out-expo)] group-hover:scale-110"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent transition-colors duration-500 group-hover:from-[hsl(152_70%_12%/0.9)]" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-ink/75 via-ink/10 to-transparent transition-colors duration-500 group-hover:from-[hsl(350_24%_24%/0.8)]" />
                         <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-4 sm:p-5">
                           <div>
                             <p className="text-base font-semibold leading-tight text-white sm:text-lg">
@@ -619,7 +619,7 @@ export const HomeSection = () => {
       {/* ── CREATOR CTA ── */}
       <section className="container-page py-16 sm:py-24">
         <Reveal scale={0.97} y={30}>
-          <div className="group/cta relative isolate grid overflow-hidden rounded-[2rem] bg-ink text-ink-foreground lg:grid-cols-2">
+          <div className="group/cta grain relative isolate grid overflow-hidden rounded-[2rem] bg-ink text-ink-foreground lg:grid-cols-2">
             <div aria-hidden="true" className="absolute -left-24 -top-24 -z-10 size-96 rounded-full bg-primary/30 blur-[100px] animate-float-slow" />
             <div aria-hidden="true" className="absolute bottom-0 left-1/3 -z-10 size-64 rounded-full bg-accent/15 blur-[90px] animate-float" />
             <div className="relative z-10 flex flex-col justify-center p-8 sm:p-12 lg:p-16">
@@ -727,7 +727,7 @@ export const HomeSection = () => {
                             initial={{ scale: 0.5, rotate: -20 }}
                             animate={{ scale: 1, rotate: 0 }}
                             transition={{ type: "spring", stiffness: 260, damping: 16, delay: 0.15 }}
-                            className="flex size-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-[hsl(170_60%_28%)] text-lg font-bold text-white"
+                            className="flex size-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground ring-2 ring-accent/60 ring-offset-2 ring-offset-card"
                           >
                             {(review.customerName || review.email || "U").charAt(0).toUpperCase()}
                           </motion.span>

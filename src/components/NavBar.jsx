@@ -169,7 +169,7 @@ const SearchOverlay = ({ open, onClose, products }) => {
       {open && (
         <div className="fixed inset-0 z-[10000]" role="dialog" aria-modal="true" aria-label="Search products">
           <motion.div
-            className="absolute inset-0 bg-[hsl(160_25%_4%/0.5)] backdrop-blur-[6px]"
+            className="absolute inset-0 bg-[hsl(30_12%_6%/0.5)] backdrop-blur-[6px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -321,7 +321,7 @@ const MobileMenu = ({ open, onClose, pathname, totalWishlistItems, isAdmin, onAd
       {open && (
         <div className="fixed inset-0 z-[9999] lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <motion.div
-            className="absolute inset-0 bg-[hsl(160_25%_4%/0.5)] backdrop-blur-[4px]"
+            className="absolute inset-0 bg-[hsl(30_12%_6%/0.5)] backdrop-blur-[4px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

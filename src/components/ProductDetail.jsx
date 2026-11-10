@@ -23,10 +23,48 @@ import { Modal } from "./ui/Modal";
 import { Stars } from "./ui/Stars";
 import { Spinner } from "./ui/Spinner";
 import { EmptyState } from "./ui/EmptyState";
+import { ProductCard } from "./ui/ProductCard";
+import { AutoScrollCarousel } from "./ui/AutoScrollCarousel";
 import { cn } from "../lib/utils";
 import { categoryNavLabel, formatCategory, formatPrice } from "../lib/format";
 import { optimizeImage, handleImageError } from "../lib/image";
 import { STORE_CONTACT } from "../lib/contact";
+
+/** Main product photo that magnifies under the cursor on desktop. */
+const ZoomImage = ({ src, alt }) => {
+  const [zoom, setZoom] = useState(false);
+  const [origin, setOrigin] = useState("50% 50%");
+  return (
+    <div
+      className="group/zoom relative size-full cursor-zoom-in overflow-hidden"
+      onMouseEnter={() => setZoom(true)}
+      onMouseLeave={() => setZoom(false)}
+      onMouseMove={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        const x = ((e.clientX - r.left) / r.width) * 100;
+        const y = ((e.clientY - r.top) / r.height) * 100;
+        setOrigin(`${x}% ${y}%`);
+      }}
+    >
+      <img
+        src={optimizeImage(src, 1600)}
+        alt={alt}
+        onError={handleImageError}
+        draggable="false"
+        className="size-full object-cover transition-transform duration-300 ease-out"
+        style={{ transformOrigin: origin, transform: zoom ? "scale(1.9)" : "scale(1)" }}
+      />
+      <span
+        className={cn(
+          "pointer-events-none absolute bottom-4 right-4 rounded-full bg-card/85 px-3 py-1.5 text-xs font-semibold text-foreground shadow-soft backdrop-blur transition-opacity duration-300",
+          zoom ? "opacity-0" : "opacity-100",
+        )}
+      >
+        Hover to zoom
+      </span>
+    </div>
+  );
+};
 
 const DetailSkeleton = () => (
   <div className="container-page grid gap-10 py-10 lg:grid-cols-2 lg:gap-16" aria-busy="true">
@@ -57,6 +95,9 @@ export const ProductDetail = () => {
 
   const [reviews, setReviews] = useState([]);
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [related, setRelated] = useState([]);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+  const ctaRef = useRef(null);
 
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -103,6 +144,36 @@ export const ProductDetail = () => {
     const interval = setInterval(loadReviews, 30000);
     return () => clearInterval(interval);
   }, [product]);
+
+  // "You may also like": same category first, topped up with best sellers
+  useEffect(() => {
+    if (!product) return;
+    let cancelled = false;
+    productsAPI
+      .getAll()
+      .then((all) => {
+        if (cancelled) return;
+        const others = all.filter((p) => p.id !== product.id);
+        const same = others.filter((p) => p.category === product.category);
+        const fill = others.filter((p) => p.category !== product.category && p.bestSelling);
+        setRelated([...same, ...fill].slice(0, 10));
+      })
+      .catch((error) => console.error("Error loading related products:", error));
+    return () => {
+      cancelled = true;
+    };
+  }, [product]);
+
+  // Phones: show a sticky "Add to cart" bar once the main buttons scroll out of view
+  useEffect(() => {
+    const el = ctaRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([entry]) => {
+      setShowStickyBar(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [product, loading]);
 
   useEffect(() => {
     try {
@@ -268,7 +339,7 @@ export const ProductDetail = () => {
     );
 
   return (
-    <div className="pb-20">
+    <div className={related.length ? "" : "pb-20"}>
       {/* Breadcrumbs */}
       <div className="container-page flex items-center justify-between gap-4 py-5 sm:py-6">
         <button
@@ -332,7 +403,11 @@ export const ProductDetail = () => {
                   transition={{ duration: 0.25 }}
                   className="aspect-square"
                 >
-                  {renderMedia(activeMedia, "size-full object-cover")}
+                  {activeMedia?.type === "video" ? (
+                    renderMedia(activeMedia, "size-full object-cover")
+                  ) : (
+                    <ZoomImage src={activeMedia?.src} alt={product.name} />
+                  )}
                 </motion.div>
               </AnimatePresence>
               {soldOut && (
@@ -435,7 +510,7 @@ export const ProductDetail = () => {
               </p>
             )}
 
-            <div className="mt-6 flex gap-2.5">
+            <div ref={ctaRef} className="mt-6 flex gap-2.5">
               <button onClick={handleAddToCart} disabled={soldOut} className="btn btn-primary btn-lg flex-1">
                 <ShoppingBag size={18} /> Add to cart
               </button>
@@ -535,6 +610,64 @@ export const ProductDetail = () => {
           </div>
         )}
       </section>
+
+      {/* ── You may also like ── */}
+      {related.length > 0 && (
+        <section className="mt-20 border-t bg-surface py-14 sm:py-20" aria-labelledby="related-heading">
+          <div className="container-page">
+            <p className="eyebrow mb-3">More to explore</p>
+            <h2 id="related-heading" className="text-2xl font-bold sm:text-3xl">
+              You may also <span className="font-display font-normal italic text-primary">like</span>
+            </h2>
+          </div>
+          <div className="mx-auto mt-10 max-w-[1920px]">
+            <AutoScrollCarousel
+              ariaLabel="Related products"
+              items={related}
+              speed={32}
+              itemClassName="w-[200px] sm:w-[230px] lg:w-[250px]"
+              renderItem={(p) => (
+                <ProductCard
+                  product={p}
+                  onOpen={(item) => navigate(`/product/${item.id}`)}
+                  onAddToCart={addToCart}
+                  onToggleWishlist={addToWishlist}
+                  isWishlisted={isInWishlist(p.id)}
+                />
+              )}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* ── Sticky add-to-cart bar (phones) ── */}
+      <AnimatePresence>
+        {showStickyBar && (
+          <motion.div
+            initial={{ y: "110%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "110%" }}
+            transition={{ type: "spring", stiffness: 320, damping: 32 }}
+            className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-12px_30px_-18px_hsl(var(--shadow-color)/0.4)] backdrop-blur-xl md:hidden"
+          >
+            <div className="flex items-center gap-3">
+              <img
+                src={optimizeImage(product.image, 120)}
+                alt=""
+                onError={handleImageError}
+                className="size-12 shrink-0 rounded-xl bg-muted object-cover"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-foreground">{product.name}</p>
+                <p className="text-sm font-bold text-primary">{formatPrice(product.price * quantity)}</p>
+              </div>
+              <button onClick={handleAddToCart} disabled={soldOut} className="btn btn-primary h-11 shrink-0 !px-4 text-sm">
+                <ShoppingBag size={16} /> {soldOut ? "Sold out" : "Add"}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Review modal ── */}
       <Modal

@@ -67,7 +67,7 @@ export const Modal = ({
           )}
         >
           <motion.div
-            className="absolute inset-0 bg-[hsl(160_25%_4%/0.55)] backdrop-blur-[6px]"
+            className="absolute inset-0 bg-[hsl(30_12%_6%/0.55)] backdrop-blur-[6px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

@@ -16,6 +16,7 @@ import GoogleCallback from "./components/GoogleCallback";
 import { ProductManager } from "./components/ProductManager";
 import { ProductDetail } from "./components/ProductDetail";
 import { ThemeProvider } from "./lib/theme";
+import { ScrollProgress, FloatingActions } from "./components/ui/FloatingActions";
 
 /** Scroll to the top on route change, or to the #hash target if present. */
 const ScrollManager = () => {
@@ -48,15 +49,6 @@ const PageTransition = ({ children }) => {
   );
 };
 
-/** The original animated waves at the bottom of the screen (tablet & desktop). */
-const Waves = () => (
-  <div className="waves" aria-hidden="true">
-    <div className="wave" />
-    <div className="wave" />
-    <div className="wave" />
-  </div>
-);
-
 function App() {
   return (
     <ThemeProvider>
@@ -73,9 +65,9 @@ function App() {
                   >
                     Skip to content
                   </a>
+                  <ScrollProgress />
                   <NavBar />
 
-                  <Waves />
                   <main id="main-content" className="flex-1 pt-[var(--nav-height)]">
                     <PageTransition>
                     <Routes>
@@ -100,6 +92,7 @@ function App() {
                   </main>
 
                   <Footer />
+                  <FloatingActions />
                 </div>
               </BrowserRouter>
             </WishlistSection>

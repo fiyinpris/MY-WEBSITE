@@ -52,7 +52,7 @@ export const Footer = () => {
   };
 
   return (
-    <footer className="relative mt-auto overflow-hidden bg-ink text-ink-foreground">
+    <footer className="grain relative mt-auto overflow-hidden bg-ink text-ink-foreground">
       {/* glowing brand line + soft light */}
       <div className="h-px w-full bg-gradient-to-r from-transparent via-primary to-transparent" />
       <div
@@ -96,7 +96,7 @@ export const Footer = () => {
               </button>
             </div>
             <p className="mt-3 min-h-5 pl-5 text-sm" aria-live="polite">
-              {status === "done" && <span className="text-[hsl(148_55%_65%)]">Thanks! You're on the list.</span>}
+              {status === "done" && <span className="text-accent">Thanks! You're on the list.</span>}
               {status === "invalid" && <span className="text-[hsl(0_80%_72%)]">Please enter a valid email address.</span>}
               {status === "error" && <span className="text-[hsl(0_80%_72%)]">Something went wrong. Please try again.</span>}
             </p>
@@ -183,9 +183,21 @@ export const Footer = () => {
         {/* Bottom bar */}
         <div className="flex flex-col-reverse gap-3 border-t border-white/10 py-6 text-sm text-ink-foreground/50 sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} my.LIGHTSTORE. All rights reserved.</p>
-          <p className="flex items-center gap-2">
-            <ShieldCheck size={16} /> Secure payments by Paystack
-          </p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <p className="flex items-center gap-2">
+              <ShieldCheck size={16} /> Secure payments by Paystack
+            </p>
+            <ul className="flex flex-wrap items-center gap-1.5" aria-label="Accepted payment methods">
+              {["Card", "Transfer", "Bank", "USSD", "OPay"].map((m) => (
+                <li
+                  key={m}
+                  className="rounded-md border border-white/15 bg-white/5 px-2 py-0.5 text-[0.7rem] font-semibold tracking-wide text-ink-foreground/75"
+                >
+                  {m}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </footer>

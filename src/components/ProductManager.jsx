@@ -997,7 +997,7 @@ export const ProductManager = () => {
 
         {/* Add/Edit Modal */}
         {(showAddModal || showEditModal) && (
-          <div className="fixed inset-0 bg-[hsl(160_25%_4%/0.55)] backdrop-blur-[6px] flex items-center justify-center z-[10000] p-4 overflow-y-auto">
+          <div className="fixed inset-0 bg-[hsl(30_12%_6%/0.55)] backdrop-blur-[6px] flex items-center justify-center z-[10000] p-4 overflow-y-auto">
             <div className="bg-card rounded-3xl shadow-lift max-w-2xl w-full max-h-[90vh] overflow-y-auto my-8">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
