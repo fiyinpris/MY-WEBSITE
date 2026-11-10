@@ -396,11 +396,11 @@ export const ProductManager = () => {
 
   const renderThumbnailUploads = () => (
     <div>
-      <label className="block text-sm font-semibold text-foreground mb-2">
+      <label className="field-label">
         Additional Media (2 Images + 1 Video)
       </label>
       <div className="grid grid-cols-3 gap-3">
-        <div className="border-2 border-dashed border-border rounded-lg p-2 text-center">
+        <div className="border-2 border-dashed border-border rounded-xl p-2 text-center hover:border-primary/50 transition-colors">
           {formData.thumbnail1 ? (
             <div className="relative">
               <img
@@ -410,7 +410,7 @@ export const ProductManager = () => {
               />
               <button
                 onClick={() => setFormData({ ...formData, thumbnail1: "" })}
-                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                className="absolute top-1 right-1 bg-danger text-white p-1 rounded-full hover:opacity-90 transition-opacity"
               >
                 <X size={12} />
               </button>
@@ -431,7 +431,7 @@ export const ProductManager = () => {
             </label>
           )}
         </div>
-        <div className="border-2 border-dashed border-border rounded-lg p-2 text-center">
+        <div className="border-2 border-dashed border-border rounded-xl p-2 text-center hover:border-primary/50 transition-colors">
           {formData.thumbnail2 ? (
             <div className="relative">
               <img
@@ -441,7 +441,7 @@ export const ProductManager = () => {
               />
               <button
                 onClick={() => setFormData({ ...formData, thumbnail2: "" })}
-                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                className="absolute top-1 right-1 bg-danger text-white p-1 rounded-full hover:opacity-90 transition-opacity"
               >
                 <X size={12} />
               </button>
@@ -462,7 +462,7 @@ export const ProductManager = () => {
             </label>
           )}
         </div>
-        <div className="border-2 border-dashed border-border rounded-lg p-2 text-center">
+        <div className="border-2 border-dashed border-border rounded-xl p-2 text-center hover:border-primary/50 transition-colors">
           {formData.videoThumbnail ? (
             <div className="relative">
               <video
@@ -472,7 +472,7 @@ export const ProductManager = () => {
               />
               <button
                 onClick={() => setFormData({ ...formData, videoThumbnail: "" })}
-                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                className="absolute top-1 right-1 bg-danger text-white p-1 rounded-full hover:opacity-90 transition-opacity"
               >
                 <X size={12} />
               </button>
@@ -518,16 +518,16 @@ export const ProductManager = () => {
     return (
       <div className="space-y-4">
         {/* ✅ Sold Out Section */}
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/40 dark:to-gray-800/30 border-2 border-gray-400 dark:border-gray-600 rounded-xl p-5 shadow-md">
+        <div className="rounded-2xl border bg-muted/40 p-5">
           <div className="flex items-center gap-2 mb-3">
-            <div className="p-2 bg-gray-600 rounded-lg">
+            <div className="p-2 bg-foreground/80 rounded-xl">
               <PackageX className="text-white" size={20} />
             </div>
             <label className="block text-base font-bold text-foreground">
               📦 Stock Status
             </label>
           </div>
-          <div className="bg-white/70 dark:bg-gray-800/50 p-4 rounded-lg border-2 border-gray-300 dark:border-gray-700 mb-3">
+          <div className="bg-card p-4 rounded-xl border mb-3">
             <p className="text-sm text-foreground font-semibold mb-1">
               Currently sold out: {soldOutCount} product
               {soldOutCount !== 1 ? "s" : ""}
@@ -537,14 +537,14 @@ export const ProductManager = () => {
               disable the "Add to Cart" button for customers.
             </p>
           </div>
-          <label className="flex items-center gap-3 cursor-pointer p-4 rounded-lg transition-colors border-2 hover:bg-white/70 dark:hover:bg-gray-700/40 border-transparent hover:border-gray-400">
+          <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl transition-colors hover:bg-card">
             <input
               type="checkbox"
               checked={formData.soldOut}
               onChange={(e) =>
                 setFormData({ ...formData, soldOut: e.target.checked })
               }
-              className="w-6 h-6 text-gray-600 rounded focus:ring-2 focus:ring-gray-500 cursor-pointer"
+              className="size-5 rounded accent-primary cursor-pointer"
             />
             <span className="text-sm font-semibold flex-1">
               📦 Mark as Sold Out (disables Add to Cart)
@@ -553,16 +553,16 @@ export const ProductManager = () => {
         </div>
 
         {/* Best Selling Section */}
-        <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-700 rounded-xl p-5 shadow-md">
+        <div className="rounded-2xl border bg-muted/40 p-5">
           <div className="flex items-center gap-2 mb-3">
-            <div className="p-2 bg-yellow-500 rounded-lg">
+            <div className="p-2 bg-accent rounded-xl">
               <Star className="text-white fill-white" size={20} />
             </div>
             <label className="block text-base font-bold text-foreground">
               ⭐ Best Selling Product
             </label>
           </div>
-          <div className="bg-white/70 dark:bg-gray-800/50 p-4 rounded-lg border-2 border-yellow-300 dark:border-yellow-800 mb-3">
+          <div className="bg-card p-4 rounded-xl border mb-3">
             <p className="text-sm text-foreground font-semibold mb-2">
               📊 Best Selling Status: {bestSellingCount} product
               {bestSellingCount !== 1 ? "s" : ""} marked
@@ -572,14 +572,14 @@ export const ProductManager = () => {
               carousel.
             </p>
           </div>
-          <label className="flex items-center gap-3 cursor-pointer p-4 rounded-lg transition-colors border-2 hover:bg-white/70 dark:hover:bg-yellow-900/40 border-transparent hover:border-yellow-400">
+          <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl transition-colors hover:bg-card">
             <input
               type="checkbox"
               checked={formData.bestSelling}
               onChange={(e) =>
                 setFormData({ ...formData, bestSelling: e.target.checked })
               }
-              className="w-6 h-6 text-yellow-600 rounded focus:ring-2 focus:ring-yellow-500 cursor-pointer"
+              className="size-5 rounded accent-primary cursor-pointer"
             />
             <span className="text-sm font-semibold flex-1">
               ⭐ Mark as Best Selling (Shows on homepage carousel)
@@ -588,16 +588,16 @@ export const ProductManager = () => {
         </div>
 
         {/* Homepage Featured Sections */}
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-2 border-blue-300 dark:border-blue-700 rounded-xl p-5 shadow-sm">
+        <div className="rounded-2xl border bg-muted/40 p-5">
           <div className="flex items-center gap-2 mb-3">
-            <div className="p-2 bg-blue-600 rounded-lg">
+            <div className="p-2 bg-primary rounded-xl">
               <Tag className="text-white" size={20} />
             </div>
             <label className="block text-base font-bold text-foreground">
               Homepage Featured Sections
             </label>
           </div>
-          <p className="text-sm text-muted-foreground mb-4 bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+          <p className="text-sm text-muted-foreground mb-4 bg-card p-3 rounded-xl border">
             💡 <strong>Optional:</strong> Check tags to also display this
             product in specific sections on the homepage.
           </p>
@@ -618,10 +618,10 @@ export const ProductManager = () => {
                 color: "green",
                 label: '✨ NEW ARRIVALS - Display in "New Arrivals" section',
               },
-            ].map(({ key, color, label }) => (
+            ].map(({ key, label }) => (
               <label
                 key={key}
-                className={`flex items-center gap-3 cursor-pointer hover:bg-white/70 dark:hover:bg-blue-900/40 p-3 rounded-lg transition-colors border-2 border-transparent hover:border-${color}-300`}
+                className={"flex items-center gap-3 cursor-pointer hover:bg-card p-3 rounded-xl transition-colors"}
               >
                 <input
                   type="checkbox"
@@ -632,15 +632,15 @@ export const ProductManager = () => {
                       tags: { ...formData.tags, [key]: e.target.checked },
                     })
                   }
-                  className={`w-5 h-5 text-${color}-600 rounded focus:ring-2 focus:ring-${color}-500 cursor-pointer`}
+                  className={"size-5 rounded accent-primary cursor-pointer"}
                 />
                 <span className="text-sm font-semibold flex-1">{label}</span>
               </label>
             ))}
           </div>
 
-          <div className="mt-5 pt-4 border-t-2 border-blue-200 dark:border-blue-800">
-            <label className="block text-sm font-semibold text-foreground mb-2">
+          <div className="mt-5 pt-4 border-t">
+            <label className="field-label">
               Discount Badge (Optional)
             </label>
             <input
@@ -650,7 +650,7 @@ export const ProductManager = () => {
                 setFormData({ ...formData, discount: e.target.value })
               }
               placeholder="e.g., SAVE 90%"
-              className="w-full px-4 py-2.5 border-2 border-border rounded-lg bg-white dark:bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+              className="input"
             />
             <p className="text-xs text-muted-foreground mt-2">
               💳 This will show as a red badge on the product card (e.g., "SAVE
@@ -665,10 +665,10 @@ export const ProductManager = () => {
   // Password prompt
   if (showPasswordPrompt) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 flex items-center justify-center p-4">
-        <div className="bg-card rounded-2xl shadow-2xl max-w-md w-full p-8">
+      <div className="flex min-h-[80vh] items-center justify-center p-4">
+        <div className="surface-card max-w-md w-full p-8">
           <div className="text-center mb-6">
-            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="size-16 bg-primary-soft rounded-full flex items-center justify-center mx-auto mb-4">
               <Lock className="w-10 h-10 text-primary" />
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-2">
@@ -677,8 +677,8 @@ export const ProductManager = () => {
             <p className="text-muted-foreground mb-4">
               This area is restricted to authorized administrators only
             </p>
-            <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg p-3 mb-4">
-              <p className="text-sm text-amber-800 dark:text-amber-200">
+            <div className="bg-accent/10 border border-accent/30 rounded-xl p-3 mb-4">
+              <p className="text-sm text-foreground/80">
                 🔒 <strong>Security Notice:</strong> Access is logged and
                 monitored
               </p>
@@ -689,7 +689,7 @@ export const ProductManager = () => {
             value={adminEmail}
             onChange={(e) => setAdminEmail(e.target.value)}
             placeholder="Enter admin email"
-            className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary mb-3"
+            className="input mb-3"
             autoFocus
           />
           <input
@@ -698,12 +698,12 @@ export const ProductManager = () => {
             onChange={(e) => setAdminPassword(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleAdminLogin()}
             placeholder="Enter admin password"
-            className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary mb-4"
+            className="input mb-4"
           />
           <button
             onClick={handleAdminLogin}
             disabled={!adminEmail || !adminPassword}
-            className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-lg transition-colors mb-3 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn btn-primary btn-lg w-full mb-3"
           >
             Access Admin Panel
           </button>
@@ -719,10 +719,10 @@ export const ProductManager = () => {
   const soldOutCount = products.filter((p) => p.soldOut).length;
 
   return (
-    <div className="admin-product-manager min-h-screen bg-background p-4 md:p-8 mt-14">
+    <div className="admin-product-manager container-page py-8 sm:py-12">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-card rounded-2xl shadow-lg p-6 mb-6">
+        <div className="surface-card p-6 mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">
@@ -731,12 +731,12 @@ export const ProductManager = () => {
               <p className="text-muted-foreground">
                 Manage your store's products — {products.length} total
               </p>
-              <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-1 font-semibold">
+              <p className="text-sm text-muted-foreground mt-1 font-semibold">
                 ⭐ Best Selling: {bestSellingCount} product
                 {bestSellingCount !== 1 ? "s" : ""}
               </p>
               {soldOutCount > 0 && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 font-semibold">
+                <p className="text-sm text-muted-foreground mt-0.5 font-semibold">
                   📦 Sold Out: {soldOutCount} product
                   {soldOutCount !== 1 ? "s" : ""}
                 </p>
@@ -748,14 +748,14 @@ export const ProductManager = () => {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowAddModal(true)}
-                className="bg-primary hover:bg-primary/90 text-white font-semibold px-6 py-3 rounded-lg transition-colors flex items-center gap-2 justify-center"
+                className="btn btn-primary"
               >
                 <Plus size={20} />
                 Add New Product
               </button>
               <button
                 onClick={handleLogout}
-                className="bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors flex items-center gap-2 justify-center"
+                className="btn btn-danger-soft"
               >
                 <Lock size={20} />
                 Logout
@@ -765,7 +765,7 @@ export const ProductManager = () => {
         </div>
 
         {/* Search and Filter */}
-        <div className="bg-card rounded-2xl shadow-lg p-6 mb-6">
+        <div className="surface-card p-6 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search
@@ -777,7 +777,7 @@ export const ProductManager = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search products..."
-                className="w-full pl-10 pr-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                className="input !pl-10"
               />
             </div>
             <div className="relative">
@@ -788,7 +788,7 @@ export const ProductManager = () => {
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="pl-10 pr-8 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
+                className="input !pl-10 !pr-10 cursor-pointer"
               >
                 <option value="ALL">All Categories</option>
                 {PRODUCT_CATEGORIES.map((cat) => (
@@ -806,7 +806,7 @@ export const ProductManager = () => {
               <select
                 value={filterTag}
                 onChange={(e) => setFilterTag(e.target.value)}
-                className="pl-10 pr-8 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
+                className="input !pl-10 !pr-10 cursor-pointer"
               >
                 <option value="ALL">All Tags</option>
                 <option value="BESTSELLING">⭐ BEST SELLING</option>
@@ -831,10 +831,10 @@ export const ProductManager = () => {
               {filteredProducts.map((product) => (
                 <div
                   key={product.id}
-                  className={`bg-card rounded-lg shadow-md hover:shadow-xl overflow-hidden transition-all duration-300 ${product.soldOut ? "opacity-75" : ""}`}
+                  className={`surface-card overflow-hidden transition-all duration-300 hover:shadow-card ${product.soldOut ? "opacity-75" : ""}`}
                 >
                   {/* Image Section */}
-                  <div className="relative h-48 md:h-52 bg-gray-100 dark:bg-gray-800">
+                  <div className="relative aspect-[4/3] bg-muted">
                     <img
                       src={product.image}
                       alt={product.name}
@@ -844,7 +844,7 @@ export const ProductManager = () => {
                     {/* ✅ Sold Out overlay */}
                     {product.soldOut && (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        <span className="bg-gray-800 text-white px-4 py-2 rounded-md text-sm font-bold tracking-wider shadow-lg border border-gray-600">
+                        <span className="chip bg-card text-foreground !h-8 !px-4">
                           SOLD OUT
                         </span>
                       </div>
@@ -852,7 +852,7 @@ export const ProductManager = () => {
 
                     {/* Best Selling Badge */}
                     {product.bestSelling && !product.soldOut && (
-                      <span className="absolute top-2 left-2 bg-yellow-500 text-white px-3 py-1.5 rounded-md text-xs font-bold shadow-lg flex items-center gap-1">
+                      <span className="absolute top-2 left-2 chip bg-accent text-[hsl(30_60%_14%)] shadow-soft">
                         <Star size={12} className="fill-white" />
                         BEST SELLING
                       </span>
@@ -861,17 +861,17 @@ export const ProductManager = () => {
                     {/* Other Tags */}
                     <div className="absolute top-12 left-2 flex flex-col gap-1">
                       {!product.soldOut && product.tags?.sale && (
-                        <span className="bg-red-500 text-white px-2 py-0.5 rounded-md text-xs font-semibold shadow-md">
+                        <span className="chip !h-5 bg-danger text-white">
                           SALE
                         </span>
                       )}
                       {!product.soldOut && product.tags?.hot && (
-                        <span className="bg-orange-500 text-white px-2 py-0.5 rounded-md text-xs font-semibold shadow-md">
+                        <span className="chip !h-5 bg-[hsl(24_90%_52%)] text-white">
                           HOT
                         </span>
                       )}
                       {!product.soldOut && product.tags?.newArrivals && (
-                        <span className="bg-green-500 text-white px-2 py-0.5 rounded-md text-xs font-semibold shadow-md">
+                        <span className="chip !h-5 bg-primary text-primary-foreground">
                           NEW
                         </span>
                       )}
@@ -879,7 +879,7 @@ export const ProductManager = () => {
 
                     {/* Discount Badge */}
                     {product.discount && !product.soldOut && (
-                      <span className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-md text-xs font-bold shadow-md">
+                      <span className="chip absolute top-2 right-2 bg-danger text-white">
                         {product.discount}
                       </span>
                     )}
@@ -888,7 +888,7 @@ export const ProductManager = () => {
                   {/* Product Info Section */}
                   <div className="p-4">
                     <div className="mb-2">
-                      <span className="inline-block text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-full">
+                      <span className="inline-block text-xs font-medium bg-primary-soft text-primary px-2.5 py-1 rounded-full">
                         {product.category}
                       </span>
                     </div>
@@ -896,7 +896,7 @@ export const ProductManager = () => {
                       {product.name}
                     </h3>
                     <p
-                      className={`text-lg font-bold mb-3 ${product.soldOut ? "text-gray-400" : "text-green-600 dark:text-green-400"}`}
+                      className={`text-lg font-bold mb-3 ${product.soldOut ? "text-muted-foreground" : "text-foreground"}`}
                     >
                       ₦{product.price.toLocaleString()}
                     </p>
@@ -908,10 +908,10 @@ export const ProductManager = () => {
                         isTogglingStock === product.id ||
                         isDeletingProduct === product.id
                       }
-                      className={`w-full mb-2 font-medium py-2 rounded-md transition-all flex items-center justify-center gap-1.5 text-xs border-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                      className={`w-full mb-2 font-semibold h-9 rounded-full transition-all flex items-center justify-center gap-1.5 text-xs border disabled:opacity-50 disabled:cursor-not-allowed ${
                         product.soldOut
-                          ? "border-green-500 text-green-600 hover:bg-green-500 hover:text-white"
-                          : "border-gray-400 text-gray-500 hover:bg-gray-500 hover:text-white"
+                          ? "border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
+                          : "border-border text-muted-foreground hover:bg-foreground hover:text-background"
                       }`}
                     >
                       {isTogglingStock === product.id ? (
@@ -937,7 +937,7 @@ export const ProductManager = () => {
                       <button
                         onClick={() => openEditModal(product)}
                         disabled={isDeletingProduct === product.id}
-                        className="flex-1 border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white font-medium py-2 rounded-md transition-all flex items-center justify-center gap-1.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="btn btn-outline btn-sm flex-1"
                       >
                         <Edit size={14} />
                         Edit
@@ -945,7 +945,7 @@ export const ProductManager = () => {
                       <button
                         onClick={() => handleDeleteProduct(product.id)}
                         disabled={isDeletingProduct === product.id}
-                        className="flex-1 border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white font-medium py-2 rounded-md transition-all flex items-center justify-center gap-1.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="btn btn-danger-soft btn-sm flex-1"
                       >
                         {isDeletingProduct === product.id ? (
                           <>
@@ -967,7 +967,7 @@ export const ProductManager = () => {
 
             {/* Empty State */}
             {filteredProducts.length === 0 && (
-              <div className="bg-card rounded-2xl shadow-lg p-12 text-center">
+              <div className="surface-card p-12 text-center">
                 <div className="text-6xl mb-4">📦</div>
                 <h3 className="text-2xl font-bold text-foreground mb-2">
                   No Products Found
@@ -984,7 +984,7 @@ export const ProductManager = () => {
                   filterTag === "ALL" && (
                     <button
                       onClick={() => setShowAddModal(true)}
-                      className="bg-primary hover:bg-primary/90 text-white font-semibold px-6 py-3 rounded-lg transition-colors inline-flex items-center gap-2"
+                      className="btn btn-primary"
                     >
                       <Plus size={20} />
                       Add First Product
@@ -997,8 +997,8 @@ export const ProductManager = () => {
 
         {/* Add/Edit Modal */}
         {(showAddModal || showEditModal) && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div className="bg-card rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto my-8">
+          <div className="fixed inset-0 bg-[hsl(30_12%_6%/0.55)] backdrop-blur-[6px] flex items-center justify-center z-[10000] p-4 overflow-y-auto">
+            <div className="bg-card rounded-3xl shadow-lift max-w-2xl w-full max-h-[90vh] overflow-y-auto my-8">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-foreground">
@@ -1013,7 +1013,7 @@ export const ProductManager = () => {
                       resetForm();
                     }}
                     disabled={isAddingProduct || isUpdatingProduct}
-                    className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                    className="icon-btn disabled:opacity-50"
                   >
                     <X size={24} />
                   </button>
@@ -1021,7 +1021,7 @@ export const ProductManager = () => {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">
+                    <label className="field-label">
                       Category *
                     </label>
                     <select
@@ -1030,7 +1030,7 @@ export const ProductManager = () => {
                         setFormData({ ...formData, category: e.target.value })
                       }
                       disabled={isAddingProduct || isUpdatingProduct}
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                      className="input disabled:opacity-50"
                     >
                       {PRODUCT_CATEGORIES.map((cat) => (
                         <option key={cat} value={cat}>
@@ -1041,7 +1041,7 @@ export const ProductManager = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">
+                    <label className="field-label">
                       Product Name *
                     </label>
                     <input
@@ -1052,12 +1052,12 @@ export const ProductManager = () => {
                       }
                       disabled={isAddingProduct || isUpdatingProduct}
                       placeholder="Enter product name"
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                      className="input disabled:opacity-50"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">
+                    <label className="field-label">
                       Price (₦) *
                     </label>
                     <input
@@ -1070,7 +1070,7 @@ export const ProductManager = () => {
                       placeholder="16000"
                       step="1"
                       min="0"
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                      className="input disabled:opacity-50"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       Enter whole numbers only (e.g., 16000)
@@ -1078,16 +1078,16 @@ export const ProductManager = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">
+                    <label className="field-label">
                       Main Product Image *
                     </label>
-                    <div className="border-2 border-dashed border-border rounded-lg p-4 text-center">
+                    <div className="border-2 border-dashed border-border rounded-2xl p-4 text-center hover:border-primary/50 transition-colors">
                       {formData.image ? (
                         <div className="relative">
                           <img
                             src={formData.image}
                             alt="Preview"
-                            className="w-full h-48 object-cover rounded-lg mb-2"
+                            className="w-full h-48 object-cover rounded-xl mb-2"
                           />
                           <button
                             onClick={() =>
@@ -1098,7 +1098,7 @@ export const ProductManager = () => {
                               })
                             }
                             disabled={isAddingProduct || isUpdatingProduct}
-                            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors disabled:opacity-50"
+                            className="absolute top-2 right-2 bg-danger text-white p-2 rounded-full hover:opacity-90 transition-opacity disabled:opacity-50"
                           >
                             <X size={16} />
                           </button>
@@ -1130,7 +1130,7 @@ export const ProductManager = () => {
                   {renderThumbnailUploads()}
 
                   <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">
+                    <label className="field-label">
                       Description
                     </label>
                     <textarea
@@ -1144,7 +1144,7 @@ export const ProductManager = () => {
                       disabled={isAddingProduct || isUpdatingProduct}
                       placeholder="Product description..."
                       rows="3"
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none disabled:opacity-50"
+                      className="input disabled:opacity-50"
                     />
                   </div>
 
@@ -1155,7 +1155,7 @@ export const ProductManager = () => {
                       showAddModal ? handleAddProduct : handleEditProduct
                     }
                     disabled={isAddingProduct || isUpdatingProduct}
-                    className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="btn btn-primary btn-lg w-full"
                   >
                     {isAddingProduct || isUpdatingProduct ? (
                       <>

@@ -1,19 +1,14 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-} from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Trash2,
   Plus,
   Minus,
-  ShoppingCart,
+  ShoppingBag,
   AlertCircle,
-  CheckCircle,
+  CheckCircle2,
   X,
-  Loader2,
   CreditCard,
   Building2,
   Smartphone,
@@ -23,10 +18,22 @@ import {
   Home,
   Package,
   ChevronRight,
-  Shield,
+  ChevronLeft,
+  ShieldCheck,
+  Lock,
+  Truck,
+  Check,
+  Tag,
 } from "lucide-react";
+import { Modal } from "./ui/Modal";
+import { Spinner } from "./ui/Spinner";
+import { EmptyState } from "./ui/EmptyState";
+import { cn } from "../lib/utils";
+import { formatCategory, formatPrice } from "../lib/format";
+import { optimizeImage, handleImageError } from "../lib/image";
 
 const CartContext = createContext();
+const EASE = [0.22, 1, 0.36, 1];
 
 const PAYSTACK_PUBLIC_KEY = "pk_live_86028b6add1aa51c8bc8f41f5c87a7f52cfbed99";
 
@@ -72,9 +79,7 @@ const STATE_DELIVERY_FEES = {
 
 const getDeliveryFee = (state, type) => {
   if (!state || !type) return 0;
-  return (
-    (STATE_DELIVERY_FEES[state] || { park: 3500, doorstep: 5500 })[type] || 0
-  );
+  return (STATE_DELIVERY_FEES[state] || { park: 3500, doorstep: 5500 })[type] || 0;
 };
 
 const STATES = Object.keys(STATE_DELIVERY_FEES);
@@ -101,118 +106,60 @@ const trackPurchase = async (items, userEmail) => {
   }
 };
 
-const Toast = ({ message, type, onClose }) => {
+/* -------------------------------------------------------------------------- */
+/*  Toast                                                                      */
+/* -------------------------------------------------------------------------- */
+const Toast = ({ toast, onClose }) => {
   useEffect(() => {
-    const t = setTimeout(onClose, 4000);
+    if (!toast) return;
+    const t = setTimeout(onClose, 3800);
     return () => clearTimeout(t);
-  }, [onClose]);
-  const bg =
-    type === "error"
-      ? "bg-red-50 border-red-200"
-      : "bg-green-50 border-green-200";
-  const text = type === "error" ? "text-red-800" : "text-green-800";
-  const Icon = type === "error" ? AlertCircle : CheckCircle;
+  }, [toast, onClose]);
+
   return (
     <div
-      className={`fixed top-20 right-4 ${bg} border rounded-lg px-3 py-2 shadow-lg z-[9999] max-w-xs`}
+      aria-live="polite"
+      className="pointer-events-none fixed inset-x-4 bottom-4 z-[10050] flex justify-center sm:inset-x-auto sm:bottom-auto sm:right-6 sm:top-[calc(var(--nav-height)+0.75rem)]"
     >
-      <div className="flex items-center gap-2">
-        <Icon className={`w-4 h-4 ${text} shrink-0`} />
-        <p className={`${text} text-xs font-medium flex-1`}>{message}</p>
-        <button onClick={onClose} className={`${text} hover:opacity-70`}>
-          <X className="w-3 h-3" />
-        </button>
-      </div>
-    </div>
-  );
-};
-
-const LoadingOverlay = () => (
-  <div className="fixed inset-0 bg-white/20 dark:bg-gray-900/30 z-50 flex items-center justify-center">
-    <div className="flex gap-3">
-      {[0, 0.2, 0.4].map((d, i) => (
-        <div
-          key={i}
-          className="w-4 h-4 rounded-full bg-primary animate-bounce"
-          style={{ animationDelay: `${d}s` }}
-        />
-      ))}
-    </div>
-  </div>
-);
-
-const SignInModal = ({ onSignIn, onClose }) => (
-  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-    <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-sm p-6">
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 text-foreground/50 hover:text-foreground"
-      >
-        <X size={20} />
-      </button>
-      <div className="flex justify-center mb-4">
-        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-          <LogIn className="w-8 h-8 text-primary" />
-        </div>
-      </div>
-      <h2 className="text-xl font-bold text-foreground text-center mb-2">
-        Sign in to Checkout
-      </h2>
-      <p className="text-sm text-foreground/60 text-center mb-6">
-        You need to be signed in before you can proceed to checkout.
-      </p>
-      <div className="flex flex-col gap-3">
-        <button
-          onClick={onSignIn}
-          className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
-        >
-          <LogIn size={18} /> Sign In to Continue
-        </button>
-        <button
-          onClick={onClose}
-          className="w-full border border-border text-foreground/70 font-medium py-3 rounded-lg flex items-center justify-center gap-2"
-        >
-          <X size={16} /> Cancel
-        </button>
-      </div>
-      <p className="text-xs text-foreground/40 text-center mt-4">
-        Your cart items will be saved while you sign in.
-      </p>
-    </div>
-  </div>
-);
-
-// Step indicator — matches original style with flex-1 growing connectors
-const Steps = ({ current }) => {
-  const steps = ["Cart", "Checkout", "Confirm", "Payment"];
-  const idx = steps.indexOf(current);
-  return (
-    <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-8 overflow-x-auto">
-      {steps.map((s, i) => (
-        <div
-          key={s}
-          className="flex items-center gap-2 sm:gap-4 shrink-0 flex-1 last:flex-none"
-        >
-          <span
-            className={`text-xs sm:text-sm whitespace-nowrap font-medium ${i === idx ? "text-foreground font-semibold" : i < idx ? "text-primary" : "text-foreground/50"}`}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            key={toast.id}
+            role={toast.type === "error" ? "alert" : "status"}
+            initial={{ opacity: 0, y: 16, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.97 }}
+            transition={{ duration: 0.3, ease: EASE }}
+            className="pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-2xl border bg-card px-4 py-3 shadow-lift sm:w-96"
           >
-            {i + 1}. {s}
-          </span>
-          {i < steps.length - 1 && (
-            <div
-              className={`h-px flex-1 min-w-4 ${i < idx ? "bg-primary/40" : "bg-border"}`}
-            />
-          )}
-        </div>
-      ))}
+            <span
+              className={cn(
+                "flex size-8 shrink-0 items-center justify-center rounded-full",
+                toast.type === "error" ? "bg-danger/10 text-danger" : "bg-primary-soft text-primary",
+              )}
+            >
+              {toast.type === "error" ? <AlertCircle size={17} /> : <CheckCircle2 size={17} />}
+            </span>
+            <p className="flex-1 text-sm font-medium text-foreground">{toast.message}</p>
+            <button onClick={onClose} className="icon-btn !size-8 shrink-0" aria-label="Dismiss notification">
+              <X size={15} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
+/* -------------------------------------------------------------------------- */
+/*  Cart provider                                                              */
+/* -------------------------------------------------------------------------- */
 export const CartSection = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [toast, setToast] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const toastId = useRef(0);
+
   const safeGet = useCallback((k) => {
     try {
       const v = localStorage.getItem(k);
@@ -224,12 +171,16 @@ export const CartSection = ({ children }) => {
   const safeSave = useCallback((k, v) => {
     try {
       localStorage.setItem(k, JSON.stringify(v));
-    } catch {}
+    } catch {
+      /* storage full or unavailable */
+    }
   }, []);
-  const showToast = useCallback(
-    (message, type = "success") => setToast({ message, type }),
-    [],
-  );
+  const showToast = useCallback((message, type = "success") => {
+    toastId.current += 1;
+    setToast({ id: toastId.current, message, type });
+  }, []);
+  const closeToast = useCallback(() => setToast(null), []);
+
   useEffect(() => {
     const s = safeGet("cartItems");
     if (s && Array.isArray(s)) setCartItems(s);
@@ -243,6 +194,10 @@ export const CartSection = ({ children }) => {
     try {
       if (!product?.id || !product?.name || typeof product?.price !== "number")
         throw new Error("Invalid product");
+      if (product.soldOut) {
+        showToast(`${product.name} is sold out`, "error");
+        return;
+      }
       setCartItems((prev) => {
         const ex = prev.find((i) => i.id === product.id);
         if (ex) {
@@ -251,9 +206,7 @@ export const CartSection = ({ children }) => {
             return prev;
           }
           showToast(`${product.name} added to cart`, "success");
-          return prev.map((i) =>
-            i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i,
-          );
+          return prev.map((i) => (i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i));
         }
         showToast(`${product.name} added to cart`, "success");
         return [...prev, { ...product, quantity: 1 }];
@@ -271,31 +224,16 @@ export const CartSection = ({ children }) => {
   };
   const updateQuantity = (id, qty) => {
     if (qty < 1 || qty > 10) return;
-    setCartItems((p) =>
-      p.map((i) => (i.id === id ? { ...i, quantity: qty } : i)),
-    );
+    setCartItems((p) => p.map((i) => (i.id === id ? { ...i, quantity: qty } : i)));
   };
   const clearCart = () => setCartItems([]);
   const totalItems = cartItems.reduce((s, i) => s + i.quantity, 0);
+
   return (
     <CartContext.Provider
-      value={{
-        cartItems,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        totalItems,
-        showToast,
-      }}
+      value={{ cartItems, addToCart, removeFromCart, updateQuantity, clearCart, totalItems, showToast }}
     >
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      <Toast toast={toast} onClose={closeToast} />
       {children}
     </CartContext.Provider>
   );
@@ -307,69 +245,180 @@ export const useCart = () => {
   return ctx;
 };
 
-const DeliverySelector = ({ value, onChange, state }) => {
-  const fees = STATE_DELIVERY_FEES[state] || { park: 3500, doorstep: 5500 };
+/* -------------------------------------------------------------------------- */
+/*  Shared checkout pieces                                                     */
+/* -------------------------------------------------------------------------- */
+const Steps = ({ current }) => {
+  const steps = ["Cart", "Checkout", "Confirm", "Payment"];
+  const idx = steps.indexOf(current);
   return (
-    <div>
-      <label className="block text-xs sm:text-sm font-medium text-foreground/70 mb-3">
-        Delivery Method <span className="text-red-500">*</span>
-        {state && <span className="ml-1 text-primary text-xs">— {state}</span>}
-      </label>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {[
-          {
-            type: "doorstep",
-            Icon: Home,
-            label: "Doorstep Delivery",
-            desc: "Delivered to your door",
-            fee: fees.doorstep,
-          },
-          {
-            type: "park",
-            Icon: Package,
-            label: "Park Pickup",
-            desc: "Pick up at nearest park",
-            fee: fees.park,
-          },
-        ].map(({ type, Icon, label, desc, fee }) => (
-          <button
-            key={type}
-            type="button"
-            onClick={() => onChange(type)}
-            className={`flex items-start gap-3 p-4 rounded-xl border-2 transition-all text-left ${value === type ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 bg-background"}`}
-          >
-            <div
-              className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${value === type ? "border-primary" : "border-foreground/30"}`}
-            >
-              {value === type && (
-                <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+    <ol className="flex items-center gap-2 sm:gap-3" aria-label="Checkout progress">
+      {steps.map((s, i) => (
+        <li key={s} className="flex flex-1 items-center gap-2 sm:gap-3 last:flex-none">
+          <span className="flex items-center gap-2" aria-current={i === idx ? "step" : undefined}>
+            <span
+              className={cn(
+                "flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors",
+                i < idx && "bg-primary text-primary-foreground",
+                i === idx && "bg-foreground text-background",
+                i > idx && "border text-muted-foreground",
               )}
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Icon className="w-4 h-4 text-primary" />
-                <span className="font-semibold text-foreground text-sm">
-                  {label}
-                </span>
-              </div>
-              <p className="text-xs text-foreground/50">{desc}</p>
-              <p className="text-sm font-bold text-primary mt-1">
-                ₦{fee.toLocaleString()}
-              </p>
-            </div>
-          </button>
-        ))}
-      </div>
-      {!state && (
-        <p className="text-amber-500 text-xs mt-2 flex items-center gap-1">
-          <MapPin className="w-3 h-3" /> Select your state to see prices
-        </p>
-      )}
-    </div>
+            >
+              {i < idx ? <Check size={14} strokeWidth={3} /> : i + 1}
+            </span>
+            <span
+              className={cn(
+                "hidden text-sm font-medium sm:inline",
+                i === idx ? "text-foreground" : "text-muted-foreground",
+              )}
+            >
+              {s}
+            </span>
+          </span>
+          {i < steps.length - 1 && (
+            <span className={cn("h-px flex-1 min-w-3", i < idx ? "bg-primary/50" : "bg-border")} />
+          )}
+        </li>
+      ))}
+    </ol>
   );
 };
 
-// ── STEP 2: Checkout Form ─────────────────────────────────────────────────────
+const CheckoutShell = ({ step, title, subtitle, children }) => (
+  <div className="container-page pb-20 pt-8 sm:pt-12">
+    <div className="mb-8 flex flex-col gap-6 sm:mb-10 lg:flex-row lg:items-end lg:justify-between">
+      <div>
+        <h1 className="text-3xl sm:text-4xl font-bold text-foreground">{title}</h1>
+        {subtitle && <p className="mt-2 text-muted-foreground">{subtitle}</p>}
+      </div>
+      <div className="w-full lg:max-w-md">
+        <Steps current={step} />
+      </div>
+    </div>
+    {children}
+  </div>
+);
+
+const SummaryRow = ({ label, value, muted, strong, className }) => (
+  <div className={cn("flex items-center justify-between gap-4", className)}>
+    <span className={cn(strong ? "font-semibold text-foreground" : "text-muted-foreground")}>{label}</span>
+    <span
+      className={cn(
+        "tabular-nums",
+        strong ? "text-lg font-bold text-foreground" : muted ? "text-muted-foreground" : "font-semibold text-foreground",
+      )}
+    >
+      {value}
+    </span>
+  </div>
+);
+
+const ItemThumb = ({ item, size = "size-16" }) => (
+  <div className={cn("relative shrink-0", size)}>
+    <img
+      src={optimizeImage(item.image || item.img, 200)}
+      alt={item.name}
+      onError={handleImageError}
+      className="size-full rounded-xl bg-muted object-cover"
+    />
+    {item.quantity > 1 && (
+      <span className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-foreground text-[0.65rem] font-bold text-background">
+        {item.quantity}
+      </span>
+    )}
+  </div>
+);
+
+const SecureNote = () => (
+  <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+    <Lock size={12} /> Payments secured & encrypted by <strong className="font-semibold">Paystack</strong>
+  </p>
+);
+
+const SignInModal = ({ open, onSignIn, onClose }) => (
+  <Modal open={open} onClose={onClose} size="sm">
+    <div className="text-center">
+      <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-full bg-primary-soft">
+        <LogIn className="text-primary" size={24} />
+      </div>
+      <h2 className="text-xl font-bold text-foreground">Sign in to check out</h2>
+      <p className="mt-2 text-sm text-muted-foreground">
+        You need to be signed in before you can proceed to checkout.
+      </p>
+      <div className="mt-6 flex flex-col gap-2.5">
+        <button onClick={onSignIn} className="btn btn-primary w-full">
+          <LogIn size={17} /> Sign in to continue
+        </button>
+        <button onClick={onClose} className="btn btn-ghost w-full">
+          Cancel
+        </button>
+      </div>
+      <p className="mt-4 text-xs text-muted-foreground">Your cart items will be saved while you sign in.</p>
+    </div>
+  </Modal>
+);
+
+const DeliverySelector = ({ value, onChange, state, error }) => {
+  const fees = STATE_DELIVERY_FEES[state] || { park: 3500, doorstep: 5500 };
+  return (
+    <fieldset>
+      <legend className="field-label">
+        Delivery method <span className="text-danger">*</span>
+        {state && <span className="ml-1 font-normal text-muted-foreground">— {state}</span>}
+      </legend>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {[
+          { type: "doorstep", Icon: Home, label: "Doorstep delivery", desc: "Delivered to your door", fee: fees.doorstep },
+          { type: "park", Icon: Package, label: "Park pickup", desc: "Pick up at the nearest park", fee: fees.park },
+        ].map(({ type, Icon, label, desc, fee }) => {
+          const active = value === type;
+          return (
+            <button
+              key={type}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => onChange(type)}
+              className={cn(
+                "flex items-start gap-3 rounded-2xl border p-4 text-left transition-all",
+                active
+                  ? "border-primary bg-primary-soft/60 ring-1 ring-primary"
+                  : "bg-card hover:border-foreground/30",
+                error && !value && "border-danger/60",
+              )}
+            >
+              <span
+                className={cn(
+                  "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                  active ? "border-primary" : "border-foreground/25",
+                )}
+              >
+                {active && <span className="size-2.5 rounded-full bg-primary" />}
+              </span>
+              <span className="flex-1">
+                <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Icon size={16} className="text-primary" /> {label}
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">{desc}</span>
+              </span>
+              <span className="text-sm font-bold text-foreground">{formatPrice(fee)}</span>
+            </button>
+          );
+        })}
+      </div>
+      {!state && (
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <MapPin size={13} /> Select your state to confirm delivery prices
+        </p>
+      )}
+      {error && <p className="mt-2 text-xs font-medium text-danger">{error}</p>}
+    </fieldset>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/*  STEP 2: Checkout form                                                      */
+/* -------------------------------------------------------------------------- */
 const AUTO_COMPLETE_MAP = {
   fullName: "name",
   email: "email",
@@ -378,19 +427,11 @@ const AUTO_COMPLETE_MAP = {
   city: "address-level2",
 };
 
-const Field = ({
-  label,
-  name,
-  type = "text",
-  placeholder,
-  required,
-  form,
-  errors,
-  onChange,
-}) => (
+const Field = ({ label, name, type = "text", placeholder, required, form, errors, onChange, optional }) => (
   <div>
-    <label className="block text-xs sm:text-sm font-medium text-foreground/70 mb-2">
-      {label} {required && <span className="text-red-500">*</span>}
+    <label htmlFor={`field-${name}`} className="field-label">
+      {label} {required && <span className="text-danger">*</span>}
+      {optional && <span className="font-normal text-muted-foreground">(optional)</span>}
     </label>
     <input
       type={type}
@@ -400,12 +441,10 @@ const Field = ({
       onChange={onChange}
       placeholder={placeholder}
       autoComplete={AUTO_COMPLETE_MAP[name] || "off"}
-      className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-      style={{ fontSize: "16px" }}
+      aria-invalid={errors[name] ? "true" : undefined}
+      className="input"
     />
-    {errors[name] && (
-      <p className="text-red-500 text-xs mt-1">{errors[name]}</p>
-    )}
+    {errors[name] && <p className="mt-1.5 text-xs font-medium text-danger">{errors[name]}</p>}
   </div>
 );
 
@@ -428,9 +467,7 @@ const CheckoutPage = ({ onNext, onBack }) => {
   useEffect(() => {
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
-      const saved = JSON.parse(
-        localStorage.getItem("savedShippingInfo") || "{}",
-      );
+      const saved = JSON.parse(localStorage.getItem("savedShippingInfo") || "{}");
       setForm((p) => ({
         ...p,
         fullName: saved.fullName || user.name || "",
@@ -442,7 +479,9 @@ const CheckoutPage = ({ onNext, onBack }) => {
         country: saved.country || "Nigeria",
         deliveryType: saved.deliveryType || "",
       }));
-    } catch (_) {}
+    } catch {
+      /* ignore malformed saved data */
+    }
   }, []);
 
   const deliveryFee = getDeliveryFee(form.state, form.deliveryType);
@@ -484,12 +523,14 @@ const CheckoutPage = ({ onNext, onBack }) => {
             deliveryType: form.deliveryType,
           }),
         );
-      } catch (_) {}
+      } catch {
+        /* storage unavailable */
+      }
     }
     setTimeout(() => {
       setBusy(false);
       onNext({ ...form, deliveryFee, total });
-    }, 700);
+    }, 400);
   };
 
   const handleChange = (e) => {
@@ -503,231 +544,135 @@ const CheckoutPage = ({ onNext, onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 pt-16 sm:pt-20 pb-16 px-4">
-      <div className="max-w-6xl mx-auto mt-2">
-        <Steps current="Checkout" />
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-6">
-          Checkout
-        </h1>
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <form
-              onSubmit={handleSubmit}
-              className="bg-card rounded-xl p-5 shadow-lg border border-border"
-            >
-              <h2 className="text-lg font-bold text-foreground mb-5">
-                Shipping Information
-              </h2>
-              <div className="space-y-4">
-                <Field
-                  label="Full Name"
-                  name="fullName"
-                  placeholder="Your full name"
-                  required
-                  form={form}
-                  errors={errors}
-                  onChange={handleChange}
-                />
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <Field
-                    label="Email"
-                    name="email"
-                    type="email"
-                    placeholder="your@email.com"
-                    required
-                    form={form}
-                    errors={errors}
-                    onChange={handleChange}
-                  />
-                  <Field
-                    label="Phone"
-                    name="phone"
-                    type="tel"
-                    placeholder="080XXXXXXXX"
-                    required
-                    form={form}
-                    errors={errors}
-                    onChange={handleChange}
-                  />
-                </div>
-                <Field
-                  label="Address"
-                  name="address"
-                  placeholder="Street address"
-                  required
-                  form={form}
-                  errors={errors}
-                  onChange={handleChange}
-                />
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-foreground/70 mb-2">
-                      Country
-                    </label>
-                    <select
-                      name="country"
-                      value={form.country}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      style={{ fontSize: "16px" }}
-                    >
-                      {[
-                        "Nigeria",
-                        "Ghana",
-                        "Kenya",
-                        "South Africa",
-                        "Other",
-                      ].map((c) => (
-                        <option key={c}>{c}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-foreground/70 mb-2">
-                      State <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="state"
-                      value={form.state}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      style={{ fontSize: "16px" }}
-                    >
-                      <option value="">Select State</option>
-                      {STATES.map((s) => (
-                        <option key={s}>{s}</option>
-                      ))}
-                    </select>
-                    {errors.state && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.state}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-foreground/70 mb-2">
-                      City{" "}
-                      <span className="text-foreground/40 font-normal">
-                        (Optional)
-                      </span>
-                    </label>
-                    <input
-                      type="text"
-                      name="city"
-                      value={form.city}
-                      onChange={handleChange}
-                      placeholder="City"
-                      className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      style={{ fontSize: "16px" }}
-                    />
-                  </div>
-                </div>
-                <DeliverySelector
-                  value={form.deliveryType}
-                  onChange={(t) => {
-                    setForm((p) => ({ ...p, deliveryType: t }));
-                    if (errors.deliveryType)
-                      setErrors((p) => ({ ...p, deliveryType: "" }));
-                  }}
-                  state={form.state}
-                />
-                {errors.deliveryType && (
-                  <p className="text-red-500 text-xs">{errors.deliveryType}</p>
-                )}
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="saveInfo"
-                    checked={form.saveInfo}
-                    onChange={handleChange}
-                    className="w-5 h-5 rounded border-2 border-border text-primary shrink-0"
-                    style={{ minWidth: 20, minHeight: 20 }}
-                  />
-                  <span className="text-sm text-foreground/60 select-none">
-                    Save this information for next time
-                  </span>
-                </label>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={onBack}
-                  className="w-full sm:w-auto sm:px-6 py-3 border-2 border-border text-foreground font-medium rounded-lg hover:bg-background/50 text-sm"
-                >
-                  ← Back
-                </button>
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 rounded-lg disabled:opacity-50 text-sm shadow-lg flex items-center justify-center gap-2"
-                >
-                  {busy ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      Review Order <ChevronRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-          <div>
-            <div className="bg-card rounded-xl p-4 sm:p-5 shadow-lg border border-border lg:sticky lg:top-24">
-              <h2 className="text-base font-bold text-foreground mb-4">
-                Order Summary
-              </h2>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between text-foreground/70">
-                  <span>Subtotal</span>
-                  <span className="font-semibold text-foreground">
-                    ₦{subtotal.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between text-foreground/70">
-                  <span>Delivery</span>
-                  <span
-                    className={
-                      deliveryFee > 0
-                        ? "font-semibold text-foreground"
-                        : "text-foreground/40"
-                    }
-                  >
-                    {deliveryFee > 0
-                      ? `₦${deliveryFee.toLocaleString()}`
-                      : !form.state
-                        ? "Select state"
-                        : "Select method"}
-                  </span>
-                </div>
-                {form.deliveryType && form.state && (
-                  <div className="flex items-center gap-1 text-xs text-foreground/50 bg-primary/5 rounded-lg px-2 py-1.5">
-                    <MapPin className="w-3 h-3 text-primary" />
-                    <span>
-                      {form.deliveryType === "doorstep"
-                        ? "Doorstep"
-                        : "Park Pickup"}{" "}
-                      · {form.state}
-                    </span>
-                  </div>
-                )}
-                <div className="border-t border-border pt-3 flex justify-between font-bold text-foreground">
-                  <span>Total</span>
-                  <span>₦{total.toLocaleString()}</span>
-                </div>
+    <CheckoutShell step="Checkout" title="Checkout" subtitle="Where should we deliver your order?">
+      <div className="grid gap-8 lg:grid-cols-12 lg:gap-10">
+        <form onSubmit={handleSubmit} noValidate className="lg:col-span-7 xl:col-span-8">
+          <div className="surface-card p-5 sm:p-8">
+            <h2 className="text-lg font-bold text-foreground">Contact information</h2>
+            <div className="mt-5 space-y-4">
+              <Field label="Full name" name="fullName" placeholder="Your full name" required form={form} errors={errors} onChange={handleChange} />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Email" name="email" type="email" placeholder="you@example.com" required form={form} errors={errors} onChange={handleChange} />
+                <Field label="Phone" name="phone" type="tel" placeholder="080XXXXXXXX" required form={form} errors={errors} onChange={handleChange} />
               </div>
             </div>
+
+            <h2 className="mt-10 border-t pt-8 text-lg font-bold text-foreground">Delivery address</h2>
+            <div className="mt-5 space-y-4">
+              <Field label="Address" name="address" placeholder="Street address" required form={form} errors={errors} onChange={handleChange} />
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div>
+                  <label htmlFor="field-country" className="field-label">
+                    Country
+                  </label>
+                  <select id="field-country" name="country" value={form.country} onChange={handleChange} className="input">
+                    {["Nigeria", "Ghana", "Kenya", "South Africa", "Other"].map((c) => (
+                      <option key={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="field-state" className="field-label">
+                    State <span className="text-danger">*</span>
+                  </label>
+                  <select
+                    id="field-state"
+                    name="state"
+                    value={form.state}
+                    onChange={handleChange}
+                    aria-invalid={errors.state ? "true" : undefined}
+                    className="input"
+                  >
+                    <option value="">Select state</option>
+                    {STATES.map((s) => (
+                      <option key={s}>{s}</option>
+                    ))}
+                  </select>
+                  {errors.state && <p className="mt-1.5 text-xs font-medium text-danger">{errors.state}</p>}
+                </div>
+                <Field label="City" name="city" placeholder="City" optional form={form} errors={errors} onChange={handleChange} />
+              </div>
+            </div>
+
+            <div className="mt-8 border-t pt-8">
+              <DeliverySelector
+                value={form.deliveryType}
+                onChange={(t) => {
+                  setForm((p) => ({ ...p, deliveryType: t }));
+                  if (errors.deliveryType) setErrors((p) => ({ ...p, deliveryType: "" }));
+                }}
+                state={form.state}
+                error={errors.deliveryType}
+              />
+            </div>
+
+            <label className="mt-6 flex cursor-pointer items-center gap-3 select-none">
+              <input
+                type="checkbox"
+                name="saveInfo"
+                checked={form.saveInfo}
+                onChange={handleChange}
+                className="size-5 shrink-0 cursor-pointer rounded accent-primary"
+              />
+              <span className="text-sm text-muted-foreground">Save this information for next time</span>
+            </label>
           </div>
-        </div>
+
+          <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row">
+            <button type="button" onClick={onBack} className="btn btn-outline btn-lg">
+              <ChevronLeft size={18} /> Back to cart
+            </button>
+            <button type="submit" disabled={busy} className="btn btn-primary btn-lg flex-1">
+              {busy ? (
+                <>
+                  <Spinner size={18} /> Processing…
+                </>
+              ) : (
+                <>
+                  Review order <ChevronRight size={18} />
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+
+        <aside className="lg:col-span-5 xl:col-span-4">
+          <div className="surface-card p-5 sm:p-6 lg:sticky lg:top-[calc(var(--nav-height)+1.5rem)]">
+            <h2 className="text-base font-bold text-foreground">Order summary</h2>
+            <ul className="mt-5 space-y-4">
+              {cartItems.map((item) => (
+                <li key={item.id} className="flex items-center gap-3">
+                  <ItemThumb item={item} size="size-14" />
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.name}</span>
+                  <span className="text-sm font-semibold tabular-nums">{formatPrice(item.price * item.quantity)}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-5 space-y-3 border-t pt-5 text-sm">
+              <SummaryRow label="Subtotal" value={formatPrice(subtotal)} />
+              <SummaryRow
+                label="Delivery"
+                value={deliveryFee > 0 ? formatPrice(deliveryFee) : !form.state ? "Select state" : "Select method"}
+                muted={deliveryFee === 0}
+              />
+              {form.deliveryType && form.state && (
+                <p className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
+                  <MapPin size={13} className="text-primary" />
+                  {form.deliveryType === "doorstep" ? "Doorstep" : "Park pickup"} · {form.state}
+                </p>
+              )}
+              <SummaryRow label="Total" value={formatPrice(total)} strong className="border-t pt-4" />
+            </div>
+          </div>
+        </aside>
       </div>
-    </div>
+    </CheckoutShell>
   );
 };
 
-// ── STEP 3: Confirm Order ─────────────────────────────────────────────────────
+/* -------------------------------------------------------------------------- */
+/*  STEP 3: Confirm order                                                      */
+/* -------------------------------------------------------------------------- */
 const ConfirmPage = ({ shippingInfo, onPay, onBack }) => {
   const { cartItems } = useCart();
   const subtotal = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
@@ -735,190 +680,80 @@ const ConfirmPage = ({ shippingInfo, onPay, onBack }) => {
   const total = subtotal + deliveryFee;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 pt-16 sm:pt-20 pb-16 px-4">
-      <div className="max-w-6xl mx-auto mt-2">
-        <Steps current="Confirm" />
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-6">
-          Review Your Order
-        </h1>
-
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* LEFT: Items + Delivery Details */}
-          <div className="lg:col-span-2 space-y-4">
-            {/* Items Ordered */}
-            <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
-              <div className="px-4 py-3 bg-foreground/5 border-b border-border">
-                <h2 className="font-bold text-foreground text-sm">
-                  Items Ordered
-                </h2>
-              </div>
+    <CheckoutShell step="Confirm" title="Review your order" subtitle="Check everything looks right before paying.">
+      <div className="grid gap-8 lg:grid-cols-12 lg:gap-10">
+        <div className="space-y-6 lg:col-span-7 xl:col-span-8">
+          <section className="surface-card overflow-hidden">
+            <h2 className="border-b px-5 py-4 text-sm font-bold sm:px-6">Items ordered</h2>
+            <ul className="divide-y">
               {cartItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-4 p-4 border-b border-border last:border-0"
-                >
-                  <img
-                    src={item.image || item.img}
-                    alt={item.name}
-                    className="w-16 h-16 object-cover rounded-lg shrink-0"
-                    onError={(e) => {
-                      e.target.src = "https://via.placeholder.com/64?text=?";
-                    }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-foreground text-sm truncate">
-                      {item.name}
+                <li key={item.id} className="flex items-center gap-4 px-5 py-4 sm:px-6">
+                  <ItemThumb item={item} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold text-foreground">{item.name}</p>
+                    <p className="mt-0.5 text-sm text-muted-foreground">
+                      {item.quantity} × {formatPrice(item.price)}
                     </p>
-                    <p className="text-xs text-foreground/50 mt-1">
-                      Qty: {item.quantity} × ₦{item.price.toLocaleString()}
-                    </p>
-                    {item.description && (
-                      <p className="text-xs text-foreground/40 mt-0.5 line-clamp-1">
-                        {item.description}
-                      </p>
-                    )}
                   </div>
-                  <p className="font-bold text-foreground text-sm shrink-0">
-                    ₦{(item.price * item.quantity).toLocaleString()}
-                  </p>
+                  <p className="font-bold tabular-nums text-foreground">{formatPrice(item.price * item.quantity)}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="surface-card overflow-hidden">
+            <div className="flex items-center justify-between border-b px-5 py-4 sm:px-6">
+              <h2 className="text-sm font-bold">Delivery details</h2>
+              <button onClick={onBack} className="text-sm font-semibold text-primary hover:underline">
+                Edit
+              </button>
+            </div>
+            <dl className="grid gap-x-8 gap-y-4 p-5 text-sm sm:grid-cols-2 sm:p-6">
+              {[
+                ["Name", shippingInfo?.fullName],
+                ["Email", shippingInfo?.email],
+                ["Phone", shippingInfo?.phone],
+                ["State", shippingInfo?.state],
+                ["Address", `${shippingInfo?.address}${shippingInfo?.city ? ", " + shippingInfo?.city : ""}`],
+                ["Method", shippingInfo?.deliveryType === "doorstep" ? "Doorstep delivery" : "Park pickup"],
+              ].map(([l, v]) => (
+                <div key={l}>
+                  <dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{l}</dt>
+                  <dd className="mt-1 font-medium text-foreground break-words">{v}</dd>
                 </div>
               ))}
-            </div>
-
-            {/* Delivery Details */}
-            <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
-              <div className="px-4 py-3 bg-foreground/5 border-b border-border flex items-center justify-between">
-                <h2 className="font-bold text-foreground text-sm">
-                  Delivery Details
-                </h2>
-                <button
-                  onClick={onBack}
-                  className="text-xs text-primary hover:underline font-medium"
-                >
-                  Edit
-                </button>
-              </div>
-              <div className="p-4 grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
-                {[
-                  ["Name", shippingInfo?.fullName],
-                  ["Email", shippingInfo?.email],
-                  ["Phone", shippingInfo?.phone],
-                  ["State", shippingInfo?.state],
-                  [
-                    "Address",
-                    `${shippingInfo?.address}${shippingInfo?.city ? ", " + shippingInfo?.city : ""}`,
-                  ],
-                  [
-                    "Method",
-                    shippingInfo?.deliveryType === "doorstep"
-                      ? "Doorstep Delivery"
-                      : "Park Pickup",
-                  ],
-                ].map(([l, v]) => (
-                  <div key={l}>
-                    <p className="text-foreground/40 text-xs mb-0.5">{l}</p>
-                    <p className="text-foreground font-medium">{v}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Action buttons — visible on mobile only, sticky on desktop via sidebar */}
-            <div className="flex flex-col sm:flex-row gap-3 lg:hidden">
-              <button
-                onClick={onBack}
-                className="w-full sm:w-auto sm:px-6 py-3 border-2 border-border text-foreground font-medium rounded-lg hover:bg-background/50 text-sm"
-              >
-                ← Edit Details
-              </button>
-              <button
-                onClick={onPay}
-                className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 rounded-lg text-sm shadow-lg flex items-center justify-center gap-2"
-              >
-                <Shield className="w-4 h-4" /> Pay ₦{total.toLocaleString()} Now
-              </button>
-            </div>
-          </div>
-
-          {/* RIGHT: Order Summary sticky sidebar */}
-          <div>
-            <div className="bg-card rounded-xl p-4 sm:p-5 shadow-lg border border-border lg:sticky lg:top-24 space-y-4">
-              <h2 className="text-base font-bold text-foreground">
-                Order Summary
-              </h2>
-
-              {/* Mini item list */}
-              <div className="space-y-2">
-                {cartItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex justify-between text-sm gap-2"
-                  >
-                    <span className="text-foreground/70 truncate">
-                      {item.name} ×{item.quantity}
-                    </span>
-                    <span className="font-medium text-foreground shrink-0">
-                      ₦{(item.price * item.quantity).toLocaleString()}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="border-t border-border pt-3 space-y-2 text-sm">
-                <div className="flex justify-between text-foreground/70">
-                  <span>Subtotal</span>
-                  <span className="font-medium text-foreground">
-                    ₦{subtotal.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between text-foreground/70">
-                  <span>
-                    {shippingInfo?.deliveryType === "doorstep"
-                      ? "Doorstep"
-                      : "Park Pickup"}{" "}
-                    · {shippingInfo?.state}
-                  </span>
-                  <span className="font-medium text-foreground">
-                    ₦{deliveryFee.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between font-bold text-base text-foreground border-t border-border pt-2">
-                  <span>Total</span>
-                  <span className="text-green-600">
-                    ₦{total.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-
-              {/* Pay button — desktop only */}
-              <div className="hidden lg:flex flex-col gap-3 pt-1">
-                <button
-                  onClick={onPay}
-                  className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 rounded-lg text-sm shadow-lg flex items-center justify-center gap-2"
-                >
-                  <Shield className="w-4 h-4" /> Pay ₦{total.toLocaleString()}{" "}
-                  Now
-                </button>
-                <button
-                  onClick={onBack}
-                  className="w-full py-2.5 border-2 border-border text-foreground font-medium rounded-lg hover:bg-background/50 text-sm"
-                >
-                  ← Edit Details
-                </button>
-              </div>
-
-              <p className="text-center text-xs text-foreground/40 flex items-center justify-center gap-1">
-                <Shield className="w-3 h-3" /> Secured by Paystack
-              </p>
-            </div>
-          </div>
+            </dl>
+          </section>
         </div>
+
+        <aside className="lg:col-span-5 xl:col-span-4">
+          <div className="surface-card space-y-5 p-5 sm:p-6 lg:sticky lg:top-[calc(var(--nav-height)+1.5rem)]">
+            <h2 className="text-base font-bold text-foreground">Order summary</h2>
+            <div className="space-y-3 text-sm">
+              <SummaryRow label="Subtotal" value={formatPrice(subtotal)} />
+              <SummaryRow
+                label={`${shippingInfo?.deliveryType === "doorstep" ? "Doorstep" : "Park pickup"} · ${shippingInfo?.state}`}
+                value={formatPrice(deliveryFee)}
+              />
+              <SummaryRow label="Total" value={formatPrice(total)} strong className="border-t pt-4" />
+            </div>
+            <button onClick={onPay} className="btn btn-primary btn-lg w-full">
+              <ShieldCheck size={18} /> Pay {formatPrice(total)} now
+            </button>
+            <button onClick={onBack} className="btn btn-ghost w-full">
+              <ChevronLeft size={17} /> Edit details
+            </button>
+            <SecureNote />
+          </div>
+        </aside>
       </div>
-    </div>
+    </CheckoutShell>
   );
 };
 
-// ── STEP 4: Payment ───────────────────────────────────────────────────────────
+/* -------------------------------------------------------------------------- */
+/*  STEP 4: Payment                                                            */
+/* -------------------------------------------------------------------------- */
 const PaymentPage = ({ shippingInfo, onBack }) => {
   const { cartItems, clearCart, showToast } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -934,9 +769,7 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
       setScriptState("ready");
       return;
     }
-    const existing = document.querySelector(
-      'script[src="https://js.paystack.co/v1/inline.js"]',
-    );
+    const existing = document.querySelector('script[src="https://js.paystack.co/v1/inline.js"]');
     if (existing) {
       const poll = setInterval(() => {
         if (window.PaystackPop) {
@@ -944,11 +777,14 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
           clearInterval(poll);
         }
       }, 300);
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         clearInterval(poll);
         if (!window.PaystackPop) setScriptState("error");
       }, 15000);
-      return () => clearInterval(poll);
+      return () => {
+        clearInterval(poll);
+        clearTimeout(timeout);
+      };
     }
     const s = document.createElement("script");
     s.src = "https://js.paystack.co/v1/inline.js";
@@ -973,29 +809,14 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
         ref: `PSK_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         metadata: {
           custom_fields: [
-            {
-              display_name: "Customer Name",
-              variable_name: "customer_name",
-              value: shippingInfo.fullName,
-            },
-            {
-              display_name: "Phone",
-              variable_name: "phone",
-              value: shippingInfo.phone,
-            },
+            { display_name: "Customer Name", variable_name: "customer_name", value: shippingInfo.fullName },
+            { display_name: "Phone", variable_name: "phone", value: shippingInfo.phone },
             {
               display_name: "Delivery",
               variable_name: "delivery",
-              value:
-                shippingInfo.deliveryType === "doorstep"
-                  ? "Doorstep"
-                  : "Park Pickup",
+              value: shippingInfo.deliveryType === "doorstep" ? "Doorstep" : "Park Pickup",
             },
-            {
-              display_name: "State",
-              variable_name: "state",
-              value: shippingInfo.state,
-            },
+            { display_name: "State", variable_name: "state", value: shippingInfo.state },
             {
               display_name: "Address",
               variable_name: "address",
@@ -1003,13 +824,10 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
             },
           ],
         },
-        callback: (response) => {
+        callback: () => {
           setIsProcessing(false);
           trackPurchase(cartItems, shippingInfo.email);
-          showToast(
-            "🎉 Payment successful! Your order is confirmed.",
-            "success",
-          );
+          showToast("🎉 Payment successful! Your order is confirmed.", "success");
           setTimeout(() => {
             clearCart();
             window.location.href = "/";
@@ -1022,202 +840,138 @@ const PaymentPage = ({ shippingInfo, onBack }) => {
       handler.openIframe();
     } catch (err) {
       setIsProcessing(false);
-      showToast(
-        err.message || "Failed to open payment. Please try again.",
-        "error",
-      );
+      showToast(err.message || "Failed to open payment. Please try again.", "error");
     }
   };
 
+  const methods = [
+    { Icon: CreditCard, label: "Pay with card", tone: "bg-[hsl(214_90%_95%)] text-[hsl(214_80%_45%)]" },
+    { Icon: Banknote, label: "Pay with transfer", tone: "bg-primary-soft text-primary" },
+    { Icon: Building2, label: "Pay with bank", tone: "bg-[hsl(262_80%_95%)] text-[hsl(262_60%_50%)]" },
+    { Icon: Smartphone, label: "Pay with USSD", tone: "bg-[hsl(28_95%_93%)] text-[hsl(24_80%_45%)]" },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 pt-16 sm:pt-20 pb-16 px-4">
-      <div className="max-w-md mx-auto mt-2">
-        <Steps current="Payment" />
+    <div className="container-page max-w-xl pb-20 pt-8 sm:pt-12">
+      <Steps current="Payment" />
 
-        <button
-          onClick={onBack}
-          disabled={isProcessing}
-          className="flex items-center gap-2 text-foreground/60 hover:text-foreground mb-4 disabled:opacity-50 text-sm font-medium"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          Back to review
-        </button>
+      <button
+        onClick={onBack}
+        disabled={isProcessing}
+        className="mt-8 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground disabled:opacity-50"
+      >
+        <ChevronLeft size={17} /> Back to review
+      </button>
 
-        {/* Paystack-style header */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-green-600 mb-2">
-            PAYSTACK CHECKOUT
-          </h1>
-          <p className="text-foreground/70 text-sm sm:text-base">
-            Pay NGN {total.toLocaleString()} for {shippingInfo?.fullName}
-          </p>
-        </div>
-
-        {/* Payment methods */}
-        <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden mb-5">
-          <div className="px-4 py-3 bg-foreground/5 border-b border-border">
-            <p className="text-xs font-semibold text-foreground/50 uppercase tracking-wider">
-              Pay With
-            </p>
-          </div>
-
-          {scriptState === "loading" && (
-            <div className="p-10 text-center">
-              <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto mb-3" />
-              <p className="text-sm text-foreground/60">
-                Loading secure payment options...
-              </p>
-            </div>
-          )}
-
-          {scriptState === "error" && (
-            <div className="p-8 text-center">
-              <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-3" />
-              <p className="text-sm font-semibold text-red-600 mb-1">
-                Failed to load payment
-              </p>
-              <p className="text-xs text-foreground/50 mb-4">
-                Check your internet and try again
-              </p>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-primary text-white text-sm rounded-lg"
-              >
-                Refresh Page
-              </button>
-            </div>
-          )}
-
-          {scriptState === "ready" && (
-            <div>
-              {/* Zap */}
-              <button
-                onClick={pay}
-                disabled={isProcessing}
-                className="w-full flex items-center gap-3 p-4 border-b border-border hover:bg-primary/5 transition-colors disabled:opacity-50 group"
-              >
-                <div className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0">
-                  Z
-                </div>
-                <div className="flex-1 text-left">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-foreground text-sm">
-                      Pay with Zap
-                    </span>
-                    <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full leading-tight">
-                      NEW
-                    </span>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-foreground/30 group-hover:text-primary" />
-              </button>
-              {[
-                {
-                  Icon: CreditCard,
-                  label: "Pay with Card",
-                  iconBg: "bg-blue-50",
-                  iconColor: "text-blue-500",
-                },
-                {
-                  Icon: Banknote,
-                  label: "Pay with Transfer",
-                  iconBg: "bg-emerald-50",
-                  iconColor: "text-emerald-500",
-                },
-                {
-                  Icon: Building2,
-                  label: "Pay with Bank",
-                  iconBg: "bg-violet-50",
-                  iconColor: "text-violet-500",
-                },
-                {
-                  Icon: Smartphone,
-                  label: "Pay with USSD",
-                  iconBg: "bg-orange-50",
-                  iconColor: "text-orange-500",
-                },
-              ].map(({ Icon, label, iconBg, iconColor }) => (
-                <button
-                  key={label}
-                  onClick={pay}
-                  disabled={isProcessing}
-                  className="w-full flex items-center gap-3 p-4 border-b border-border hover:bg-primary/5 transition-colors disabled:opacity-50 group"
-                >
-                  <div
-                    className={`w-10 h-10 ${iconBg} rounded-xl flex items-center justify-center shrink-0`}
-                  >
-                    <Icon className={`w-5 h-5 ${iconColor}`} />
-                  </div>
-                  <span className="flex-1 font-semibold text-foreground text-sm text-left">
-                    {label}
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-foreground/30 group-hover:text-primary" />
-                </button>
-              ))}
-              {/* OPay */}
-              <button
-                onClick={pay}
-                disabled={isProcessing}
-                className="w-full flex items-center gap-3 p-4 hover:bg-primary/5 transition-colors disabled:opacity-50 group"
-              >
-                <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center shrink-0">
-                  <span className="text-green-600 font-bold">O</span>
-                </div>
-                <span className="flex-1 font-semibold text-foreground text-sm text-left">
-                  Pay with OPay
-                </span>
-                <ChevronRight className="w-4 h-4 text-foreground/30 group-hover:text-primary" />
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center justify-center gap-1.5 text-xs text-foreground/40">
-          <Shield className="w-3 h-3" />
-          <span>
-            Secured & encrypted by{" "}
-            <strong className="text-foreground/60">Paystack</strong>
-          </span>
-        </div>
+      <div className="mt-6 text-center">
+        <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary">
+          <Lock size={22} />
+        </span>
+        <h1 className="mt-5 text-3xl font-bold text-foreground">Secure checkout</h1>
+        <p className="mt-2 text-muted-foreground">
+          Pay <span className="font-bold text-foreground">NGN {total.toLocaleString()}</span> for {shippingInfo?.fullName}
+        </p>
       </div>
 
-      {isProcessing && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-card rounded-2xl p-8 text-center max-w-xs mx-4 shadow-2xl">
-            <Loader2 className="w-14 h-14 text-green-600 animate-spin mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-foreground mb-1">
-              Opening Payment
-            </h3>
-            <p className="text-sm text-foreground/60">Please wait...</p>
+      <div className="surface-card mt-8 overflow-hidden">
+        <p className="border-b px-5 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          Pay with
+        </p>
+
+        {scriptState === "loading" && (
+          <div className="flex flex-col items-center gap-3 p-12 text-center">
+            <Spinner size={28} className="text-primary" />
+            <p className="text-sm text-muted-foreground">Loading secure payment options…</p>
           </div>
+        )}
+
+        {scriptState === "error" && (
+          <div className="p-10 text-center">
+            <AlertCircle className="mx-auto text-danger" size={28} />
+            <p className="mt-3 font-semibold text-foreground">Failed to load payment</p>
+            <p className="mt-1 text-sm text-muted-foreground">Check your internet connection and try again.</p>
+            <button onClick={() => window.location.reload()} className="btn btn-primary btn-sm mt-5">
+              Refresh page
+            </button>
+          </div>
+        )}
+
+        {scriptState === "ready" && (
+          <ul className="divide-y">
+            <li>
+              <button
+                onClick={pay}
+                disabled={isProcessing}
+                className="group flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-muted/60 disabled:opacity-50"
+              >
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[hsl(0_80%_55%)] text-sm font-bold text-white">
+                  Z
+                </span>
+                <span className="flex flex-1 items-center gap-2 font-semibold text-foreground">
+                  Pay with Zap
+                  <span className="chip !h-5 bg-[hsl(0_80%_55%)] !px-1.5 text-[0.6rem] text-white">New</span>
+                </span>
+                <ChevronRight size={18} className="text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+              </button>
+            </li>
+            {methods.map(({ Icon, label, tone }) => (
+              <li key={label}>
+                <button
+                  onClick={pay}
+                  disabled={isProcessing}
+                  className="group flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-muted/60 disabled:opacity-50"
+                >
+                  <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl", tone)}>
+                    <Icon size={19} />
+                  </span>
+                  <span className="flex-1 font-semibold text-foreground">{label}</span>
+                  <ChevronRight size={18} className="text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                </button>
+              </li>
+            ))}
+            <li>
+              <button
+                onClick={pay}
+                disabled={isProcessing}
+                className="group flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-muted/60 disabled:opacity-50"
+              >
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft font-bold text-primary">
+                  O
+                </span>
+                <span className="flex-1 font-semibold text-foreground">Pay with OPay</span>
+                <ChevronRight size={18} className="text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+              </button>
+            </li>
+          </ul>
+        )}
+      </div>
+
+      <div className="mt-6">
+        <SecureNote />
+      </div>
+
+      <Modal open={isProcessing} onClose={() => {}} dismissible={false} showClose={false} size="sm">
+        <div className="flex flex-col items-center py-2 text-center">
+          <Spinner size={44} className="text-primary" />
+          <h3 className="mt-5 text-lg font-bold text-foreground">Opening payment</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Please wait…</p>
         </div>
-      )}
+      </Modal>
     </div>
   );
 };
 
-// ── Cart Page ─────────────────────────────────────────────────────────────────
+/* -------------------------------------------------------------------------- */
+/*  Cart page                                                                  */
+/* -------------------------------------------------------------------------- */
 export const CartPage = () => {
-  const { cartItems, removeFromCart, updateQuantity, totalItems, showToast } =
-    useCart();
+  const { cartItems, removeFromCart, updateQuantity, totalItems, showToast } = useCart();
+  const navigate = useNavigate();
   const [couponCode, setCouponCode] = useState("");
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [appliedDiscount, setAppliedDiscount] = useState(0);
   const [page, setPage] = useState("cart");
   const [shippingInfo, setShippingInfo] = useState(null);
-  const [isNavigating, setIsNavigating] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
 
   useEffect(() => {
@@ -1241,7 +995,7 @@ export const CartPage = () => {
         showToast("Invalid coupon code", "error");
       }
       setIsApplyingCoupon(false);
-    }, 700);
+    }, 500);
   };
 
   const handleCheckout = () => {
@@ -1274,221 +1028,174 @@ export const CartPage = () => {
       />
     );
   if (page === "confirm")
-    return (
-      <ConfirmPage
-        shippingInfo={shippingInfo}
-        onPay={() => setPage("payment")}
-        onBack={() => setPage("checkout")}
-      />
-    );
-  if (page === "payment")
-    return (
-      <PaymentPage
-        shippingInfo={shippingInfo}
-        onBack={() => setPage("confirm")}
-      />
-    );
+    return <ConfirmPage shippingInfo={shippingInfo} onPay={() => setPage("payment")} onBack={() => setPage("checkout")} />;
+  if (page === "payment") return <PaymentPage shippingInfo={shippingInfo} onBack={() => setPage("confirm")} />;
 
   if (!cartItems.length)
     return (
-      <>
-        {isNavigating && <LoadingOverlay />}
-        <div className="min-h-screen flex items-center justify-center px-4 pt-16 bg-gradient-to-br from-primary/20 via-background to-primary/10">
-          <div className="text-center max-w-md">
-            <div className="w-24 h-24 mx-auto mb-6 bg-foreground/10 rounded-full flex items-center justify-center animate-pulse">
-              <ShoppingCart className="w-12 h-12 text-foreground/40" />
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
-              Your cart is empty
-            </h2>
-            <p className="text-sm sm:text-base text-foreground/60 mb-8">
-              Add some products to see them here.
-            </p>
-            <button
-              onClick={() => {
-                setIsNavigating(true);
-                setTimeout(() => {
-                  window.location.href = "/shop";
-                }, 1500);
-              }}
-              disabled={isNavigating}
-              className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg shadow-lg disabled:opacity-70"
-            >
-              <ShoppingCart className="w-5 h-5 mr-2" /> Start Shopping
-            </button>
-          </div>
-        </div>
-      </>
+      <div className="container-page py-16 sm:py-24">
+        <EmptyState
+          icon={ShoppingBag}
+          title="Your cart is empty"
+          description="Looks like you haven't added anything yet. Explore our lighting and creator gear to get started."
+        >
+          <Link to="/shop" className="btn btn-primary btn-lg">
+            Start shopping
+          </Link>
+          <Link to="/wishlist" className="btn btn-outline btn-lg">
+            View wishlist
+          </Link>
+        </EmptyState>
+      </div>
     );
 
   return (
     <>
-      {showSignIn && (
-        <SignInModal
-          onSignIn={() => {
-            setShowSignIn(false);
-            sessionStorage.setItem("returnTo", "/cart");
-            window.location.href = "/signin";
-          }}
-          onClose={() => setShowSignIn(false)}
-        />
-      )}
-      <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-primary/10 pt-16 sm:pt-20 pb-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800 p-3 sm:p-4 mb-4 rounded-lg flex items-center gap-2 mt-2">
-            <ShoppingCart className="w-5 h-5 shrink-0" />
-            <p className="font-semibold text-xs sm:text-sm">
-              {totalItems} {totalItems === 1 ? "item" : "items"} in your cart
-            </p>
-          </div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-4">
-            Shopping Cart
-          </h1>
-          <Steps current="Cart" />
+      <SignInModal
+        open={showSignIn}
+        onSignIn={() => {
+          setShowSignIn(false);
+          sessionStorage.setItem("returnTo", "/cart");
+          navigate("/signin");
+        }}
+        onClose={() => setShowSignIn(false)}
+      />
 
-          <div className="grid lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-4">
-              {cartItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-card rounded-xl p-4 sm:p-5 shadow-lg border border-border hover:shadow-xl transition-shadow"
-                >
-                  <div className="flex flex-col sm:flex-row gap-4">
+      <CheckoutShell
+        step="Cart"
+        title="Shopping cart"
+        subtitle={`${totalItems} ${totalItems === 1 ? "item" : "items"} in your cart`}
+      >
+        <div className="grid gap-8 lg:grid-cols-12 lg:gap-10">
+          <section className="lg:col-span-7 xl:col-span-8" aria-label="Cart items">
+            <ul className="surface-card divide-y overflow-hidden">
+              <AnimatePresence initial={false}>
+                {cartItems.map((item) => (
+                  <motion.li
+                    key={item.id}
+                    layout
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3, ease: EASE }}
+                    className="flex gap-4 p-4 sm:gap-5 sm:p-6"
+                  >
                     <img
-                      src={item.image || item.img}
+                      src={optimizeImage(item.image || item.img, 260)}
                       alt={item.name}
-                      className="w-full h-44 sm:w-28 sm:h-28 object-cover rounded-lg shrink-0"
-                      onError={(e) => {
-                        e.target.src =
-                          "https://via.placeholder.com/150?text=No+Image";
-                      }}
+                      onError={handleImageError}
+                      className="size-24 shrink-0 rounded-2xl bg-muted object-cover sm:size-28"
                     />
-                    <div className="flex-1">
-                      <h3 className="text-base sm:text-lg font-bold text-foreground mb-1">
-                        {item.name}
-                      </h3>
-                      <p className="text-xs sm:text-sm text-foreground/60 mb-3 line-clamp-2">
-                        {item.description || item.desc || ""}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl font-bold text-foreground">
-                          ₦{item.price.toLocaleString()}
-                        </span>
-                        {item.oldPrice && (
-                          <span className="text-base text-foreground/40 line-through">
-                            ₦{item.oldPrice.toLocaleString()}
-                          </span>
-                        )}
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          {item.category && (
+                            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                              {formatCategory(item.category)}
+                            </p>
+                          )}
+                          <h3 className="mt-0.5 font-semibold leading-snug text-foreground line-clamp-2">{item.name}</h3>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {formatPrice(item.price)}
+                            {item.oldPrice && (
+                              <span className="ml-2 line-through opacity-60">{formatPrice(item.oldPrice)}</span>
+                            )}
+                          </p>
+                        </div>
+                        <p className="shrink-0 font-bold tabular-nums text-foreground">
+                          {formatPrice(item.price * item.quantity)}
+                        </p>
+                      </div>
+
+                      <div className="mt-auto flex items-center justify-between gap-3 pt-4">
+                        <div className="inline-flex items-center rounded-full border bg-card p-0.5">
+                          <button
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            disabled={item.quantity <= 1}
+                            aria-label={`Decrease quantity of ${item.name}`}
+                            className="icon-btn !size-8 disabled:opacity-35"
+                          >
+                            <Minus size={14} />
+                          </button>
+                          <span className="w-8 text-center text-sm font-semibold tabular-nums">{item.quantity}</span>
+                          <button
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            disabled={item.quantity >= 10}
+                            aria-label={`Increase quantity of ${item.name}`}
+                            className="icon-btn !size-8 disabled:opacity-35"
+                          >
+                            <Plus size={14} />
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                          className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-danger/10 hover:text-danger"
+                        >
+                          <Trash2 size={15} /> <span className="hidden sm:inline">Remove</span>
+                        </button>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity - 1)
-                        }
-                        disabled={item.quantity <= 1}
-                        className="w-9 h-9 rounded-lg border-2 border-border hover:bg-background/50 flex items-center justify-center disabled:opacity-50"
-                      >
-                        <Minus size={14} />
-                      </button>
-                      <span className="w-10 text-center font-semibold text-foreground">
-                        {item.quantity}
-                      </span>
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity + 1)
-                        }
-                        disabled={item.quantity >= 10}
-                        className="w-9 h-9 rounded-lg border-2 border-border hover:bg-background/50 flex items-center justify-center disabled:opacity-50"
-                      >
-                        <Plus size={14} />
-                      </button>
-                    </div>
-                    <button
-                      onClick={() => removeFromCart(item.id)}
-                      className="p-2 hover:bg-red-50 rounded-lg group"
-                    >
-                      <Trash2
-                        size={18}
-                        className="text-foreground/40 group-hover:text-red-500"
-                      />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  </motion.li>
+                ))}
+              </AnimatePresence>
+            </ul>
+            <Link
+              to="/shop"
+              className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-foreground hover:text-primary"
+            >
+              <ChevronLeft size={16} /> Continue shopping
+            </Link>
+          </section>
 
-            <div>
-              <div className="bg-card rounded-xl p-4 sm:p-5 shadow-lg border border-border lg:sticky lg:top-24">
-                <h2 className="text-base font-bold text-foreground mb-4">
-                  Order Summary
-                </h2>
-                <div className="space-y-3 text-sm mb-4">
-                  <div className="flex justify-between text-foreground/70">
-                    <span>Sub Total</span>
-                    <span className="font-semibold text-foreground">
-                      ₦{subtotal.toLocaleString()}
-                    </span>
-                  </div>
-                  {appliedDiscount > 0 && (
-                    <div className="flex justify-between text-foreground/70">
-                      <span>Discount</span>
-                      <span className="font-semibold text-red-500">
-                        -₦{discount.toLocaleString()}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-foreground/70">
-                    <span>Delivery</span>
-                    <span className="text-foreground/40">At checkout</span>
-                  </div>
-                  <div className="border-t border-border pt-3 flex justify-between font-bold text-foreground">
-                    <span>Total</span>
-                    <span>₦{total.toLocaleString()}</span>
-                  </div>
-                </div>
-                <button
-                  onClick={handleCheckout}
-                  className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 rounded-lg mb-4 text-sm shadow-lg flex items-center justify-center gap-2"
-                >
-                  Proceed to Checkout <ChevronRight className="w-4 h-4" />
-                </button>
-                <p className="text-xs text-center text-foreground/60 mb-4">
-                  Estimated Delivery:{" "}
-                  <span className="font-semibold text-foreground">
-                    2–5 days
-                  </span>
-                </p>
-                <div className="border-t border-border pt-4">
-                  <h3 className="font-semibold text-sm text-foreground mb-3">
-                    Have a Referral code?
-                  </h3>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Referral Code"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && applyCoupon()}
-                      className="flex-1 px-3 py-2 rounded-lg border-2 border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      style={{ fontSize: "16px" }}
-                    />
-                    <button
-                      onClick={applyCoupon}
-                      disabled={isApplyingCoupon || !couponCode.trim()}
-                      className="px-4 py-2 bg-foreground text-background font-semibold rounded-lg text-sm disabled:opacity-50"
-                    >
-                      {isApplyingCoupon ? "..." : "Apply"}
-                    </button>
-                  </div>
+          <aside className="lg:col-span-5 xl:col-span-4">
+            <div className="surface-card p-5 sm:p-6 lg:sticky lg:top-[calc(var(--nav-height)+1.5rem)]">
+              <h2 className="text-base font-bold text-foreground">Order summary</h2>
+              <div className="mt-5 space-y-3 text-sm">
+                <SummaryRow label="Subtotal" value={formatPrice(subtotal)} />
+                {appliedDiscount > 0 && <SummaryRow label="Discount (15%)" value={`−${formatPrice(discount)}`} />}
+                <SummaryRow label="Delivery" value="Calculated at checkout" muted />
+                <SummaryRow label="Total" value={formatPrice(total)} strong className="border-t pt-4" />
+              </div>
+
+              <button onClick={handleCheckout} className="btn btn-primary btn-lg mt-6 w-full">
+                Proceed to checkout <ChevronRight size={18} />
+              </button>
+
+              <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                <Truck size={14} /> Estimated delivery: <span className="font-semibold text-foreground">2–5 days</span>
+              </p>
+
+              <div className="mt-6 border-t pt-6">
+                <label htmlFor="coupon" className="field-label flex items-center gap-1.5">
+                  <Tag size={14} /> Have a referral code?
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="coupon"
+                    type="text"
+                    placeholder="Referral code"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && applyCoupon()}
+                    className="input !h-11 uppercase placeholder:normal-case"
+                  />
+                  <button
+                    onClick={applyCoupon}
+                    disabled={isApplyingCoupon || !couponCode.trim()}
+                    className="btn btn-dark h-11 shrink-0 !rounded-xl"
+                  >
+                    {isApplyingCoupon ? <Spinner size={16} /> : "Apply"}
+                  </button>
                 </div>
               </div>
+
+              <div className="mt-6">
+                <SecureNote />
+              </div>
             </div>
-          </div>
+          </aside>
         </div>
-      </div>
+      </CheckoutShell>
     </>
   );
 };
@@ -1498,18 +1205,12 @@ export default function CartDemo({ products }) {
   return (
     <div>
       {cartItems.length === 0 && (
-        <div className="fixed top-4 right-4 bg-white p-4 rounded-lg shadow-xl border border-slate-200 z-50">
-          <p className="text-sm text-slate-600 mb-3 font-medium">
-            Add sample items to cart:
-          </p>
+        <div className="surface-card fixed right-4 top-4 z-50 p-4">
+          <p className="mb-3 text-sm font-medium text-muted-foreground">Add sample items to cart:</p>
           <div className="flex gap-2">
             {products.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => addToCart(p)}
-                className="px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-xs font-semibold rounded-lg"
-              >
-                Add Item {p.id}
+              <button key={p.id} onClick={() => addToCart(p)} className="btn btn-primary btn-sm">
+                Add item {p.id}
               </button>
             ))}
           </div>

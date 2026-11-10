@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { X } from "lucide-react";
+import { Spinner } from "./ui/Spinner";
 
 // Helper to parse Google JWT credential
 function parseJwt(token) {
@@ -120,60 +122,24 @@ const GoogleCallback = () => {
   }, [navigate, location]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/20 via-background to-primary/10">
-      <div className="text-center space-y-4">
+    <div className="flex min-h-[70vh] items-center justify-center px-4">
+      <div className="surface-card w-full max-w-sm p-8 text-center" role="status" aria-live="polite">
         {error ? (
           <>
-            <div className="w-16 h-16 mx-auto bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-red-600 dark:text-red-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+            <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-danger/10 text-danger">
+              <X size={26} />
             </div>
-            <h2 className="text-xl font-semibold text-foreground">{error}</h2>
-            <p className="text-foreground/60">Redirecting to sign in...</p>
+            <h2 className="mt-5 text-xl font-bold text-foreground">{error}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Redirecting to sign in…</p>
           </>
         ) : (
           <>
-            <div className="relative w-16 h-16 mx-auto">
-              {[...Array(12)].map((_, i) => (
-                <div
-                  key={i}
-                  className="absolute w-2 h-6 bg-green-600 rounded-full"
-                  style={{
-                    left: "50%",
-                    top: "50%",
-                    transformOrigin: "1px -24px",
-                    transform: `rotate(${i * 30}deg)`,
-                    opacity: 1 - i * 0.08,
-                    animation: `spin-fade 1.2s linear infinite`,
-                    animationDelay: `${-1.2 + i * 0.1}s`,
-                  }}
-                />
-              ))}
-            </div>
-            <p className="text-lg font-medium text-foreground">
-              Signing you in with Google…
-            </p>
+            <Spinner size={44} className="mx-auto text-primary" />
+            <p className="mt-5 text-lg font-semibold text-foreground">Signing you in with Google…</p>
+            <p className="mt-1 text-sm text-muted-foreground">This only takes a moment.</p>
           </>
         )}
       </div>
-
-      <style>{`
-        @keyframes spin-fade {
-          0% { opacity: 1; }
-          100% { opacity: 0.1; }
-        }
-      `}</style>
     </div>
   );
 };

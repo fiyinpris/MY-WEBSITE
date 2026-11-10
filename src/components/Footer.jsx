@@ -1,87 +1,204 @@
-import { Instagram } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Instagram, Mail, MapPin, Phone, ArrowRight, Check, ShieldCheck } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
+import { Logo } from "./ui/Logo";
+import { Spinner } from "./ui/Spinner";
+import { Reveal } from "./ui/Reveal";
+import { STORE_CONTACT, sendContactMessage } from "../lib/contact";
+import { categoryNavLabel } from "../lib/format";
 
-export const Footer = ({ formData, setFormData }) => {
+const shopLinks = ["RINGLIGHT", "LED LIGHT", "TRIPOD STAND", "MICROPHONE", "ACCESSORIES"];
+
+const FooterHeading = ({ children }) => (
+  <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-ink-foreground/50">{children}</h3>
+);
+
+const FooterLink = ({ to, children }) => (
+  <li>
+    <Link
+      to={to}
+      className="group inline-flex items-center gap-2 text-[0.9375rem] text-ink-foreground/75 transition-colors hover:text-ink-foreground"
+    >
+      <span className="h-px w-0 bg-accent transition-all duration-300 group-hover:w-3" />
+      {children}
+    </Link>
+  </li>
+);
+
+export const Footer = () => {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState("idle"); // idle | sending | done | invalid | error
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setStatus("invalid");
+      return;
+    }
+    setStatus("sending");
+    try {
+      await sendContactMessage({
+        name: "Newsletter subscriber",
+        email,
+        message: `Newsletter sign-up request from ${email}. Please add this address to the my.LIGHTSTORE newsletter.`,
+      });
+      setStatus("done");
+      setEmail("");
+    } catch (err) {
+      console.error("Newsletter subscribe failed:", err);
+      setStatus("error");
+    }
+  };
+
   return (
-    <footer className="bg-black text-white mt-auto">
-      <div className="flex justify-between p-8 flex-wrap gap-8">
-        {/* Customer Services */}
-        <div className="space-y-3">
-          <h4 className="font-bold text-lg">Customer Services</h4>
-          <p className="text-sm">Customer Care</p>
-          <p className="text-sm">FAQ</p>
-          <p className="text-sm">My Account</p>
-        </div>
+    <footer className="grain relative mt-auto overflow-hidden bg-ink text-ink-foreground">
+      {/* glowing brand line + soft light */}
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-primary to-transparent" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-40 left-1/2 h-80 w-[60rem] -translate-x-1/2 rounded-full bg-primary/20 blur-[120px] animate-pulse-subtle"
+      />
 
-        {/* Company */}
-        <div className="space-y-3">
-          <h4 className="font-bold text-lg">Company</h4>
-          <p className="text-sm">About Us</p>
-          <p className="text-sm">Contact Us</p>
-        </div>
+      <div className="container-page relative">
+        {/* Newsletter band */}
+        <Reveal className="flex flex-col gap-8 border-b border-white/10 py-14 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-xl">
+            <h2 className="text-3xl font-bold text-white sm:text-4xl">
+              Stay in the <span className="font-display font-normal italic text-accent">light</span>.
+            </h2>
+            <p className="mt-3 leading-relaxed text-ink-foreground/65">
+              Receive updates on our latest products, new releases and special discount offers.
+            </p>
+          </div>
 
-        {/* Categories */}
-        <div className="space-y-3">
-          <h4 className="font-bold text-lg">Categories</h4>
-          <p className="text-sm">Ringlight</p>
-          <p className="text-sm">Led light</p>
-          <p className="text-sm">Tripod</p>
-          <p className="text-sm">Accessories</p>
-        </div>
+          <form onSubmit={handleSubscribe} className="w-full lg:max-w-md" noValidate>
+            <label htmlFor="footer-email" className="sr-only">
+              Email address
+            </label>
+            <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 p-1.5 pl-5 transition-colors focus-within:border-white/40">
+              <Mail size={18} className="shrink-0 text-ink-foreground/50" />
+              <input
+                id="footer-email"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (status !== "sending") setStatus("idle");
+                }}
+                placeholder="Your email address"
+                autoComplete="email"
+                className="h-10 min-w-0 flex-1 bg-transparent text-base text-white placeholder:text-ink-foreground/45 focus:outline-none"
+              />
+              <button type="submit" disabled={status === "sending"} className="btn btn-primary btn-sm h-10">
+                {status === "sending" ? <Spinner size={16} /> : status === "done" ? <Check size={16} /> : null}
+                {status === "done" ? "Subscribed" : "Subscribe"}
+              </button>
+            </div>
+            <p className="mt-3 min-h-5 pl-5 text-sm" aria-live="polite">
+              {status === "done" && <span className="text-accent">Thanks! You're on the list.</span>}
+              {status === "invalid" && <span className="text-[hsl(0_80%_72%)]">Please enter a valid email address.</span>}
+              {status === "error" && <span className="text-[hsl(0_80%_72%)]">Something went wrong. Please try again.</span>}
+            </p>
+          </form>
+        </Reveal>
 
-        {/* Newsletter */}
-        <div className="space-y-3 max-w-sm">
-          <p className="text-sm leading-relaxed">
-            Receive updates on our latest products, new releases <br />
-            and special discount offers.
-          </p>
+        {/* Link columns */}
+        <div className="grid grid-cols-2 gap-x-8 gap-y-12 py-14 md:grid-cols-12">
+          <Reveal className="col-span-2 md:col-span-4">
+            <Logo tone="light" />
+            <p className="mt-5 max-w-xs text-[0.9375rem] leading-relaxed text-ink-foreground/65">
+              Professional lighting and creator gear — ringlights, LED panels, tripods and microphones — delivered
+              across Nigeria.
+            </p>
+            <div className="mt-6 flex items-center gap-2">
+              <a
+                href={STORE_CONTACT.instagramHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="inline-flex size-10 items-center justify-center rounded-full border border-white/15 text-ink-foreground/80 transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#dc2743] hover:to-[#bc1888] hover:text-white"
+              >
+                <Instagram size={18} />
+              </a>
+              <a
+                href={STORE_CONTACT.whatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="WhatsApp"
+                className="inline-flex size-10 items-center justify-center rounded-full border border-white/15 text-ink-foreground/80 transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:bg-[#25d366] hover:text-white"
+              >
+                <FaWhatsapp size={18} />
+              </a>
+            </div>
+          </Reveal>
 
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
-            placeholder="Your Email"
-            required
-            className="w-full px-5 py-3 border border-gray-600 rounded-lg bg-transparent text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-white/40"
-          />
+          <Reveal className="md:col-span-2" delay={0.06}>
+            <FooterHeading>Categories</FooterHeading>
+            <ul className="space-y-3">
+              {shopLinks.map((c) => (
+                <FooterLink key={c} to={`/shop?category=${encodeURIComponent(c)}`}>
+                  {categoryNavLabel(c)}
+                </FooterLink>
+              ))}
+            </ul>
+          </Reveal>
 
-          <a
-            href="#contact"
-            className="bg-white text-black px-6 py-3 rounded-3xl mt-2 inline-block text-sm"
-          >
-            SUBSCRIBE
-          </a>
+          <Reveal className="md:col-span-2" delay={0.12}>
+            <FooterHeading>Customer care</FooterHeading>
+            <ul className="space-y-3">
+              <FooterLink to="/signin">My account</FooterLink>
+              <FooterLink to="/cart">My cart</FooterLink>
+              <FooterLink to="/wishlist">Wishlist</FooterLink>
+              <FooterLink to="/contact">Contact us</FooterLink>
+            </ul>
+          </Reveal>
 
-          <div className="flex items-center gap-4 mt-3">
-            <a
-              href="https://www.instagram.com/cillas_light"
-              target="_blank"
-              rel="noopener noreferrer"
+          <Reveal className="col-span-2 md:col-span-4" delay={0.18}>
+            <FooterHeading>Get in touch</FooterHeading>
+            <ul className="space-y-3.5 text-[0.9375rem] text-ink-foreground/75">
+              <li>
+                <a href={`mailto:${STORE_CONTACT.email}`} className="flex items-center gap-3 transition-colors hover:text-white">
+                  <Mail size={17} className="shrink-0 text-ink-foreground/45" /> {STORE_CONTACT.email}
+                </a>
+              </li>
+              <li>
+                <a href={STORE_CONTACT.phoneHref} className="flex items-center gap-3 transition-colors hover:text-white">
+                  <Phone size={17} className="shrink-0 text-ink-foreground/45" /> {STORE_CONTACT.phoneDisplay}
+                </a>
+              </li>
+              <li className="flex items-center gap-3">
+                <MapPin size={17} className="shrink-0 text-ink-foreground/45" /> {STORE_CONTACT.location}
+              </li>
+            </ul>
+            <Link
+              to="/contact"
+              className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-white transition-all hover:gap-3"
             >
-              <Instagram className="cursor-pointer hover:text-gray-300" />
-            </a>
+              Send us a message <ArrowRight size={16} />
+            </Link>
+          </Reveal>
+        </div>
 
-            <a
-              href="https://wa.me/+2349058419783"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <FaWhatsapp className="text-xl cursor-pointer hover:text-gray-300" />
-            </a>
+        {/* Bottom bar */}
+        <div className="flex flex-col-reverse gap-3 border-t border-white/10 py-6 text-sm text-ink-foreground/50 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} my.LIGHTSTORE. All rights reserved.</p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <p className="flex items-center gap-2">
+              <ShieldCheck size={16} /> Secure payments by Paystack
+            </p>
+            <ul className="flex flex-wrap items-center gap-1.5" aria-label="Accepted payment methods">
+              {["Card", "Transfer", "Bank", "USSD", "OPay"].map((m) => (
+                <li
+                  key={m}
+                  className="rounded-md border border-white/15 bg-white/5 px-2 py-0.5 text-[0.7rem] font-semibold tracking-wide text-ink-foreground/75"
+                >
+                  {m}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
-      </div>
-
-      {/* Divider */}
-      <div className="border-t border-gray-700 w-full"></div>
-
-      {/* Copyright */}
-      <div className="text-center pb-10 py-4 text-gray-400 text-sm">
-        © {new Date().getFullYear()} my.LIGHTSTORE. All rights reserved.
       </div>
     </footer>
   );
