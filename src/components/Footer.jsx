@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Instagram, Mail, MapPin, Phone, ArrowRight, Check, ShieldCheck } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { Logo } from "./ui/Logo";
@@ -27,6 +27,9 @@ const FooterLink = ({ to, children }) => (
 );
 
 export const Footer = () => {
+  // The newsletter band only appears on the Home page
+  const { pathname } = useLocation();
+  const showNewsletter = pathname === "/";
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState("idle"); // idle | sending | done | invalid | error
 
@@ -61,7 +64,8 @@ export const Footer = () => {
       />
 
       <div className="container-page relative">
-        {/* Newsletter band */}
+        {/* Newsletter band (Home page only) */}
+        {showNewsletter && (
         <Reveal className="flex flex-col gap-8 border-b border-white/10 py-14 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-xl">
             <h2 className="text-3xl font-bold text-white sm:text-4xl">
@@ -102,6 +106,7 @@ export const Footer = () => {
             </p>
           </form>
         </Reveal>
+        )}
 
         {/* Link columns */}
         <div className="grid grid-cols-2 gap-x-8 gap-y-12 py-14 md:grid-cols-12">
